@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="Generator" content="EditPlus®">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+  <title>Document</title>
+  <link rel="stylesheet" type="text/css" href="../resources/css/common.css">
+  <link rel="stylesheet" type="text/css" href="../resources/swiper/dist/css/swiper.min.css">
+  <script type="text/javascript" src="../resources/js/jquery-1.9.1.min.js"></script>
+  <script type="text/javascript" src="../resources/js/jquery-ui.1.12.1.js"></script>
+  <script type="text/javascript" src="../resources/js/common.js"></script>
+  <script type="text/javascript" src="../resources/swiper/dist/js/swiper.min.js"></script>
+  
+ </head>
+ <body>
+  <div>
+    <button>testButton</button>
+  </div>
+  <div class="swiper-container">
+    <!-- Additional required wrapper -->
+    <div class="swiper-wrapper">
+        <!-- Slides -->
+        <div class="swiper-slide">Slide 1</div>
+        <div class="swiper-slide">Slide 2</div>
+        <div class="swiper-slide">Slide 3</div>
+    </div>
+
+  </div>
+
+ </body>
+ <script>
+  $('button').on('click',function(){
+    alert('test')
+  })
+
+  $(document).ready(function(){
+    var mySwiper = new Swiper('.swiper-container', {
+      speed: 400,
+      spaceBetween: 100
+    }); 
+
+
+
+
+  })
+ 
+
+ </script>
+</html>

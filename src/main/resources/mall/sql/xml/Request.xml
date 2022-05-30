@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.mall.RequestMapper">
+	
+	<select id="list" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODINFOXM">
+		SELECT A.ORDER_NUM /*주문번호*/
+		     , TO_CHAR(TO_DATE(A.ORDER_DATE,'YYYY-MM-DD'),'YYYY-MM-DD') AS ORDER_DATE    /*주문일자*/
+		     , (SELECT B.PD_NAME FROM XTB_ODINFOXD B WHERE B.DEL_YN = 'N' AND B.ORDER_NUM = A.ORDER_NUM AND ROWNUM=1) AS PD_NAME /*제품명1개*/
+		     , (SELECT COUNT(*)-1 FROM XTB_ODINFOXD B WHERE B.DEL_YN = 'N' AND B.ORDER_NUM = A.ORDER_NUM) AS count /*주문 제품 갯수*/
+		     , A.ORDER_AMT /*주문금액*/
+		     , A.ORDER_CON /*주문상태 */
+		     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+             , A.COM_NAME
+             , A.BIZR_NUM
+             , A.CEO_NAME
+             , A.COM_TEL
+             , A.POST_NUM
+             , A.BASC_ADDR
+             , A.DTL_ADDR
+             , A.STAFF_NAME
+             , A.STAFF_MAIL
+             , A.STAFF_CPON
+             , A.ORDER_MSG
+		 FROM XTB_ODINFOXM A
+		WHERE REPLACE(BIZR_NUM,'-', '') = REPLACE(#{BIZR_NUM},'-', '')
+		<if test="PW_PASS != null and PW_PASS != ''">
+			<if test='PW_PASS != "PASS"'>
+				AND ORDER_PW = #{ORDER_PW}	
+			</if>	
+		</if>
+	</select>
+	
+	<select id="newList" parameterType="java.util.List" resultType="mall.web.domain.XTB_ODINFOXD" >
+        SELECT PD_CODE    	/*제품코드*/
+             , PD_NAME    	/*제품명*/
+             , PD_PRICE   	/*제품가격*/
+             , PDDC_GUBN  	/*제품할인 구분*/
+             , PDDC_VAL   	/*제품할인 값*/
+             , 1 ORDER_QTY	/*주문수량*/
+          FROM TB_PDINFOXM
+         WHERE PD_CODE IN 
+	 		<foreach collection="list" item="item" separator="," open="(" close=")" >
+	 			#{item}
+	 		</foreach>
+	       AND SALE_CON = 'SALE_CON_01'
+	 	 ORDER BY PD_NAME
+	</select>
+	
+	<insert id="odInfoXmInsert" parameterType="mall.web.domain.XTB_ODINFOXM">
+		<selectKey keyProperty="ORDER_NUM" resultType="String" order="BEFORE">    
+			SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || LPAD(NVL(MAX(SUBSTR(ORDER_NUM, 10, 4)),0)+1, 4, 0) 
+			FROM XTB_ODINFOXM WHERE SUBSTR(ORDER_NUM, 0, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+		INSERT INTO 
+			XTB_ODINFOXM (
+                ORDER_NUM
+                , ORDER_DATE
+                , ORDER_PW
+                , ORDER_AMT
+                , ORDER_CON
+                , PAY_METD
+                , COM_NAME
+                , BIZR_NUM
+                , CEO_NAME
+                , COM_TEL
+                , POST_NUM
+                , BASC_ADDR
+                , DTL_ADDR
+                , EXTRA_ADDR
+                , STAFF_NAME
+                , STAFF_MAIL
+                , STAFF_CPON
+                , ORDER_MSG
+                , ATFL_ID
+                , DLVY_ATFL
+                , CARD_ATFL
+                , ARRIVAL_DATE
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+			) 
+			VALUES( #{ORDER_NUM}
+			     , TO_CHAR(SYSDATE, 'YYYYMMDD')
+			     , #{ORDER_PW}
+			     , #{ORDER_AMT}
+			     , 'XORDER_CON_01'
+			     , #{PAY_METD}
+                 , #{COM_NAME}
+                 , #{BIZR_NUM}
+                 , #{CEO_NAME}
+                 , #{COM_TEL}
+                 , #{POST_NUM}
+                 , #{BASC_ADDR}
+                 , #{DTL_ADDR}
+                 , #{EXTRA_ADDR}
+                 , #{STAFF_NAME}
+                 , #{STAFF_MAIL}
+                 , #{STAFF_CPON}
+                 , #{ORDER_MSG}
+                 , #{ATFL_ID}
+                 , #{DLVY_ATFL}
+                 , #{CARD_ATFL}
+                 , #{ARRIVAL_DATE}
+                 , #{REGP_ID}
+                 , SYSDATE
+                 , #{REGP_ID}
+                 , SYSDATE
+			)
+	</insert>
+	
+	<insert id="odInfoXdInsert" parameterType="mall.web.domain.XTB_ODINFOXM">
+		INSERT INTO 
+			XTB_ODINFOXD (
+				ORDER_DTNUM
+                , ORDER_NUM
+                , PD_CODE
+                , PD_NAME
+                , PD_PRICE
+                , PDDC_GUBN
+                , PDDC_VAL
+                , ORDER_QTY
+                , ORDER_AMT
+                , ORDER_CON
+                , PAY_METD
+                , PAY_MDKY
+                , DLVY_CON
+                , DLVY_TDN
+                , CNCL_CON
+                , RFND_CON
+                , DLVY_ROWNUM
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+            ) VALUES (
+			     (SELECT NVL(MAX(ORDER_DTNUM),0)+1 FROM XTB_ODINFOXD WHERE ORDER_NUM = #{ORDER_NUM})
+				 , #{ORDER_NUM}
+                 , #{PD_CODE}
+                 , #{PD_NAME}
+                 , #{PD_PRICE}
+                 , #{PDDC_GUBN}
+                 , #{PDDC_VAL}
+                 , #{ORDER_QTY}
+			     , #{ORDER_AMT}
+			     , 'XORDER_CON_01'
+			     , #{PAY_METD}
+			     , ''
+			     , 'DLVY_CON_01'
+			     , ''
+			     , ''
+			     , ''
+			     , #{DLVY_ROWNUM}
+                 , #{REGP_ID}
+                 , SYSDATE
+                 , #{REGP_ID}
+                 , SYSDATE
+			)
+	</insert>
+	
+	<insert id="odDlaxiXmInsert" parameterType="mall.web.domain.XTB_ODDLAIXM">
+		INSERT INTO 
+			XTB_ODDLAIXM (
+				DLVY_NUM
+				, ORDER_NUM
+                , DLVY_ROWNUM
+                , DLVY_NAME
+                , STAFF_NAME
+                , STAFF_CPON
+                , POST_NUM
+                , BASC_ADDR
+                , DTL_ADDR
+                , DLVY_MSG
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+            ) VALUES (
+            	 (SELECT NVL(MAX(DLVY_NUM),0)+1 FROM XTB_ODDLAIXM WHERE ORDER_NUM = #{ORDER_NUM})
+				 , #{ORDER_NUM}
+				 , #{DLVY_ROWNUM}
+                 , #{DLVY_NAME}
+                 , #{STAFF_NAME}
+                 , #{STAFF_CPON}
+                 , #{POST_NUM}
+                 , #{BASC_ADDR}
+                 , #{DTL_ADDR}
+                 , #{DLVY_MSG}
+                 , #{REGP_ID}
+                 , SYSDATE
+                 , #{REGP_ID}
+                 , SYSDATE
+			)
+	</insert>
+	
+	<delete id="bkInfoXmDelete" parameterType="mall.web.domain.TB_BKINFOXM">
+		DELETE FROM TB_BKINFOXM WHERE PD_CODE = #{PD_CODE} AND MEMB_ID = #{REGP_ID}
+	</delete>
+	
+	<!-- 주문정보 마스터 정보 - 상세화면 -->
+	<select id="getMasterInfo" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODINFOXM">
+		SELECT ORDER_NUM
+             , TO_CHAR(TO_DATE(ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') AS ORDER_DATE
+             , ORDER_PW
+             , ORDER_AMT
+             , ORDER_CON
+		     , FC_GET_COMCOD_NM(ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+             , PAY_METD
+		     , FC_GET_COMCOD_NM(PAY_METD) AS PAY_METD_NM    /*결제수단 명*/
+             , COM_NAME
+             , BIZR_NUM
+             , CEO_NAME
+             , COM_TEL
+             , POST_NUM
+             , BASC_ADDR
+             , DTL_ADDR
+             , EXTRA_ADDR
+             , STAFF_NAME
+             , STAFF_MAIL
+             , STAFF_CPON
+             , ORDER_MSG
+             , ATFL_ID
+             , DLVY_ATFL
+             , CARD_ATFL
+             , ARRIVAL_DATE
+		  FROM XTB_ODINFOXM       /*주문정보 마스터*/
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</select>
+	<!-- 주문정보 상세 - 상세화면   -->
+	<select id="getDetailsList" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODINFOXD">
+		SELECT A.ORDER_DTNUM  /*주문상세번호*/
+		     , A.ORDER_NUM
+             , A.PD_CODE
+             , A.PD_NAME
+             , A.PD_PRICE
+             , A.PDDC_GUBN
+             , A.PDDC_VAL
+             , A.ORDER_QTY
+             , A.ORDER_AMT
+             , A.ORDER_CON
+             , A.PAY_METD
+		     , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM    /*결제수단 명*/
+             , A.DLVY_CON
+             , A.DLVY_TDN
+             , A.DLVY_ROWNUM
+             , (SELECT DLVY_NAME FROM XTB_ODDLAIXM B WHERE B.DEL_YN = 'N' AND B.ORDER_NUM = A.ORDER_NUM AND B.DLVY_ROWNUM = A.DLVY_ROWNUM) DLVY_NAME
+		  FROM XTB_ODINFOXD  A     /*주문정보 상세*/
+		 WHERE A.ORDER_NUM = #{ORDER_NUM}
+		   AND A.DEL_YN = 'N'  
+		 ORDER BY A.ORDER_DTNUM 
+	</select>
+	<!-- 배송지 정보 - 상세화면 -->
+	<select id="getDeliveryInfo" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODDLAIXM">
+		SELECT A.ORDER_NUM /*주문번호*/
+             , A.DLVY_ROWNUM
+             , A.DLVY_NAME
+             , A.STAFF_NAME
+             , A.STAFF_CPON
+             , A.POST_NUM
+             , A.BASC_ADDR
+             , A.DTL_ADDR
+             , A.DLVY_MSG
+		  FROM XTB_ODDLAIXM A   /*주문배송지정보 */
+		 WHERE A.ORDER_NUM = #{ORDER_NUM}   
+	       AND A.DEL_YN = 'N'  
+	</select>
+	
+
+	<update id="conditionUpdate" parameterType="mall.web.domain.XTB_ODINFOXM">
+		UPDATE XTB_ODINFOXM
+		   SET ORDER_CON = #{ORDER_CON}
+		 WHERE ORDER_NUM = #{ORDER_NUM}   
+	</update>
+	
+	<update id="odInfoXmUpdate" parameterType="mall.web.domain.XTB_ODINFOXM">
+		UPDATE XTB_ODINFOXM
+		   SET ORDER_AMT = #{ORDER_AMT} 
+		     , COM_NAME = #{COM_NAME} 
+		     , CEO_NAME = #{CEO_NAME} 
+		     , COM_TEL = #{COM_TEL} 
+		     , POST_NUM = #{POST_NUM} 
+		     , BASC_ADDR = #{BASC_ADDR} 
+		     , DTL_ADDR = #{DTL_ADDR} 
+		     , EXTRA_ADDR = #{EXTRA_ADDR} 
+		     , STAFF_NAME = #{STAFF_NAME} 
+		     , STAFF_MAIL = #{STAFF_MAIL} 
+		     , STAFF_CPON = #{STAFF_CPON} 
+		     , ORDER_MSG = #{ORDER_MSG} 
+		     , ATFL_ID = #{ATFL_ID} 
+		     , DLVY_ATFL = #{DLVY_ATFL} 
+		     , CARD_ATFL = #{CARD_ATFL} 
+		     , ARRIVAL_DATE = #{ARRIVAL_DATE}
+		     , PAY_METD = #{PAY_METD} 
+		 WHERE ORDER_NUM = #{ORDER_NUM}   
+	</update>
+
+	<update id="odInfoXdDelete" parameterType="mall.web.domain.XTB_ODINFOXD">
+		UPDATE XTB_ODINFOXD
+		   SET DEL_YN = 'Y'
+		 WHERE ORDER_NUM = #{ORDER_NUM}   
+	</update>
+	
+	<update id="odDlaxiXmDelete" parameterType="mall.web.domain.XTB_ODDLAIXM">
+		UPDATE XTB_ODDLAIXM
+		   SET DEL_YN = 'Y'
+		 WHERE ORDER_NUM = #{ORDER_NUM}   
+	</update>
+	
+</mapper>

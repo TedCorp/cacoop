@@ -1,0 +1,194 @@
+
+/* ============================================================================================
+	Reset
+============================================================================================ */
+
+body,h1,h2,h3,h4,h5,h6,table,div,header,section,a,ul,li,tr,td,th,tbody,thead,tfoot,ol,button,input,select,p{margin: 0; padding:0 ; box-sizing: border-box;}
+
+nav, ul{
+  list-style:none
+}
+a{
+  text-decoration: none;
+}
+table{
+  border-collapse: collapse;
+}
+input,select {
+  vertical-align: middle;
+}
+
+fieldset, img {
+	border: 0 none;
+}
+
+dl, ul, ol, menu, li {
+	list-style: none;
+}
+
+blockquote, q {
+	quotes: none;
+}
+
+blockquote:before, blockquote:after, q:before, q:after {
+	content: '';
+	content: none;
+}
+
+input, select, textarea, button {
+	vertical-align: middle;
+	outline: 0;
+}
+
+button {
+	border: 0 none;
+	background-color: transparent;
+	cursor: pointer;
+}
+
+body, th, td, input, select, textarea, button, select {
+	color: #333;
+	font-family: noto;
+	font-size: 16px;
+	line-height: 1.5;
+	letter-spacing: -0.4px;
+}
+
+body {
+	overflow-x: auto;
+	width: 100%;
+}
+
+
+input[type=submit] {
+	border-radius: 0;
+	border: 0;
+	-webkit-appearance: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-weight: normal;
+	font-size: 100%;
+}
+
+a {
+	color: #333;
+	text-decoration: none;
+}
+
+a:active, a:hover {
+	text-decoration: none;
+} /* hover */
+address, caption, cite, code, dfn, em, var {
+	font-style: normal;
+}
+
+legend, caption {
+	display: none;
+	visibility: hidden;
+	overflow: hidden;
+	width: 0;
+	height: 0;
+	margin: 0;
+	padding: 0;
+	font-size: 0;
+	text-indent: -9999px;
+	line-height: 0;
+}
+
+table {
+	table-layout: fixed;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	border-spacing: 0;
+	border: 0;
+	border-collapse: collapse;
+}
+
+*+html table {
+	border-collapse: collapse;
+}
+
+button {
+	vertical-align: top;
+	outline: 0;
+}
+
+button:disabled {
+	cursor: not-allowed;
+}
+
+input[type=text], input[type=tel], input[type=number], input[type=password]
+	{
+	height: 45px;
+	padding: 0 15px;
+	box-sizing: border-box;
+	border-radius: 0;
+	border: 1px solid;
+	border-color:#d2d2d2;
+	background-color: #fff;
+	color: #111;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+}
+
+input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button
+	{
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+input::-ms-clear {
+	display: none;
+}
+
+textarea {
+	width: 100%;
+	padding: 7px 17px;
+	border: 1px solid #c9c9c9;
+	border-radius: 0;
+	background-color: #fff;
+	box-sizing: border-box;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	word-break: keep-all;
+	word-wrap: break-word;
+	resize: none;
+}
+
+input:-ms-input-placeholder {
+	color: #b3b3b3;
+}
+
+textarea:-ms-input-placeholder {
+	color: #b3b3b3;
+}
+
+::-webkit-input-placeholder {
+	color: #b3b3b3;
+}
+
+::-moz-placeholder {
+	color: #b3b3b3;
+}
+
+select {
+	height: 40px;
+	padding: 0 40px 0 14px;
+	border: 1px solid #ccc;
+	background-color: #fff;
+	box-sizing: border-box;
+}
+
+::-webkit-file-upload-button {
+	cursor: pointer;
+}
+
+.clear-fix::after{
+	content: "";
+	display: block;
+	clear: both;
+}

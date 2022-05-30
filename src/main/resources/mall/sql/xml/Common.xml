@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.common.CommonMapper">
+
+	<!-- 공통코드 조회 -->
+	<select id="selectComCodList" parameterType="mall.web.domain.TB_COMCODXD" resultType="mall.web.domain.TB_COMCODXD">
+		SELECT
+			COMM_CODE
+			, COMD_CODE
+			, COMDCD_NAME
+			, SORT_ORDR
+			, USE_YN
+			, CODE_EXPN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_COMCODXD
+		WHERE COMM_CODE = #{COMM_CODE}
+			AND USE_YN = 'Y'
+		ORDER BY
+			SORT_ORDR
+	</select>
+	
+	<!-- 공통코드 명 조회 -->
+	<select id="selectComCodName" parameterType="mall.web.domain.TB_COMCODXD" resultType="mall.web.domain.TB_COMCODXD">
+		SELECT
+			COMM_CODE
+			, COMD_CODE
+			, COMDCD_NAME
+			, SORT_ORDR
+			, USE_YN
+			, CODE_EXPN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_COMCODXD
+		WHERE COMM_CODE = #{COMM_CODE}
+			AND COMD_CODE = #{COMD_CODE} 
+			AND USE_YN = 'Y'
+		ORDER BY
+			SORT_ORDR
+	</select>
+	
+	<!-- 현재 접속 메뉴 조회 -->
+	<select id="selectNowMenu" parameterType="mall.web.domain.TB_SYSMNUXM" resultType="mall.web.domain.TB_SYSMNUXM">
+	    /*현재 메뉴(SERVLETPATH를 기준으로 검색)*/
+		SELECT	  A.MENU_CD
+	    		, A.MENU_NAME
+	    		, MENU_URL
+	    		, A.UPPER_MENU_CD
+	    		, A.SORT_ORDR
+	    		, A.MENU_GUBN
+	    		, A.MENU_CSS
+	         	, FC_GET_MENU_PATH(A.MENU_CD, 'CODE') AS MENU_CD_PATH
+	         	, FC_GET_MENU_PATH(A.MENU_CD, 'NAME') AS MENU_NAME_PATH
+	      FROM (
+			SELECT ROWNUM RNUM, A.*
+			FROM (
+				SELECT *
+				FROM (
+					SELECT	LEVEL LVL, A.*
+					FROM (
+						SELECT	  A.*, LENGTH(SUBSTR(MENU_URL, 1, DECODE(INSTR(MENU_URL, '?') - 1, -1, 10000, INSTR(MENU_URL, '?') - 1))) LEN 
+						FROM TB_SYSMNUXM A
+						WHERE MENU_CD IN (
+							SELECT MENU_CD 
+						    FROM TB_SYSGMNXM 
+						    WHERE GROUP_CD IN (SELECT GROUP_CD FROM TB_SYSGUSXM WHERE MEMB_ID = #{MEMB_ID})
+						    UNION
+						    SELECT MENU_CD 
+						    FROM TB_SYSMNUXM
+						  	GROUP BY MENU_CD
+						)
+					) A
+					CONNECT BY PRIOR MENU_CD = UPPER_MENU_CD
+					START WITH UPPER_MENU_CD IS NULL
+				)
+				WHERE MENU_URL LIKE '%' || #{SERVLETPATH} || '%'
+				ORDER BY LEN, LVL DESC, SORT_ORDR, MENU_CD
+			) A
+		) A
+	   WHERE RNUM = 1
+	</select>
+
+	<!-- 사용자 메뉴 조회 -->
+	<select id="selectUserMenuList" parameterType="mall.web.domain.TB_SYSMNUXM" resultType="mall.web.domain.TB_SYSMNUXM">
+		SELECT LEVEL LVL
+	   		, A.MENU_CD
+	   		, A.MENU_NAME
+	   		, MENU_URL
+	   		, A.UPPER_MENU_CD
+	   		, A.SORT_ORDR
+	   		, A.MENU_GUBN
+	   		, A.MENU_CSS
+	   		, CONNECT_BY_ISLEAF LEAF
+		FROM (        
+			SELECT *
+		    FROM TB_SYSMNUXM
+		    WHERE MENU_CD IN (
+				SELECT MENU_CD FROM TB_SYSGMNXM
+		        WHERE GROUP_CD IN (SELECT GROUP_CD FROM TB_SYSGUSXM WHERE MEMB_ID = #{MEMB_ID})
+			)
+		) A
+		CONNECT BY PRIOR MENU_CD = UPPER_MENU_CD 
+		START WITH UPPER_MENU_CD IS NULL
+		ORDER SIBLINGS BY A.SORT_ORDR, A.MENU_CD
+	</select>
+
+	<insert id="insertFileMaster" parameterType="mall.web.domain.TB_COATFLXD">
+		<selectKey keyProperty="ATFL_ID" resultType="string" order="BEFORE">
+			SELECT LPAD(SQ_TB_COATFLXM_01.NEXTVAL, 12,'0') FROM DUAL
+		</selectKey>
+
+		INSERT INTO 
+			TB_COATFLXM (
+				ATFL_ID
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				<if test="UPLOAD_CODE != '' and UPLOAD_CODE != null">
+				, UPLOAD_CODE
+				</if>
+			) VALUES (
+				#{ATFL_ID}
+				, #{REGP_ID}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+				<if test="UPLOAD_CODE != '' and UPLOAD_CODE != null">
+				, #{UPLOAD_CODE}
+				</if>
+			)
+	</insert>
+	
+	
+
+	<insert id="insertFileDetail" parameterType="mall.web.domain.TB_COATFLXD">
+		<selectKey keyProperty="ATFL_SEQ" resultType="string" order="BEFORE">
+			SELECT DECODE (MAX (ATFL_SEQ), NULL, '1', MAX (ATFL_SEQ)+1)               
+			  FROM TB_COATFLXD
+			 WHERE ATFL_ID = #{ATFL_ID}
+		</selectKey>
+
+		INSERT INTO 
+			TB_COATFLXD (
+				ATFL_ID
+				, ATFL_SEQ
+				, STFL_PATH
+				, STFL_NAME
+				, ORFL_NAME
+				, FILE_EXT
+				, FILE_SIZE
+				, DEL_YN
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				, FILEPATH_FLAG
+				<if test="UPLOAD_CODE != '' and UPLOAD_CODE != null">
+				, UPLOAD_CODE
+				</if>
+			) VALUES (
+				#{ATFL_ID}
+				, #{ATFL_SEQ}
+				, #{STFL_PATH}
+				, #{STFL_NAME}
+				, #{ORFL_NAME}
+				, #{FILE_EXT}
+				, #{FILE_SIZE}
+				, 'N'
+				, #{REGP_ID}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+				, #{FILEPATH_FLAG}
+				<if test="UPLOAD_CODE != '' and UPLOAD_CODE != null">
+				, #{UPLOAD_CODE}
+				</if>
+			)
+	</insert>
+
+	<select id="selectFile" parameterType="mall.web.domain.TB_COATFLXD" resultType="mall.web.domain.TB_COATFLXD">
+	   SELECT ATFL_ID, ATFL_SEQ, STFL_PATH, STFL_NAME, ORFL_NAME, FILE_EXT, FILE_SIZE, FILEPATH_FLAG
+	     FROM TB_COATFLXD
+		WHERE ATFL_ID = #{ATFL_ID}
+		  AND ATFL_SEQ = #{ATFL_SEQ}
+		  AND DEL_YN = 'N'
+	</select>
+	
+	<select id="selectFileList" parameterType="mall.web.domain.TB_COATFLXD" resultType="mall.web.domain.TB_COATFLXD">
+	   SELECT ATFL_ID, ATFL_SEQ, STFL_PATH, STFL_NAME, ORFL_NAME, FILE_EXT, FILE_SIZE, FILEPATH_FLAG
+	     FROM TB_COATFLXD
+		WHERE ATFL_ID = #{ATFL_ID}
+		  AND DEL_YN = 'N'
+		ORDER BY ATFL_SEQ
+	</select>
+	
+	<update id="deleteFile" parameterType="mall.web.domain.TB_COATFLXD">
+		UPDATE TB_COATFLXD
+		   SET DEL_YN = 'Y'
+		 WHERE ATFL_ID = #{ATFL_ID}
+		  AND ATFL_SEQ = #{ATFL_SEQ}
+	</update>
+	
+	
+	<!-- 옵션코드 조회 -->
+	<select id="selectOptCodList" parameterType="mall.web.domain.TB_OPTCODXD" resultType="mall.web.domain.TB_OPTCODXD">
+		SELECT
+			OPTM_CODE
+			, OPTD_CODE
+			, OPTDCD_NAME
+			, SORT_ORDR
+			, USE_YN
+			, OPT_EXPN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_OPTCODXD
+		WHERE OPTM_CODE = #{OPTM_CODE}
+		ORDER BY
+			SORT_ORDR
+	</select>
+	
+	<!-- <select id="authGroupCheck" parameterType="mall.web.domain.TB_MBINFOXM" resultType="mall.web.domain.TB_SYSGUSXM">				
+		SELECT GROUP_CD
+		     , MEMB_ID
+		FROM TB_SYSGUSXM
+		WHERE MEMB_ID = #{MEMB_ID}
+	</select>
+	 -->
+	
+	<!-- SUPMEM_APST에서 권한을 요청해서 Y를 받으면 관리자가 GROUP_CD를 부여해주고 로그인이 되는 절차 -->
+	<select id="authGroupCheck" parameterType="mall.web.domain.TB_MBINFOXM" resultType="mall.web.domain.TB_SYSGUSXM">				
+		SELECT C.GROUP_CD
+            , A.MEMB_ID
+            , A.SUPMEM_APST 
+		FROM TB_MBINFOXM A LEFT OUTER JOIN TB_SPINFOXM B ON A.SUPR_ID  = B.SUPR_ID
+              			   LEFT OUTER JOIN TB_SYSGUSXM C ON A.MEMB_ID = C.MEMB_ID 
+		WHERE A.MEMB_ID  = #{MEMB_ID}
+		AND  A.MEMB_GUBN IN ('MEMB_GUBN_03','MEMB_GUBN_04')
+		AND  DECODE(A.MEMB_GUBN,'MEMB_GUBN_03','Y',B.USE_YN)  ='Y'
+		AND  A.SUPMEM_APST  ='SUPMEM_APST_03'
+	</select>
+</mapper>

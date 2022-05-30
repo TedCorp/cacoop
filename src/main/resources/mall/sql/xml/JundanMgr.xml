@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- <if test="@org.apache.commons.lang.StringUtils@isNotBlank(PD_NAME)"> -->
+
+<mapper namespace="mall.web.mapper.admin.JundanMgrMapper">
+	<sql id="searchCondition">
+		<where>	
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(schTxt)">
+				JD_NAME LIKE '%' || #{schTxt} || '%'
+			</if>
+			<if test="JD_NAME != null and JD_NAME != '' and JD_NAME != ' ' ">
+			    AND JD_NAME = #{JD_NAME}
+			</if>
+			AND DEL_YN = 'N'
+			AND REGP_ID = #{REGP_ID}
+		</where>  
+	</sql>
+	
+	<sql id="makeJdId">
+		 SELECT 'JD' || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(JD_ID, 3))), 0) + 1, 4, '0') FROM TB_JDINFOXM
+	</sql>
+	
+	<select id="count" parameterType="mall.web.domain.TB_JDINFOXM" resultType="int">
+		 SELECT COUNT(*)
+		 FROM TB_JDINFOXM
+		<include refid="searchCondition"/>
+	</select>
+	
+	<select id="paginatedList" parameterType="mall.web.domain.TB_JDINFOXM" resultType="mall.web.domain.TB_JDINFOXM">
+		<include refid="default.pagerHeader"/>	
+			  SELECT *
+			  FROM (
+					SELECT
+						  JD_ID
+						, JD_NAME
+						, START_DT
+						, END_DT
+						, JD_DESC
+						, TOP_ATFL
+						, DEL_YN
+						, JD_GUBN
+						, END_YN
+						, REGP_ID
+						, REG_DTM
+						, MODP_ID
+						, MOD_DTM
+						, JD_FL1
+						, JD_FL2
+						, JD_FL3
+						, JD_FL4
+					FROM TB_JDINFOXM
+					ORDER BY JD_ID desc
+			        )
+			<include refid="searchCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<select id="selectList" parameterType="mall.web.domain.TB_JDINFOXM" resultType="mall.web.domain.TB_JDINFOXM">  <!-- 팝업창 광고목록 -->
+			  SELECT *
+			  FROM (
+					SELECT
+						  JD_ID
+						, JD_NAME
+						, START_DT
+						, END_DT
+						, JD_DESC
+						, TOP_ATFL
+						, DEL_YN
+						, JD_GUBN
+						, END_YN
+						, REGP_ID
+						, REG_DTM
+						, MODP_ID
+						, MOD_DTM
+						, JD_FL1
+						, JD_FL2
+						, JD_FL3
+						, JD_FL4
+					FROM TB_JDINFOXM
+					ORDER BY JD_ID ASC
+			<include refid="searchCondition"/>
+	</select>
+	
+	<select id="find" parameterType="mall.web.domain.TB_JDINFOXM" resultType="mall.web.domain.TB_JDINFOXM">
+			SELECT
+				  JD_ID
+				, JD_NAME
+				, START_DT
+				, END_DT
+				, JD_DESC
+				, TOP_ATFL
+				, ATFL_ID
+				, JD_GUBN
+				, END_YN
+				, DEL_YN
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				, JD_FL1
+				, JD_FL2
+				, JD_FL3
+				, JD_FL4
+			FROM
+				TB_JDINFOXM
+			WHERE
+				JD_ID = #{JD_ID}
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_JDINFOXM">
+		<selectKey keyProperty="JD_ID" order="BEFORE" resultType="String">
+			<include refid="makeJdId" />
+		</selectKey>
+		  INSERT INTO
+			TB_JDINFOXM (
+				  JD_ID
+				, JD_NAME
+				, START_DT
+				, END_DT
+				, JD_DESC
+				, TOP_ATFL
+				, ATFL_ID
+				, END_YN
+				, JD_GUBN
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				, JD_FL1
+				, JD_FL2
+				, JD_FL3
+				, JD_FL4
+			) VALUES (
+				  #{JD_ID}
+				, #{JD_NAME}
+				, #{START_DT}
+				, #{END_DT}
+				, #{JD_DESC}
+				, #{TOP_ATFL}
+				, #{ATFL_ID}
+				, #{END_YN}
+				, #{JD_GUBN}
+				, #{REGP_ID} 
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+				, #{JD_FL1}
+				, #{JD_FL2}
+				, #{JD_FL3}
+				, #{JD_FL4}
+			)
+	</insert>
+	
+	<update id="update" parameterType="mall.web.domain.TB_JDINFOXM">
+		UPDATE
+			TB_JDINFOXM
+		SET
+			  JD_NAME = #{JD_NAME}
+			, START_DT = #{START_DT}
+			, END_DT = #{END_DT}
+			, JD_DESC = #{JD_DESC}
+			, TOP_ATFL = #{TOP_ATFL}
+			, ATFL_ID = #{ATFL_ID}
+			, END_YN = #{END_YN}
+			, JD_GUBN = #{JD_GUBN}
+			, MODP_ID = #{REGP_ID}
+			, MOD_DTM = sysdate
+			, JD_FL1 = #{JD_FL1}
+			, JD_FL2 = #{JD_FL2}
+			, JD_FL3 = #{JD_FL3}
+			, JD_FL4 = #{JD_FL4}
+		WHERE
+			JD_ID = #{JD_ID}
+	</update>	 
+	
+	<update id="delete" parameterType="mall.web.domain.TB_JDINFOXM">
+		UPDATE
+			TB_JDINFOXM
+		SET
+			DEL_YN = 'Y'
+			, MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+		WHERE
+			JD_ID = #{JD_ID}
+	</update>	 
+	
+	<insert id="copyJdInsert" parameterType="mall.web.domain.TB_JDINFOXM">
+		<selectKey keyProperty="JD_ID_NEW" order="BEFORE" resultType="String">
+			<include refid="makeJdId" />
+		</selectKey>
+		
+	     INSERT INTO
+            TB_JDINFOXM (
+                  JD_ID
+                , JD_NAME
+                , START_DT
+                , END_DT
+                , JD_DESC
+                , TOP_ATFL
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+            ) SELECT 
+                 #{JD_ID_NEW}
+                , JD_NAME
+                , START_DT
+                , END_DT
+                , JD_DESC
+                , TOP_ATFL
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM   
+              FROM 
+              	TB_JDINFOXM
+              WHERE 
+              	JD_ID = #{JD_ID}
+	</insert>
+	
+	<select id="selectLog" parameterType="mall.web.domain.TB_JDINFOXM" resultType="mall.web.domain.TB_JDINFOXM">
+		  SELECT AD_ID, LOG_DTM, COUNT(*) LOG_CNT
+		  FROM (
+		        SELECT AD_ID, TO_CHAR(LOG_DTM, 'YYYY-MM-DD') LOG_DTM, LOG_OS 
+		          FROM TB_ADLOGSXM
+		         WHERE AD_ID = #{AD_ID}
+		       )
+		 GROUP BY AD_ID, LOG_DTM
+		 ORDER BY LOG_DTM
+	</select>
+	
+</mapper>

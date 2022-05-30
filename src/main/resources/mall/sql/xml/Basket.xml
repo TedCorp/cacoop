@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.mall.BasketMapper">
+	
+	<select id="list" parameterType="mall.web.domain.TB_BKINFOXM" resultType="mall.web.domain.TB_BKINFOXM">
+			SELECT	  BSKT_REGNO										/*장바구니 등록번호*/
+					, PD_CODE												/*제품코드*/
+					, SETPD_CODE											/*묶음제품코드*/
+					, SUPR_ID
+					, CASE
+							WHEN OPTION2_NAME IS NOT NULL THEN PD_NAME || ' (' || OPTION1_NAME || ':' || OPTION1_VALUE || ' ' || OPTION2_NAME || ':' || OPTION2_VALUE || ')'
+							WHEN OPTION1_NAME IS NOT NULL THEN PD_NAME || ' (' || OPTION1_NAME || ':' || OPTION1_VALUE || ')'
+							ELSE PD_NAME
+					  END PD_NAME										/* 제품명 */
+					, PD_QTY												/* 수량 */
+					, MEMB_ID												/* 회원아이디 */
+					, ATFL_ID												/* 첨부파일 아이디 */
+					, RPIMG_SEQ											/* 대표이미지 SEQ */
+					, QNT_LIMT_USE										/* 지정수량 사용여부 */
+					, SALE_CON											/* 판매상태 */
+					, SALE_CON_NM										
+					, DEL_YN												/* 삭제여부 */
+					, LIMT_PD_QTY										/* 지정수량 */
+					, PD_CUT_SEQ										/* 유효한 세절방식 */
+					, OPTION_CODE										/* 옵션 */
+					, BOX_PDDC_GUBN									/* 박스할인구분 */
+					, BOX_PDDC_VAL										/* 박스할인 값 */
+					, INPUT_CNT											/* 입수량 */
+					, STFL_PATH											/* 스토리지 경로 */
+					, STFL_NAME											/* 스토리지 명 */
+					, FILEPATH_FLAG										/* 파일관리자 구분 */
+					, DLVY_GUBN											/* 배송구분 */
+					, INVEN_QTY											/* 재고수량 */
+					, LIMIT_QTY											/* 한정수량 */
+					, OPTION1_NAME
+	             	, OPTION1_VALUE
+	             	, OPTION2_NAME
+	             	, OPTION2_VALUE
+	             	, OPTION3_NAME
+	             	, OPTION3_VALUE
+	             	, DLVY_AMT 
+		            , DLVA_FCON 
+		            , PD_PRICE
+		            , EXTRA_YN
+		            , DLVR_INDI_YN										/* 개별배송 유무 */
+		            , DLVY_SORT											/* 묶음배송 적용방식 */
+		FROM ( 
+			SELECT 	  A.BSKT_REGNO
+						, A.PD_CODE
+						, A.SETPD_CODE									
+						, B.PD_NAME
+						, A.PD_QTY
+						, B.SUPR_ID
+						, A.PD_PRICE 
+						, A.MEMB_ID
+						, B.ATFL_ID
+						, B.RPIMG_SEQ
+						, B.QNT_LIMT_USE
+						, B.SALE_CON
+						, (SELECT FC_GET_COMCOD_NM(B.SALE_CON) FROM DUAL) AS SALE_CON_NM
+						, B.DEL_YN
+						, DECODE(
+								B.QNT_LIMT_USE, 'Y',
+								(SELECT COMD_CODE FROM TB_COMCODXD WHERE COMDCD_NAME = A.PD_QTY AND COMM_CODE = 'QNT_LIMT')
+								,A.PD_QTY
+						  ) AS LIMT_PD_QTY
+						, T.CUT_UNIT AS PD_CUT_SEQ
+						, T.USE_YN
+						, NVL( (SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = A.OPTION_CODE ),
+								 (SELECT OPTDCD_NAME FROM TB_OPTCODXD M, TB_PDINFOXM N  WHERE M.OPTD_CODE = A.OPTION_CODE AND N.PD_CODE = A.PD_CODE AND M.OPTM_CODE = N.OPTION_GUBN)
+						  ) AS OPTION_CODE
+						, BOX_PDDC_GUBN
+						, BOX_PDDC_VAL
+						, C.STFL_PATH
+						, C.STFL_NAME
+						, C.FILEPATH_FLAG
+						, (SELECT FC_GET_COMCOD_NM(B.DLVY_GUBN) FROM DUAL) AS DLVY_GUBN
+						, B.INPUT_CNT
+		                , B.INVEN_QTY
+		                , B.LIMIT_QTY
+		                , B.PDDC_GUBN
+		                , B.PDDC_VAL
+		                , A.OPTION1_NAME
+		             	, A.OPTION1_VALUE
+		             	, A.OPTION2_NAME
+		             	, A.OPTION2_VALUE
+		             	, A.OPTION3_NAME
+		             	, A.OPTION3_VALUE
+		             	, A.DLVY_AMT 
+		             	, S.DLVA_FCON 
+		             	, A.EXTRA_YN
+		             	, B.DLVR_INDI_YN
+		            	, B.DLVY_SORT
+			FROM TB_BKINFOXM A
+			INNER JOIN TB_PDINFOXM B
+				ON A.PD_CODE = B.PD_CODE
+				AND DEL_YN = 'N'
+			LEFT JOIN TB_PDCUTXM T
+			    ON B.PD_CODE = T.PD_CODE
+			    AND A.PD_CUT_SEQ = T.SEQ
+			    AND T.USE_YN = 'Y'
+			LEFT JOIN TB_COATFLXD C
+				ON B.ATFL_ID = C.ATFL_ID
+				AND B.RPIMG_SEQ = C.ATFL_SEQ
+			LEFT JOIN TB_SPINFOXM S 
+				ON B.SUPR_ID =S.SUPR_ID 
+			WHERE
+				A.MEMB_ID = #{REGP_ID}
+		)
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_BKINFOXM">
+		INSERT INTO TB_IPINFOXM (
+			INTPD_REGNO,
+			PD_CODE,
+			INTPD_REGDT,
+			MEMB_ID,
+			PD_NAME,
+			PD_QTY,
+			PD_PRICE,
+			OCCUR_SVMN,
+			REGP_ID,
+			REG_DTM,
+			MODP_ID,
+			MOD_DTM,
+			PD_CUT_SEQ,
+			OPTION_CODE
+		)
+		SELECT 
+			((SELECT NVL(MAX(TO_NUMBER(INTPD_REGNO))+1,1) FROM TB_IPINFOXM)),
+			PD_CODE,
+			SYSDATE,
+			MEMB_ID,
+			PD_NAME,
+			PD_QTY,
+			PD_PRICE,
+			OCCUR_SVMN,
+			REGP_ID,
+			REG_DTM,
+			MODP_ID,
+			MOD_DTM,
+			PD_CUT_SEQ,
+			OPTION_CODE
+		FROM TB_BKINFOXM
+		WHERE
+			BSKT_REGNO = #{BSKT_REGNO}
+	</insert>	
+		
+	<delete id="delete" parameterType="mall.web.domain.TB_BKINFOXM">
+		/*장바구니*/
+		DELETE 
+		FROM
+			TB_BKINFOXM
+		WHERE
+			BSKT_REGNO IN (#{BSKT_REGNO})
+	</delete>
+	
+	<update id="update" parameterType="mall.web.domain.TB_BKINFOXM">
+		UPDATE
+			TB_BKINFOXM
+		SET
+			PD_QTY = #{PD_QTY}
+		WHERE
+			BSKT_REGNO = #{BSKT_REGNO}
+	</update>
+	
+	<select id="excelList" parameterType="mall.web.domain.TB_BKINFOXM" resultType="HashMap">
+		SELECT 	  A.BSKT_REGNO					/*장바구니 등록번호*/
+					, A.PD_CODE     					/*제품코드*/
+					, B.PD_BARCD						/*제품바코드*/
+					, B.PD_NAME     					/*제품명*/
+					, A.PD_QTY							/*제품수량*/
+					, CASE 	WHEN B.PDDC_GUBN = 'PDDC_GUBN_02' THEN B.PD_PRICE - B.PDDC_VAL
+								WHEN B.PDDC_GUBN = 'PDDC_GUBN_03' THEN B.PD_PRICE - (B.PD_PRICE* B.PDDC_VAL/100)
+								ELSE B.PD_PRICE
+					  END REAL_PRICE				/*실제 제품값*/
+					, B.QNT_LIMT_USE 				/*수량개수 사용제한*/
+					, B.STD_UNIT
+					, FC_GET_COMCOD_NM(B.SALE_CON) AS SALE_CON						/*판매상태*/					
+					, DECODE(B.QNT_LIMT_USE, 'Y'
+								,(SELECT COMD_CODE FROM TB_COMCODXD WHERE COMDCD_NAME = A.PD_QTY AND COMM_CODE = 'QNT_LIMT')
+								,A.PD_QTY) LIMT_PD_QTY      /*수량제한*/
+					, (SELECT CUT_UNIT FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE AND SEQ = A.PD_CUT_SEQ ) PD_CUT_SEQ
+					, NVL ( (SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = A.OPTION_CODE ),
+							(SELECT OPTDCD_NAME FROM TB_OPTCODXD M, TB_PDINFOXM N  WHERE M.OPTD_CODE = A.OPTION_CODE AND N.PD_CODE = A.PD_CODE AND M.OPTM_CODE = N.OPTION_GUBN) ) AS OPTION_NAME
+					, FC_GET_COMCOD_NM(BOX_PDDC_GUBN) AS BOX_PDDC_GUBN
+					, BOX_PDDC_VAL
+					, INPUT_CNT
+					, FC_GET_COMCOD_NM(TAX_GUBN) AS TAX_GUBN
+		            , CASE      WHEN B.PDDC_GUBN = 'PDDC_GUBN_02' THEN (B.PD_PRICE - B.PDDC_VAL) * A.PD_QTY
+		                        WHEN B.PDDC_GUBN = 'PDDC_GUBN_03' THEN (B.PD_PRICE - (B.PD_PRICE * B.PDDC_VAL/100)) * A.PD_QTY
+		                        ELSE B.PD_PRICE  * A.PD_QTY
+		              END ALL_PRICE            				/*소계*/
+		            , '배송비별도' AS RELATE
+				FROM TB_BKINFOXM A						/*장바구니*/
+				INNER JOIN TB_PDINFOXM B 			/*상품정보*/
+					ON A.PD_CODE = B.PD_CODE
+				WHERE  A.MEMB_ID = #{REGP_ID}
+	</select>
+	
+	<!-- 견적서 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.Deliverys" resultType="mall.web.domain.Deliverys">
+		SELECT	B.BSKT_REGNO
+					, A.MEMB_ID
+					, CASE WHEN A.MEMB_GUBN = 'MEMB_GUBN_02' THEN A.COM_NAME
+							  ELSE A.MEMB_NAME
+					  END RECV_PERS
+					, A.MEMB_MAIL
+					, A.COM_BUNB
+					, A.COM_TELN
+					, B.PD_CODE
+					, B.PD_QTY AS ORDER_QTY
+					, C.PD_BARCD
+					, C.PD_NAME
+					, C.PD_STD
+					, C.STD_UNIT
+					, (SELECT FC_GET_COMCOD_NM(C.KEEP_GUBN) FROM DUAL) AS KEEP_GUBN
+					, (SELECT FC_GET_COMCOD_NM(C.PACKING_GUBN) FROM DUAL) AS PACKING_GUBN
+					, CASE
+							WHEN C.PDDC_GUBN = 'PDDC_GUBN_02' THEN C.PD_PRICE - C.PDDC_VAL
+							WHEN C.PDDC_GUBN = 'PDDC_GUBN_03' THEN C.PD_PRICE - (C.PD_PRICE * (C.PDDC_VAL / 100))
+							ELSE C.PD_PRICE
+					  END REAL_PRICE
+					, C.PD_PRICE
+					, A.KEEP_LOCATION
+					, A.ADM_REF
+					, NVL( (SELECT '(세절방식: '|| NVL(CUT_UNIT, '') ||')' FROM TB_PDCUTXM G 
+					        WHERE G.PD_CODE =  B.PD_CODE AND G.SEQ = B.PD_CUT_SEQ),''
+					) AS CUT_UNIT
+					, (SELECT FC_GET_COMCOD_NM(B.OPTION_CODE) FROM DUAL) AS OPTION_NAME
+		FROM TB_MBINFOXM A
+		INNER JOIN TB_BKINFOXM B
+		    ON A.MEMB_ID = B.MEMB_ID
+		    AND B.BSKT_REGNO IN
+		    <foreach collection="list" item="item" separator="," open="(" close=")" >
+				#{item}
+			</foreach>
+		INNER JOIN TB_PDINFOXM C
+		    ON B.PD_CODE = C.PD_CODE
+		ORDER BY BSKT_REGNO
+	</select>
+	
+	<!-- 장바구니 배송비 계산 - 이유리 -->
+	<select id="SuprDlvyAmt" parameterType="mall.web.domain.TB_BKINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT B.SUPR_ID
+		     , A.DLVR_INDI_YN
+		     , A.DLVY_SORT
+		     , count(B.SUPR_ID) AS CNT
+		     , sum(C.DLVY_AMT) AS SUPR_AMT
+		     , CASE A.DLVY_SORT WHEN 'PRICE_DESC' THEN MAX(C.DLVY_AMT) ELSE MIN(C.DLVY_AMT) END AS DLVY_AMT
+	    FROM TB_PDINFOXM A, TB_SPINFOXM B, TB_BKINFOXM C
+	   	WHERE A.SUPR_ID = B.SUPR_ID
+		  AND A.PD_CODE = C.PD_CODE
+		  AND A.PD_CODE = C.SETPD_CODE
+		  AND C.MEMB_ID = #{REGP_ID}
+	   GROUP BY B.SUPR_ID, A.DLVR_INDI_YN, A.DLVY_SORT
+	</select>
+	
+	<!-- 헤당 상품 개수&총합 - 이유리  -->
+	<select id="selectBkinInfo" parameterType="mall.web.domain.TB_BKINFOXM" resultType="mall.web.domain.TB_BKINFOXM">
+		SELECT sum(PD_QTY) AS PD_QTY
+		 	  , sum(PD_PRICE * PD_QTY) AS PD_PRICE
+		 FROM(   SELECT *
+			     FROM TB_BKINFOXM
+			     WHERE SETPD_CODE = #{SETPD_CODE}
+				 AND MEMB_ID = #{REGP_ID})
+	</select>
+	
+	<!-- 배송비 업데이트  - 이유리 -->
+	<update id="updateDlvyAmt" parameterType="mall.web.domain.TB_BKINFOXM">
+	 UPDATE
+			TB_BKINFOXM
+		SET
+			DLVY_AMT = #{DLVY_AMT}
+	  WHERE
+			SETPD_CODE = #{SETPD_CODE}
+		AND
+		    MEMB_ID = #{REGP_ID}
+	</update>
+</mapper>

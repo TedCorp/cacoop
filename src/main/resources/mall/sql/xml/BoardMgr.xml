@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.BoardMgrMapper">
+	<!-- 공통 WHERE 조건절 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test='schGbn == "WRTR_ID"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_ID LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "WRTR_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test='schGbn == "PD_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND PD_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test="PD_CODE != null and PD_CODE != ''">
+			    AND PD_CODE = #{PD_CODE}
+			</if>
+			<if test="REPLY_YN != null and REPLY_YN != ''">
+			    AND REPLY_YN = #{REPLY_YN}
+			</if>	
+			<if test="PD_PTS != null and PD_PTS != ''">
+			    AND PD_PTS = #{PD_PTS}
+			</if>	
+			<if test="schCago != null and schCago != ''">
+			    AND CAGO_ID IN (	SELECT CAGO_ID FROM TB_PDCAGOXM
+											WHERE USE_YN ='Y' AND DEL_YN = 'N'
+											START WITH CAGO_ID=#{schCago}
+											CONNECT BY PRIOR CAGO_ID = UPCAGO_ID )
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 공통 ORDER BY 조건절 -->
+	<sql id="orderByCondition">
+		<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+			<if test='ORDER_GUBUN == "WRTR_ORDER"'>
+				<if test='WRTR_ORDER == "desc"'>
+					ORDER BY WRT_DTM desc, BRD_NUM desc
+				</if>	
+				<if test='WRTR_ORDER == "asc"'>
+					ORDER BY WRT_DTM asc, BRD_NUM asc
+				</if>	
+			</if>
+			<if test='ORDER_GUBUN == "REPLY_ORDER"'>
+				<if test='REPLY_ORDER == "desc"'>
+					ORDER BY REPLY_DTM desc, MOD_DTM desc
+				</if>	
+				<if test='REPLY_ORDER == "asc"'>
+					ORDER BY REPLY_DTM asc, MOD_DTM asc
+				</if>
+			</if>
+			<if test='ORDER_GUBUN == "PD_NAME_ORDER"'>
+				<if test='REPLY_ORDER == "desc"'>
+					ORDER BY PD_NAME desc
+				</if>	
+				<if test='REPLY_ORDER == "asc"'>
+					ORDER BY PD_NAME asc
+				</if>
+			</if>
+		</if>
+		<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+			ORDER BY WRT_DTM desc, BRD_NUM desc
+		</if>
+	</sql>
+	
+	<!-- 게시글 카운트 -->
+	<select id="count" parameterType="mall.web.domain.TB_PDBORDXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT A.BRD_NUM																/*게시글 번호*/
+		             , A.BRD_GUBN															/*게시글 구분*/
+		             , A.PD_CODE															/*제품코드*/
+		             , A.BRD_SBJT															/*게시글 제목*/
+		             , A.BRD_CONT															/*게시글 내용*/
+		             , A.PD_PTS																/*상품 별점*/
+		             , A.BRD_HITS															/*게시글 조회수*/
+		             , A.WRTR_ID															/*작성자ID*/
+		             , A.SCWT_YN															/*비밀글여부*/
+		             , A.BRD_PW																/*게시글 비밀번호*/
+		             , A.QNA_REPLY															/*QNA답변*/
+		             , A.REP_ID																/*답변자ID*/
+		             , DECODE(REP_ID, NULL, 'N', 'Y') AS REPLY_YN							/*답변여부*/
+			FROM TB_PDBORDXM A LEFT OUTER JOIN TB_PDINFOXM B ON A.PD_CODE = B.PD_CODE 
+			WHERE A.BRD_GUBN = #{BRD_GUBN}
+			<if test="MEMB_ID != 'admin'">
+			AND B.SUPR_ID  IN (SELECT SUPR_ID FROM TB_MBINFOXM WHERE MEMB_ID=#{MEMB_ID})
+			</if>
+			AND A.DEL_YN = 'N'
+		)
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 게시글 페이징 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+					SELECT A.BRD_NUM                                                                        /*게시글 번호*/
+	                   , A.BRD_GUBN                                                                        /*게시글 구분*/                    
+	                  , A.PD_CODE                                                                        /*제품코드*/
+	                  , FC_GET_PD_NM(A.PD_CODE) AS PD_NAME                  /*제품명*/
+	                  , A.BRD_SBJT                                                                        /*게시글 제목*/
+	                  , A.BRD_CONT                                                                        /*게시글 내용*/
+	                  , A.PD_PTS                                                                           /*상품 별점*/
+	                  , A.BRD_HITS                                                                        /*게시글 조회수*/
+	                  , A.WRTR_ID                                                                        /*작성자ID*/
+	                  , FC_GET_MEMBID_NM(A.WRTR_ID) AS WRTR_NM            /*작성자ID명*/
+	                  , TO_CHAR(A.WRT_DTM, 'yyyy-MM-dd') AS WRT_DTM                                 /*작성일시*/
+	                  , A.SCWT_YN                                                                        /*비밀글여부*/
+	                  , A.BRD_PW                                                                           /*게시글 비밀번호*/
+	                  , A.QNA_REPLY                                                                        /*QNA답변*/
+	                  , DECODE(A.REPLY_DTM, NULL, 'N', 'Y') AS REPLY_YN                                    /*답변여부*/
+	                  , A.REP_ID                                                                           /*답변자ID*/
+	                  , FC_GET_MEMBID_NM(A.REP_ID) AS REP_NM                  /*답변자ID명*/
+	                  , TO_CHAR(REPLY_DTM, 'yyyy-MM-dd') AS REPLY_DTM                              /*답변일시*/ 
+	                  , FC_GET_COMCOD_NM(A.BRD_GUBN) AS BRD_GUBN_NM      /*게시글 구분명*/
+	                  , A.REGP_ID                                                                           /*최초등록자*/
+	                  , A.REG_DTM                                                                        /*최초등록일*/
+	                  , A.MODP_ID                                                                           /*수정자*/
+	                  , A.MOD_DTM                                                                        /*수정일시*/
+	                  , A.ORDER_NUM                                     
+	                  , B.SUPR_ID 
+	            FROM TB_PDBORDXM A LEFT OUTER JOIN TB_PDINFOXM B ON A.PD_CODE = B.PD_CODE 
+	            WHERE A.BRD_GUBN = #{BRD_GUBN}
+	            AND A.DEL_YN = 'N'
+	            <if test="MEMB_GUBN != 'MEMB_GUBN_03'">
+	            AND B.SUPR_ID  IN (SELECT SUPR_ID FROM TB_MBINFOXM WHERE MEMB_ID=#{MEMB_ID})
+	            </if>
+			)
+			<include refid="searchCondition"/>
+			<include refid="orderByCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 게시글 상세화면 -->
+	<select id="find" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		SELECT BRD_NUM																								/*게시글 번호*/
+			     , BRD_GUBN																								/*게시글 구분*/
+			     , PD_CODE																								/*제품코드*/
+		     	 , (SELECT FC_GET_PD_NM(PD_CODE) FROM DUAL) AS PD_NAME						/*제품명*/
+			     , BRD_SBJT																								/*게시글 제목*/
+			     , BRD_CONT																								/*게시글 내용*/
+			     , PD_PTS																									/*상품 별점*/
+			     , BRD_HITS																								/*게시글 조회수*/
+			     , WRTR_ID																								/*작성자ID*/
+			     , (SELECT FC_GET_MEMBID_NM(WRTR_ID) FROM DUAL) AS WRTR_NM				/*작성자ID명*/
+			     , TO_CHAR(WRT_DTM, 'yyyy-MM-dd HH:mm:ss') AS WRT_DTM							/*작성일시*/
+			     , SCWT_YN																								/*비밀글여부*/
+			     , BRD_PW																									/*게시글 비밀번호*/
+			     , QNA_REPLY																								/*QNA답변*/
+			     , DECODE(REP_ID, NULL, 'N', 'Y') AS REPLY_YN												/*답변여부*/
+			     , REP_ID																									/*답변자ID*/
+			     , (SELECT FC_GET_MEMBID_NM(REP_ID) FROM DUAL) AS REP_NM						/*답변자ID명*/
+			     , TO_CHAR(REPLY_DTM, 'yyyy-MM-dd HH:mm:ss') AS REPLY_DTM						/*답변일시*/
+			     , (SELECT FC_GET_COMCOD_NM(BRD_GUBN) FROM DUAL) AS BRD_GUBN_NM		/*게시글 구분명*/
+			     , REGP_ID																									/*최초등록자*/
+			     , REG_DTM																								/*최초등록일*/
+			     , MODP_ID																									/*수정자*/
+			     , MOD_DTM																								/*수정일시*/
+			     , ORDER_NUM
+			FROM TB_PDBORDXM
+			WHERE BRD_NUM = #{BRD_NUM} 
+				AND BRD_GUBN = #{BRD_GUBN}
+	</select>
+	
+	<!-- 답변 등록 -->
+	<update id="update" parameterType="mall.web.domain.TB_PDBORDXM">
+		UPDATE
+			TB_PDBORDXM
+		SET
+			 QNA_REPLY = #{QNA_REPLY}
+			,REP_ID = #{REP_ID}
+			,REPLY_DTM = SYSDATE
+		WHERE BRD_NUM = #{BRD_NUM} 
+			AND BRD_GUBN = #{BRD_GUBN}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<update id="delete" parameterType="mall.web.domain.TB_PDBORDXM">
+		UPDATE
+			TB_PDBORDXM
+		SET
+			 DEL_YN = 'Y'
+			,MODP_ID = #{REP_ID}
+			,MOD_DTM = SYSDATE
+		WHERE BRD_NUM = #{BRD_NUM} 
+			AND BRD_GUBN = #{BRD_GUBN}
+	</update>
+	
+	<!--공지사항 & 자주묻는질문 등록 -->
+	<update id="insert" parameterType="mall.web.domain.TB_PDBORDXM">
+		MERGE INTO TB_PDBORDXM
+			USING DUAL ON (BRD_GUBN = #{BRD_GUBN} AND BRD_NUM = #{BRD_NUM})
+		
+		WHEN MATCHED THEN
+			UPDATE SET
+				  BRD_SBJT = #{BRD_SBJT}
+				, BRD_CONT = #{BRD_CONT}
+				, WRTR_ID = #{WRTR_ID}
+				, WRT_DTM = SYSDATE
+				
+		WHEN NOT MATCHED THEN
+			INSERT (
+				  BRD_NUM
+				, BRD_GUBN 
+				, BRD_SBJT
+				, BRD_CONT
+				, WRTR_ID
+				, WRT_DTM
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+            ) VALUES (
+			      (SELECT NVL(MAX(TO_NUMBER(BRD_NUM))+1,1) FROM TB_PDBORDXM)
+				, #{BRD_GUBN} 
+			    , #{BRD_SBJT}
+			    , #{BRD_CONT}
+			    , #{WRTR_ID}
+			    , SYSDATE
+                , #{WRTR_ID}
+                , SYSDATE
+                , #{WRTR_ID}
+                , SYSDATE
+			)
+	</update>
+	
+	
+	
+	
+	<!-- 타입01(1:1문의) 공통 where 조건 -->
+	<sql id="searchCondition01">
+		<where>	
+			<if test='schGbn == "WRTR_ID"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_ID LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "WRTR_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>			
+			<if test="REPLY_YN != null and REPLY_YN != ''">
+			    AND REPLY_YN = #{REPLY_YN}
+			</if>	
+		</where>  
+	</sql>	
+	
+	<!-- 타입01(1:1문의) 카운트 -->
+	<select id="count01" parameterType="mall.web.domain.TB_PDBORDXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT BRD_NUM   /*게시글 번호*/
+				     , BRD_GUBN  /*게시글 구분*/
+				     , PD_CODE	 /*제품코드*/
+				     , BRD_SBJT  /*게시글 제목*/
+				     , BRD_CONT  /*게시글 내용*/
+				     , PD_PTS    /*상품 별점*/
+				     , BRD_HITS  /*게시글 조회수*/
+				     , WRTR_ID   /*작성자ID*/
+				     , SCWT_YN   /*비밀글여부*/
+				     , BRD_PW    /*게시글 비밀번호*/
+				     , QNA_REPLY /*QNA답변*/
+				     , REP_ID 	 /*답변자ID*/
+			FROM TB_PDBORDXM
+			WHERE BRD_GUBN = #{BRD_GUBN}
+				AND DEL_YN = 'N'
+		)
+		<include refid="searchCondition01"/>
+	</select>
+	
+	<!-- 타입01(1:1문의) 페이징 목록 -->
+	<select id="paginatedList01" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+				SELECT BRD_NUM																			/*게시글 번호*/
+					     , BRD_GUBN																			/*게시글 구분*/
+					     , PD_CODE																			/*제품코드*/
+				     	 , FC_GET_PD_NM(PD_CODE) AS PD_NAME									/*제품명*/
+					     , BRD_SBJT																			/*게시글 제목*/
+					     , BRD_CONT																			/*게시글 내용*/
+					     , PD_PTS																				/*상품 별점*/
+					     , BRD_HITS																			/*게시글 조회수*/
+					     , WRTR_ID																			/*작성자ID*/
+					     , FC_GET_MEMBID_NM(WRTR_ID) AS WRTR_NM							/*작성자ID명*/
+					     , TO_CHAR(WRT_DTM, 'yyyy-MM-dd') AS WRT_DTM						/*작성일시*/
+					     , SCWT_YN																			/*비밀글여부*/
+					     , BRD_PW																				/*게시글 비밀번호*/
+					     , QNA_REPLY																			/*QNA답변*/
+					     , DECODE(REP_ID, NULL, 'N', 'Y') AS REPLY_YN							/*답변여부*/
+					     , REP_ID																				/*답변자ID*/
+					     , FC_GET_MEMBID_NM(REP_ID) AS REP_NM								/*답변자ID명*/
+					     , TO_CHAR(REPLY_DTM, 'yyyy-MM-dd') AS REPLY_DTM					/*답변일시*/ 
+					     , REGP_ID																				/*최초등록자*/
+					     , REG_DTM																			/*최초등록일*/
+					     , MODP_ID																				/*수정자*/
+					     , MOD_DTM																			/*수정일시*/
+				FROM TB_PDBORDXM
+				WHERE BRD_GUBN = #{BRD_GUBN}
+					AND DEL_YN = 'N'
+			)
+			<include refid="searchCondition01"/>
+			<include refid="orderByCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 타입01(1:1문의) 상세화면 -->
+	<select id="find01" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		SELECT BRD_NUM																				/*게시글 번호*/
+			     , BRD_GUBN																				/*게시글 구분*/
+			     , PD_CODE																				/*제품코드*/
+		     	 , FC_GET_PD_NM(PD_CODE) AS PD_NAME										/*제품명*/
+			     , BRD_SBJT																				/*게시글 제목*/
+			     , BRD_CONT																				/*게시글 내용*/
+			     , PD_PTS																					/*상품 별점*/
+			     , BRD_HITS																				/*게시글 조회수*/
+			     , WRTR_ID																				/*작성자ID*/
+			     , FC_GET_MEMBID_NM(WRTR_ID) AS WRTR_NM								/*작성자ID명*/
+			     , TO_CHAR(WRT_DTM, 'yyyy-MM-dd HH:mm:ss') AS WRT_DTM			/*작성일시*/
+			     , SCWT_YN																				/*비밀글여부*/
+			     , BRD_PW																					/*게시글 비밀번호*/
+			     , QNA_REPLY																				/*QNA답변*/
+			     , DECODE(REP_ID, NULL, 'N', 'Y') AS REPLY_YN								/*답변여부*/
+			     , REP_ID																					/*답변자ID*/
+			     , FC_GET_MEMBID_NM(REP_ID) AS REP_NM									/*답변자ID명*/
+			     , TO_CHAR(REPLY_DTM, 'yyyy-MM-dd HH:mm:ss') AS REPLY_DTM		/*답변일시*/
+			     , REGP_ID																					/*최초등록자*/
+			     , REG_DTM																				/*최초등록일*/
+			     , MODP_ID																					/*수정자*/
+			     , MOD_DTM																				/*수정일시*/
+			FROM TB_PDBORDXM
+			WHERE BRD_NUM = #{BRD_NUM} 
+				AND BRD_GUBN = #{BRD_GUBN}
+	</select>
+	
+	<!-- 타입01(1:1문의) 답변 저장 -->
+	<update id="update01" parameterType="mall.web.domain.TB_PDBORDXM">
+		UPDATE TB_PDBORDXM
+		SET 
+		<if test="DEL_YN == 'YES'">
+			DEL_YN = 'Y'
+		</if>
+		<if test="DEL_YN != 'YES'">
+			 QNA_REPLY = #{QNA_REPLY}	/*QNA답변*/
+			,REP_ID = #{REP_ID}				/*답변자ID*/
+			,REPLY_DTM = SYSDATE			/*답변일시*/
+		</if>
+		WHERE BRD_NUM = #{BRD_NUM} 
+			AND BRD_GUBN = #{BRD_GUBN}
+	</update>
+	
+	
+	
+	<!-- 타입02(상품문의) 공통 where 조건 -->
+	<sql id="searchCondition02">
+		<where>	
+			<if test='schGbn == "WRTR_ID"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_ID LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "WRTR_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test='schGbn == "PD_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND PD_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			
+			<if test="REPLY_YN != null and REPLY_YN != ''">
+			    AND REPLY_YN = #{REPLY_YN}
+			</if>	
+			<if test="schCago != null and schCago != ''">
+			    AND CAGO_ID IN (	SELECT CAGO_ID FROM TB_PDCAGOXM
+											WHERE	USE_YN ='Y' AND	DEL_YN = 'N'
+											START WITH CAGO_ID=#{schCago}
+											CONNECT BY PRIOR CAGO_ID = UPCAGO_ID )
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 타입02(상품문의) 리스트 카운트 -->
+	<select id="count02" parameterType="mall.web.domain.TB_PDBORDXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT A.BRD_NUM																/*게시글 번호*/
+		             , A.BRD_GUBN															/*게시글 구분*/
+		             , A.PD_CODE																/*제품코드*/
+		             , A.BRD_SBJT																/*게시글 제목*/
+		             , A.BRD_CONT															/*게시글 내용*/
+		             , A.PD_PTS																/*상품 별점*/
+		             , A.BRD_HITS																/*게시글 조회수*/
+		             , A.WRTR_ID																/*작성자ID*/
+		             , A.SCWT_YN																/*비밀글여부*/
+		             , A.BRD_PW																/*게시글 비밀번호*/
+		             , A.QNA_REPLY															/*QNA답변*/
+		             , A.REP_ID																	/*답변자ID*/
+			FROM TB_PDBORDXM A
+			WHERE A.BRD_GUBN = #{BRD_GUBN}
+				AND A.DEL_YN = 'N'
+		)
+		<include refid="searchCondition02"/>
+	</select>
+	
+	<!-- 타입02(상품문의) 페이징 목록 -->
+	<select id="paginatedList02" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+				SELECT A.BRD_NUM																				/*게시글 번호*/
+			             , A.BRD_GUBN																			/*게시글 구분*/
+			             , A.PD_CODE																				/*제품코드*/
+			             , A.BRD_SBJT																				/*게시글 제목*/
+			             , A.BRD_CONT																			/*게시글 내용*/
+			             , A.PD_PTS																				/*상품 별점*/
+			             , A.BRD_HITS																				/*게시글 조회수*/
+			             , A.WRTR_ID																				/*작성자ID*/
+			             , FC_GET_MEMBID_NM(A.WRTR_ID) AS WRTR_NM							/*작성자ID명*/
+			             , TO_CHAR(A.WRT_DTM, 'yyyy-MM-dd') AS WRT_DTM						/*작성일시*/
+			             , A.SCWT_YN																				/*비밀글여부*/
+			             , A.BRD_PW																				/*게시글 비밀번호*/
+			             , A.QNA_REPLY																			/*QNA답변*/
+			             , DECODE(A.REP_ID, NULL, 'N', 'Y') AS REPLY_YN							/*답변여부*/
+			             , A.REP_ID																					/*답변자ID*/
+			             , FC_GET_MEMBID_NM(A.REP_ID) AS REP_NM									/*답변자ID명*/
+			             , TO_CHAR(A.REPLY_DTM, 'yyyy-MM-dd') AS REPLY_DTM					/*답변일시*/
+					     , REGP_ID																					/*최초등록자*/
+					     , REG_DTM																				/*최초등록일*/
+					     , MODP_ID																					/*수정자*/
+					     , MOD_DTM																				/*수정일시*/
+				FROM TB_PDBORDXM A
+				WHERE A.BRD_GUBN = #{BRD_GUBN}
+					AND A.DEL_YN = 'N'
+			)
+			<include refid="searchCondition02"/>
+			<include refid="orderByCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 타입02(상품문의) 상세화면 -->
+	<select id="find02" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		SELECT BRD_NUM																						/*게시글 번호*/
+			     , BRD_GUBN																						/*게시글 구분*/
+			     , PD_CODE																						/*제품코드*/
+		     	 , FC_GET_PD_NM(PD_CODE) AS PD_NAME												/*제품명*/
+			     , BRD_SBJT																						/*게시글 제목*/
+			     , BRD_CONT																						/*게시글 내용*/
+			     , PD_PTS																							/*상품 별점*/
+			     , BRD_HITS																						/*게시글 조회수*/
+			     , WRTR_ID																						/*작성자ID*/
+			     , FC_GET_MEMBID_NM(WRTR_ID) AS WRTR_NM										/*작성자ID명*/
+			     , TO_CHAR(WRT_DTM, 'yyyy-MM-dd HH:mm:ss') AS WRT_DTM					/*작성일시*/
+			     , SCWT_YN																						/*비밀글여부*/
+			     , BRD_PW																							/*게시글 비밀번호*/
+			     , QNA_REPLY																						/*QNA답변*/
+			     , DECODE(REP_ID, NULL, 'N', 'Y') AS REPLY_YN										/*답변여부*/
+			     , REP_ID																							/*답변자ID*/
+			     , FC_GET_MEMBID_NM(REP_ID) AS REP_NM											/*답변자ID명*/
+			     , TO_CHAR(REPLY_DTM, 'yyyy-MM-dd HH:mm:ss') AS REPLY_DTM				/*답변일시*/
+			     , REGP_ID																							/*최초등록자*/
+			     , REG_DTM																						/*최초등록일*/
+			     , MODP_ID																							/*수정자*/
+			     , MOD_DTM																						/*수정일시*/
+		FROM TB_PDBORDXM
+		WHERE BRD_NUM = #{BRD_NUM} 
+			AND BRD_GUBN = #{BRD_GUBN}
+	</select>
+	
+	<!-- 타입02 답변저장 -->
+	<update id="update02" parameterType="mall.web.domain.TB_PDBORDXM">
+		UPDATE TB_PDBORDXM
+		SET 
+		<if test="DEL_YN == 'YES'">
+			DEL_YN = 'Y'	/*삭제 여부*/
+		 </if>
+		 <if test="DEL_YN != 'YES'">
+			 QNA_REPLY = #{QNA_REPLY}	/*QNA답변*/
+			,REP_ID = #{REP_ID}				/*답변자ID*/
+			,REPLY_DTM = SYSDATE			/*답변일시*/
+		</if>
+		WHERE BRD_NUM = #{BRD_NUM} 
+			AND BRD_GUBN = #{BRD_GUBN}
+	</update>
+	
+	
+	
+	<!-- 타입03(반품문의) 공통 where 조건 -->
+	<sql id="searchCondition03">
+		<where>	
+			<if test='schGbn == "WRTR_ID"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_ID LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "WRTR_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test='schGbn == "PD_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND PD_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test="PD_PTS != null and PD_PTS != ''">
+			    AND PD_PTS = #{PD_PTS}
+			</if>
+			<if test="schCago != null and schCago != ''">				
+			    AND CAGO_ID IN (	SELECT CAGO_ID FROM TB_PDCAGOXM
+											WHERE USE_YN ='Y' AND DEL_YN = 'N'
+											START WITH CAGO_ID=#{schCago}
+											CONNECT BY PRIOR CAGO_ID = UPCAGO_ID )
+			</if>
+			<if test="PD_CODE != null and PD_CODE != ''">
+			    AND PD_CODE = #{PD_CODE}
+			</if>
+		</where>  
+	</sql>
+	
+	<!-- 타입03(반품문의) 카운트 -->
+	<select id="count03" parameterType="mall.web.domain.TB_PDBORDXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT A.BRD_NUM					/*게시글 번호*/
+		             , A.BRD_GUBN				/*게시글 구분*/
+		             , A.PD_CODE					/*제품코드*/
+		             , A.BRD_SBJT					/*게시글 제목*/
+		             , A.BRD_CONT				/*게시글 내용*/
+		             , A.PD_PTS					/*상품 별점*/
+		             , A.BRD_HITS					/*게시글 조회수*/
+		             , A.WRTR_ID					/*작성자ID*/
+		             , A.SCWT_YN					/*비밀글여부*/
+		             , A.BRD_PW					/*게시글 비밀번호*/
+		             , A.QNA_REPLY				/*QNA답변*/
+		             , A.REP_ID						/*답변자ID*/
+			FROM TB_PDBORDXM A
+			WHERE A.BRD_GUBN = #{BRD_GUBN}
+				AND A.DEL_YN = 'N'
+		)
+		<include refid="searchCondition03"/>
+	</select>
+	
+	<!-- 타입03(반품문의) 페이징 목록 -->
+	<select id="paginatedList03" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+				SELECT A.BRD_NUM																		/*게시글 번호*/
+			             , A.BRD_GUBN																	/*게시글 구분*/
+			             , A.PD_CODE																		/*제품코드*/
+			             , A.BRD_SBJT																		/*게시글 제목*/
+			             , A.BRD_CONT																	/*게시글 내용*/
+			             , A.PD_PTS																		/*상품 별점*/
+			             , A.BRD_HITS																		/*게시글 조회수*/
+			             , A.WRTR_ID																		/*작성자ID*/
+			             , FC_GET_MEMBID_NM(A.WRTR_ID) AS WRTR_NM					/*작성자ID명*/
+			             , TO_CHAR(A.WRT_DTM, 'yyyy-MM-dd') AS WRT_DTM				/*작성일시*/
+			             , A.SCWT_YN																		/*비밀글여부*/
+			             , A.BRD_PW																		/*게시글 비밀번호*/
+			             , A.QNA_REPLY																	/*QNA답변*/
+			             , DECODE(A.REP_ID, NULL, 'N', 'Y') AS REPLY_YN					/*답변여부*/
+			             , A.REP_ID																			/*답변자ID*/
+			             , FC_GET_MEMBID_NM(A.REP_ID) AS REP_NM							/*답변자ID명*/
+			             , TO_CHAR(A.REPLY_DTM, 'yyyy-MM-dd') AS REPLY_DTM			/*답변일시*/
+					     , REGP_ID																			/*최초등록자*/
+					     , REG_DTM																		/*최초등록일*/
+					     , MODP_ID																			/*수정자*/
+					     , MOD_DTM																		/*수정일시*/
+				FROM TB_PDBORDXM A
+				WHERE A.BRD_GUBN = #{BRD_GUBN}
+					AND A.DEL_YN = 'N'
+			)
+			<include refid="searchCondition03"/>
+			<include refid="orderByCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 타입03(반품문의) 상세화면 -->
+	<select id="find03" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		SELECT BRD_NUM																				/*게시글 번호*/
+			     , BRD_GUBN																				/*게시글 구분*/
+			     , PD_CODE																				/*제품코드*/
+		     	 , FC_GET_PD_NM(PD_CODE) AS PD_NAME										/*제품명*/
+			     , BRD_SBJT																				/*게시글 제목*/
+			     , BRD_CONT																				/*게시글 내용*/
+			     , PD_PTS																					/*상품 별점*/
+			     , BRD_HITS																				/*게시글 조회수*/
+			     , WRTR_ID																				/*작성자ID*/
+			     , FC_GET_MEMBID_NM(WRTR_ID) AS WRTR_NM								/*작성자ID명*/
+			     , TO_CHAR(WRT_DTM, 'yyyy-MM-dd HH:mm:ss') AS WRT_DTM			/*작성일시*/
+			     , SCWT_YN																				/*비밀글여부*/
+			     , BRD_PW																					/*게시글 비밀번호*/
+			     , QNA_REPLY																				/*QNA답변*/
+			     , DECODE(REP_ID, NULL, 'N', 'Y') AS REPLY_YN								/*답변여부*/
+			     , REP_ID																					/*답변자ID*/
+			     , FC_GET_MEMBID_NM(REP_ID) AS REP_NM									/*답변자ID명*/
+			     , TO_CHAR(REPLY_DTM, 'yyyy-MM-dd HH:mm:ss') AS REPLY_DTM		/*답변일시*/
+			     , REGP_ID																					/*최초등록자*/
+			     , REG_DTM																				/*최초등록일*/
+			     , MODP_ID																					/*수정자*/
+			     , MOD_DTM																				/*수정일시*/
+			FROM TB_PDBORDXM
+			WHERE BRD_NUM = #{BRD_NUM} 
+				AND BRD_GUBN = #{BRD_GUBN}
+	</select>
+	
+	<!-- 타입03(반품문의) 답변저장 -->
+	<update id="update03" parameterType="mall.web.domain.TB_PDBORDXM">
+		UPDATE TB_PDBORDXM
+		SET 
+			<if test="DEL_YN == 'YES'">
+				DEL_YN = 'Y'
+			</if>
+			<if test="DEL_YN != 'YES'">
+				 QNA_REPLY = #{QNA_REPLY}	/*QNA답변*/
+				,REP_ID = #{REP_ID}				/*답변자ID*/
+				,REPLY_DTM = SYSDATE			/*답변일시*/
+			</if>
+		WHERE BRD_NUM = #{BRD_NUM} 
+			AND BRD_GUBN = #{BRD_GUBN}
+	</update>
+	
+	
+	
+	<!-- 타입04(FAQ) 공통 where 조건 -->
+	<sql id="searchCondition04">
+		<where>	
+			<if test='schGbn == "WRTR_ID"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_ID LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "WRTR_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND WRTR_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+		</where>  
+	</sql>
+	
+	<!-- 타입04(FAQ) 카운트 -->
+	<select id="count04" parameterType="mall.web.domain.TB_PDBORDXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT BRD_NUM				/*게시글 번호*/
+				     , BRD_GUBN				/*게시글 구분*/
+				     , PD_CODE				/*제품코드*/
+				     , BRD_SBJT				/*게시글 제목*/
+				     , BRD_CONT				/*게시글 내용*/
+				     , PD_PTS					/*상품 별점*/
+				     , BRD_HITS				/*게시글 조회수*/
+				     , WRTR_ID				/*작성자ID*/
+				     , SCWT_YN				/*비밀글여부*/
+				     , BRD_PW					/*게시글 비밀번호*/
+				     , QNA_REPLY				/*QNA답변*/
+				     , REP_ID					/*답변자ID*/
+			FROM TB_PDBORDXM
+			WHERE BRD_GUBN = #{BRD_GUBN}
+				AND DEL_YN = 'N'
+		)
+		<include refid="searchCondition04"/>
+	</select>
+	
+	<!-- 타입04(FAQ) 페이징 목록 -->
+	<select id="paginatedList04" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+				SELECT BRD_NUM																		/*게시글 번호*/
+					     , BRD_GUBN																		/*게시글 구분*/
+					     , PD_CODE																		/*제품코드*/
+				     	 , FC_GET_PD_NM(PD_CODE) AS PD_NAME								/*제품명*/
+					     , BRD_SBJT																		/*게시글 제목*/
+					     , BRD_CONT																		/*게시글 내용*/
+					     , PD_PTS																			/*상품 별점*/
+					     , BRD_HITS																		/*게시글 조회수*/
+					     , WRTR_ID																		/*작성자ID*/
+					     , FC_GET_MEMBID_NM(WRTR_ID) AS WRTR_NM						/*작성자ID명*/
+					     , TO_CHAR(WRT_DTM, 'yyyy-MM-dd') AS WRT_DTM					/*작성일시*/
+					     , SCWT_YN																		/*비밀글여부*/
+					     , BRD_PW																			/*게시글 비밀번호*/
+					     , QNA_REPLY																		/*QNA답변*/
+					     , DECODE(REP_ID, NULL, 'N', 'Y') AS REPLY_YN						/*답변여부*/
+					     , REP_ID																			/*답변자ID*/
+					     , FC_GET_MEMBID_NM(REP_ID) AS REP_NM							/*답변자ID명*/
+					     , TO_CHAR(REPLY_DTM, 'yyyy-MM-dd') AS REPLY_DTM				/*답변일시*/
+					     , DEL_YN																			/*삭제여부*/
+					     , REGP_ID																			/*최초등록자*/
+					     , REG_DTM																		/*최초등록일*/
+					     , MODP_ID																			/*수정자*/
+					     , MOD_DTM																		/*수정일시*/
+				FROM TB_PDBORDXM
+				WHERE BRD_GUBN = #{BRD_GUBN}
+					AND DEL_YN = 'N'
+			)
+			<include refid="searchCondition04"/>
+			<include refid="orderByCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 타입04(FAQ) 상세화면 -->
+	<select id="find04" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		SELECT BRD_NUM																				/*게시글 번호*/
+			     , BRD_GUBN																				/*게시글 구분*/
+			     , BRD_SBJT																				/*게시글 제목*/
+			     , BRD_CONT																				/*게시글 내용*/
+			     , BRD_HITS																				/*게시글 조회수*/
+			     , WRTR_ID																				/*작성자ID*/
+			     , FC_GET_MEMBID_NM(WRTR_ID) AS WRTR_NM								/*작성자 명*/
+			     , TO_CHAR(WRT_DTM, 'yyyy-MM-dd HH:mm:ss') AS WRT_DTM			/*작성일시*/
+			     , REGP_ID																					/*최초등록자*/
+			     , REG_DTM																				/*최초등록일*/
+			     , MODP_ID																					/*수정자*/
+			     , MOD_DTM																				/*수정일시*/
+		FROM TB_PDBORDXM
+		WHERE BRD_NUM = #{BRD_NUM}
+			AND BRD_GUBN = #{BRD_GUBN}
+	</select>
+	
+	<!-- 타입04(FAQ) 등록 -->
+	<update id="insert04" parameterType="mall.web.domain.TB_PDBORDXM">
+		INSERT INTO TB_PDBORDXM (
+			BRD_NUM,
+			BRD_GUBN,
+			BRD_SBJT,
+			BRD_CONT,
+			BRD_HITS,
+			WRTR_ID,
+			WRT_DTM,
+			DEL_YN,
+			REGP_ID,
+			REG_DTM,
+			MODP_ID,
+			MOD_DTM
+		) VALUES ( 
+			(SELECT NVL(MAX(TO_NUMBER(BRD_NUM))+1,1) FROM TB_PDBORDXM), /*게시글 번호*/
+			#{BRD_GUBN},	/*게시글 구분*/
+			#{BRD_SBJT},	/*게시글 제목*/
+			#{BRD_CONT},	/*게시글 내용*/
+			0,						/*게시글 조회수*/
+			#{WRTR_ID},		/*작성자ID*/
+			SYSDATE,			/*작성일시*/
+			'N',					/*삭제여부*/
+			#{REGP_ID},		/*등록자 ID*/
+			SYSDATE,			/*등록 일시*/
+			#{MODP_ID},		/*수정자 ID*/
+			SYSDATE			/*수정 일시*/
+		)
+	</update>
+	
+	<!-- 타입04(FAQ) 수정 -->
+	<update id="update04" parameterType="mall.web.domain.TB_PDBORDXM">
+		UPDATE TB_PDBORDXM
+		SET 
+			<if test="DEL_YN == 'YES'">
+				DEL_YN = 'Y'	/*삭제 여부*/
+			</if>
+			<if test="DEL_YN != 'YES'">
+				 BRD_SBJT = #{BRD_SBJT}		/*게시글 제목*/
+				,BRD_CONT = #{BRD_CONT}	/*게시글 내용*/
+				,MODP_ID = #{MODP_ID}		/*수정자 ID*/
+				,MOD_DTM = SYSDATE				/*수정 일시*/
+			</if>
+		WHERE BRD_NUM = #{BRD_NUM} 
+			AND BRD_GUBN = #{BRD_GUBN}
+	</update>
+	
+	
+	<!-- 카테고리 1단계 리스트 -->
+	<select id="cagoList" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDCAGOXM">
+		SELECT	 CAGO_ID 
+		     		,CAGO_NAME
+		FROM TB_PDCAGOXM
+		WHERE USE_YN ='Y'
+			AND DEL_YN = 'N'
+			AND UPCAGO_ID IS NULL
+		ORDER BY SORT_ORDR
+	</select>
+	
+	<!-- 카테고리 리스트 -->
+	<select id="schCagoList" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDCAGOXM">
+		SELECT	CAGO_ID 
+					,CAGO_NAME
+		FROM TB_PDCAGOXM
+		WHERE USE_YN = 'Y'
+			AND DEL_YN = 'N'
+			AND UPCAGO_ID = #{schCago}
+	</select>
+	
+</mapper>

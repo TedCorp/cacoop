@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.mall.AdMapper">
+
+	<select id="find" parameterType="HashMap" resultType="HashMap">
+			SELECT
+				AD_ID
+				, AD_NAME
+				, START_DT
+				, END_DT
+				, AD_DESC
+				, TOP_ATFL
+				, ATFL_ID
+				, DEL_YN
+				, END_YN
+				, TOP_TYPE
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			FROM
+				TB_ADINFOXM
+			WHERE
+				AD_ID = #{AD_ID}
+	</select>
+	
+	<select id="list" parameterType="HashMap" resultType="HashMap">
+			SELECT *
+			  FROM (
+                    SELECT 
+                          AD_ID
+						, CAGO_NAME
+						, PD_ID
+						, PD_NAME
+						, PD_PRICE
+						, SELL_PRICE
+						, PD_DESC
+						, PD_CONS
+						, ATFL_NAME
+						, DEL_YN
+						, OPT_NAME
+						, OPT_PRICE
+						, UNIT_NAME
+						, REGP_ID
+						, REG_DTM
+						, MODP_ID
+						, MOD_DTM
+						, ORD
+                      FROM TB_ADPDIFXM
+                     WHERE AD_ID = #{AD_ID}
+                       AND DEL_YN = 'N'
+			        )
+			<if test="sortGubun != null and sortGubun != ''">
+				<if test='sortGubun == "NAME"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY PD_NAME desc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY PD_NAME asc
+					</if>	
+				</if>
+				<if test='sortGubun == "PRICE"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY SELL_PRICE desc, PD_NAME asc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY SELL_PRICE asc, PD_NAME asc
+					</if>
+				</if>
+			</if>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY  ORD, CAGO_NAME
+			</if>
+	</select>
+	
+	<select id="cagoList" parameterType="HashMap" resultType="HashMap">
+		SELECT A.CAGO_NAME, A.CNT, A.ORD
+		  FROM (
+		        SELECT A.CAGO_NAME, A.CNT, 
+		               CASE WHEN A.CAGO_NAME = '메인' THEN 1
+		               ELSE 2
+		               END AS ORD
+		        FROM (
+		                 SELECT CAGO_NAME, COUNT(PD_ID) CNT
+		                   FROM TB_ADPDIFXM
+		                  WHERE AD_ID = #{AD_ID}
+		                    AND DEL_YN = 'N'
+		                  GROUP BY CAGO_NAME
+		             ) A
+		        ORDER BY A.CAGO_NAME
+		       ) A
+		 ORDER BY A.ORD, A.CAGO_NAME
+	</select>
+
+	<select id="selectFile" parameterType="HashMap" resultType="mall.web.domain.TB_COATFLXD">
+		SELECT B.*
+		  FROM TB_PDINFOXM A, TB_COATFLXD B
+		 WHERE A.PD_CODE = #{PD_CODE}
+		   AND A.ATFL_ID = B.ATFL_ID
+		   AND A.RPIMG_SEQ = B.ATFL_SEQ
+	</select>
+
+	<insert id="adLogInsert" parameterType="HashMap">
+		INSERT INTO
+			TB_ADLOGSXM (
+				AD_ID
+				, LOG_DTM
+				, LOG_AGENT
+				, LOG_OS
+				, LOG_BROWSER
+				, LOG_IP
+			) VALUES (
+				#{AD_ID}
+				, SYSDATE
+				, #{LOG_AGENT}
+				, #{LOG_OS}
+				, #{LOG_BROWSER}
+				, #{LOG_IP}
+			)
+	</insert>
+
+	<select id="findLast" parameterType="HashMap" resultType="HashMap">
+			SELECT
+				AD_ID
+				, AD_NAME
+				, START_DT
+				, END_DT
+				, AD_DESC
+				, TOP_ATFL
+				, ATFL_ID
+				, DEL_YN
+				, END_YN
+				, TOP_TYPE
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			FROM TB_ADINFOXM
+			WHERE AD_ID IN (SELECT MAX(AD_ID) FROM TB_ADINFOXM WHERE REGP_ID = #{REGP_ID} AND DEL_YN = 'N' AND END_YN = 'N' )
+	</select>
+ 
+</mapper>

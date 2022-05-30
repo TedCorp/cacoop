@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+	** Memo ** 
+	1. 
+-->
+
+<API>
+	<!-- 
+	
+		모든오피스 API 정보		
+		
+		* 주의사항
+		1. & -> &amp; 변환할것
+		
+	 -->
+	<modenoffice>		
+		
+		<!-- 조회 -->		
+		<!-- 상품리스트 조회 -->
+		<query id="getItem" endpoint="http://www.modenmro.com/ApiExtIIBSb2c/shpZidInfoCode?key=EXPBNQHM&amp;Mcode=">${key}</query>
+		<query id="getItemTest" endpoint="http://www.modenmro.com/ApiExtTest/shpZidInfoCode?key=keyTest&amp;Mcode=">${key}</query>
+		
+		<!-- 카테고리 조회 -->
+		<query id="getCago" endpoint="http://www.modenmro.com/ApiExtIIBSb2c/shpBCD?key=EXPBNQHM"></query>
+		<query id="getCagoTest" endpoint="http://www.modenmro.com/ApiExtTest/shpBCD?key=keyTest"></query>
+
+		<!-- 최근 일주일 내 단종상품 조회 -->
+		<query id="getDiscontinuedProduct" endpoint="http://www.modenmro.com/ApiExtIIBSb2c/shpZidPE?key=EXPBNQHM"></query>		
+		<query id="getDiscontinuedProductTest" endpoint="http://www.modenmro.com/ApiExtTest/shpZidPE?key=keyTest"></query>		
+		
+		<!-- 일시품절 상품 조회 -->
+		<query id="getSoldoutProduct" endpoint="http://www.modenmro.com/ApiExtIIBSb2c/shpZidOS?key=EXPBNQHM"></query>
+		<query id="getSoldoutProductTest" endpoint="http://www.modenmro.com/ApiExtTest/shpZidOS?key=keyTest"></query>
+
+		<!-- 기간별 변동 상품 조회 -->
+		<query id="getChangedProduct" endpoint="http://www.modenmro.com/ApiExtIIBSb2c/shpZidInfoDate?key=EXPBNQHM&amp;Mdate=">${date}</query>
+		<query id="getChangedProductTest" endpoint="http://www.modenmro.com/ApiExtTest/shpZidInfoDate?key=keyTest&amp;Mdate=">${date}</query>
+
+		<!-- 상품주문 -->
+		<query id="insertOrder" endpoint="http://www.modenmro.com/ApiExtIIBSb2c/SujuInsert?key=EXPBNQHM"></query>
+		<query id="insertOrderTest" endpoint="http://www.modenmro.com/ApiExtTest/SujuInsert?key=keyTest"></query>
+
+		<query id="insertOrder_old" endpoint="http://www.modenmro.com/ApiExtTest/SujuInsert?key=keyTest"></query>
+
+		
+		<!-- 배송결과 조회 -->
+		<query id="getDlvyStatus" endpoint="http://www.modenmro.com/ApiExtIIBSb2c/BsnDelivery?key=EXPBNQHM"></query>
+		<query id="getDlvyStatusTest" endpoint="http://www.modenmro.com/ApiExtTest/BsnDelivery?key=keyTest"></query>
+		
+		
+		
+		
+	</modenoffice>
+
+</API>

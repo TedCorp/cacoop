@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.ProductEventMgrMapper">
+	<!-- 공통 조건절 -->
+	<sql id="searchCondition">
+		<where>
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "PD_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+						AND PD_NAME LIKE '%' || #{schTxt} || '%'
+					</if>
+				</if>	
+				<if test='schGbn == "PD_CODE"'>
+					<if test="schTxt != null and schTxt != ''">
+						AND PD_CODE LIKE '%' || #{schTxt} || '%'
+					</if>
+				</if>	
+				<if test='schGbn == "PD_BARCD"'>
+					<if test="schTxt != null and schTxt != ''">
+						AND PD_BARCD LIKE '%' || #{schTxt} || '%'
+					</if>
+				</if>
+			</if>			
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND TO_CHAR (TO_DATE (MOD_DTM), 'YYYY-MM-DD') <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				AND TO_CHAR (TO_DATE (MOD_DTM), 'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+			</if>		
+			<if test="SALE_CON != null and SALE_CON != ''">
+				AND SALE_CON = #{SALE_CON}
+			</if>
+			<if test="PDDC_GUBN != null and PDDC_GUBN != ''">
+				AND PDDC_GUBN = #{PDDC_GUBN}
+			</if>
+			<if test="PDDC_GUBN == null or PDDC_GUBN == ''">
+				AND PDDC_GUBN != 'PDDC_GUBN_01'
+			</if>
+			AND DEL_YN = 'N'			
+		</where>  
+	</sql>
+	
+	<!-- 공통 정렬순서 -->
+	<sql id="orderbyCondition">
+		<if test="sortGubun != null and sortGubun != ''">
+			<if test='sortGubun == "PD_NAME"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY PD_NAME DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY PD_NAME ASC
+				</if>	
+			</if>
+			<if test='sortGubun == "REG_DTM"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY REG_DTM DESC, PD_NAME ASC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY REG_DTM ASC, PD_NAME ASC
+				</if>
+			</if>
+			<if test='sortGubun == "MOD_DTM"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY MOD_DTM DESC, PD_NAME ASC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY MOD_DTM ASC, PD_NAME ASC
+				</if>
+			</if>
+		</if>
+		<if test="sortGubun == null or sortGubun == ''">
+			ORDER BY MOD_DTM DESC
+		</if>
+	</sql>
+	
+	<!-- 행사상품 수 -->
+	<select id="count" parameterType="mall.web.domain.TB_PDINFOXM" resultType="int">
+		SELECT 	COUNT(*)
+		FROM TB_PDINFOXM
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 행사상품목록 -->
+	<select id="list" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT * 
+			FROM (
+				SELECT 	PD_CODE,
+							PD_NAME, 
+							PD_BARCD, 
+							PD_PRICE,
+							PDDC_GUBN,
+							PDDC_VAL,
+							CASE	WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+							       	WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL/100))
+							       	ELSE PD_PRICE
+							END REAL_PRICE,
+							(SELECT FC_GET_COMCOD_NM(SALE_CON) FROM DUAL) AS SALE_CON,
+							(SELECT FC_GET_COMCOD_NM(PDDC_GUBN) FROM DUAL) AS PDDC_GUBN_NM,
+							DEL_YN,
+							MODP_ID,
+							MOD_DTM
+				FROM TB_PDINFOXM
+			)
+			<include refid="searchCondition"/>
+			<include refid="orderbyCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 행사상품 업데이트 -->
+	<update id="update" parameterType="mall.web.domain.TB_PDINFOXM">
+		UPDATE 
+			TB_PDINFOXM
+		SET
+			  MODP_ID = #{MODP_ID}
+			, MOD_DTM = SYSDATE
+			, PDDC_GUBN = #{PDDC_GUBN}
+			, PDDC_VAL = #{PDDC_VAL}
+		WHERE
+			PD_CODE = #{PD_CODE}
+	</update>
+	
+	<!-- 행사상품 엑셀 다운로드 -->
+	<select id="detailExcelList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="HashMap">
+		SELECT 	PD_CODE, 
+					PD_NAME, 
+					PD_BARCD, 
+					PD_PRICE,
+					CASE	WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+					       	WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL/100))
+					       	ELSE PD_PRICE
+					END REAL_PRICE,
+					(SELECT FC_GET_COMCOD_NM(PDDC_GUBN) FROM DUAL) PDDC_GUBN,
+					PDDC_VAL,					
+					DEL_YN, 
+					MODP_ID, 
+					MOD_DTM 
+		FROM TB_PDINFOXM
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 행사상품 엑셀업로드 -->
+	<insert id="excelUpload" parameterType="mall.web.domain.TB_PDINFOXM">
+		UPDATE 
+			TB_PDINFOXM
+		SET
+			MODP_ID = #{MODP_ID}
+	      , MOD_DTM = SYSDATE
+		  , PDDC_VAL = #{PDDC_VAL}   
+		  , PDDC_GUBN = #{PDDC_GUBN}
+		WHERE 1=1
+			AND PD_CODE = (	
+				SELECT PD_CODE 
+				FROM TB_PDINFOXM 
+				WHERE PD_BARCD = #{PD_BARCD} 
+					AND DEL_YN = 'N' 
+					<!-- AND SALE_CON = 'SALE_CON_01' -->
+			)
+	</insert>
+	
+	<!-- 행사상품 엑셀업로드 바코드 중복체크 -->
+	<select id="excelUploadChk_BarcodeCount" parameterType="mall.web.domain.TB_PDINFOXM" resultType="java.lang.Integer">	  
+		SELECT COUNT(*) 
+		FROM TB_PDINFOXM
+		WHERE PD_BARCD = #{PD_BARCD}
+			AND DEL_YN = 'N'
+			<!-- AND SALE_CON = 'SALE_CON_01' -->
+	</select>
+	
+	<!-- 상품팝업 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">	
+		SELECT 	PD_CODE,
+					PD_NAME, 
+					PD_BARCD, 
+					PD_PRICE,
+					PDDC_GUBN,
+					PDDC_VAL,
+					CASE	WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+					       	WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL/100))
+					       	ELSE PD_PRICE
+					END REAL_PRICE,
+					SALE_CON,
+					(SELECT FC_GET_COMCOD_NM(SALE_CON) FROM DUAL) AS SALE_CON_NM, 
+					DEL_YN,
+					MODP_ID,
+					MOD_DTM
+		FROM TB_PDINFOXM
+		<include refid="searchCondition"/>
+		<include refid="orderbyCondition"/>
+	</select>
+	
+	<select id="find" parameterType="mall.web.domain.TB_PDRCMDXM" resultType="mall.web.domain.TB_PDRCMDXM">
+		SELECT GRP_CD
+				, GRP_NM
+				, SORT_ORDR
+				, USE_YN
+				, DEL_YN
+				, RCMD_GUBN
+				, FC_GET_COMCOD_NM(RCMD_GUBN) RCMD_GUBN_NM
+				, REG_DTM
+				, REGP_ID
+				, MOD_DTM
+				, MODP_ID
+		  FROM TB_PDRCMDXM
+		 WHERE GRP_CD = #{GRP_CD}
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_PDRCMDXM">
+		<selectKey keyProperty="GRP_CD" resultType="string" order="BEFORE">
+			SELECT LPAD(SEQ_TB_PDRCMDXM.NEXTVAL,13,0) FROM DUAL
+		</selectKey>
+		INSERT INTO 
+			TB_PDRCMDXM (
+				GRP_CD
+				, GRP_NM
+				, SORT_ORDR
+				, USE_YN
+				, DEL_YN
+				, RCMD_GUBN
+				, REG_DTM
+				, REGP_ID
+				, MOD_DTM
+				, MODP_ID
+			) VALUES (
+				#{GRP_CD}
+				, #{GRP_NM}
+				, #{SORT_ORDR}
+				, #{USE_YN}
+				, 'N'
+				, #{RCMD_GUBN}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+				, #{MODP_ID}
+			)
+	</insert>
+	
+	<update id="delete" parameterType="mall.web.domain.TB_PDRCMDXM">
+		UPDATE 
+			TB_PDRCMDXM
+		SET 
+			MODP_ID = #{MODP_ID}
+			, MOD_DTM = SYSDATE
+			, DEL_YN = 'Y'
+		WHERE
+			GRP_CD = #{GRP_CD}
+	</update>
+
+	<!-- 추천상품 삭제 -->
+	<delete id="deleteProduct" parameterType="mall.web.domain.TB_PDRCMDXM">
+		DELETE FROM TB_PDRCMDXD
+		 WHERE
+			GRP_CD = #{GRP_CD}
+	</delete>
+
+</mapper>

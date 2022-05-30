@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.GroupMgrMapper">
+	
+	<select id="list" parameterType="mall.web.domain.TB_SYSGRPXM" resultType="mall.web.domain.TB_SYSGRPXM">
+		SELECT GROUP_CD
+		     , GROUP_NAME
+		     , REGP_ID
+		     , REG_DTM
+		     , MODP_ID
+		     , MOD_DTM
+		  FROM TB_SYSGRPXM
+		 ORDER BY GROUP_CD
+	</select>
+	
+	<select id="find" parameterType="mall.web.domain.TB_SYSGRPXM" resultType="mall.web.domain.TB_SYSGRPXM">
+		SELECT GROUP_CD
+		     , GROUP_NAME
+		  FROM TB_SYSGRPXM
+		 WHERE GROUP_CD = #{GROUP_CD}
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_SYSGRPXM">
+		INSERT INTO TB_SYSGRPXM
+			  (GROUP_CD,
+			   GROUP_NAME,
+			   REGP_ID,
+			   REG_DTM,
+			   MODP_ID,
+			   MOD_DTM)
+			VALUES
+			  (#{GROUP_CD},
+			   #{GROUP_NAME},
+			   #{REGP_ID},
+			   SYSDATE,
+			   #{MODP_ID},
+			   SYSDATE)
+
+	</insert>
+	
+	<update id="update" parameterType="mall.web.domain.TB_SYSGRPXM">
+		UPDATE TB_SYSGRPXM
+		   SET GROUP_NAME     = #{GROUP_NAME},
+		       MODP_ID       = #{MODP_ID},
+		       MOD_DTM       = SYSDATE
+		 WHERE GROUP_CD = #{GROUP_CD}
+	</update>
+	
+	
+	<delete id="delete" parameterType="mall.web.domain.TB_SYSGRPXM">
+		DELETE 
+		  FROM TB_SYSGRPXM
+		 WHERE GROUP_CD = #{GROUP_CD}
+	</delete>
+	
+	<select id="codeSameCnt" parameterType="mall.web.domain.TB_SYSGRPXM" resultType="int">
+		SELECT COUNT(*)
+		  FROM TB_SYSGRPXM
+		 WHERE GROUP_CD = #{GROUP_CD}
+	</select>
+	
+</mapper>

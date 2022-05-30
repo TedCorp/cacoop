@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mall.web.mapper.admin.CompanySaleMgrMapper">
+	
+	<sql id="searchCondition">
+		  	<if test='schGbn == "SUPR_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND SUPR_NAME LIKE '%'||#{schTxt}||'%' 
+				</if>	
+			</if>
+			<if test='schGbn == "BIZR_NUM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND BIZR_NUM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND	TO_CHAR (A.REG_DTM, 'YYYY-MM-DD') <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				 AND TO_CHAR (A.REG_DTM, 'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+			</if>
+	</sql>
+	
+	
+	<select id="count" parameterType="mall.web.domain.TB_TOTINFOXM" resultType="int">
+		SELECT count(*)
+		FROM (
+				SELECT  SUPR_ID, 
+			    SUPR_NAME, 
+			    RPRS_NAME, 
+			    BIZR_NUM,
+			    CASE WHEN SUM(ORDER_AMT) IS NULL THEN 0
+		 			ELSE SUM(ORDER_AMT)
+		 			END AS ORDER_AMT,
+		 		CASE WHEN SUM(RFND_AMT) IS NULL THEN 0
+		 			ELSE SUM(RFND_AMT)
+		 			END AS RFND_AMT
+			FROM (    
+			   		 SELECT  A.SUPR_ID,
+					         B.SUPR_NAME,
+					         B.RPRS_NAME,
+					         B.BIZR_NUM,
+					         TO_CHAR(A.REG_DTM ,'YYYY-MM-DD') AS REG_DTM,
+					         A.ORDER_AMT,
+					         A.RFND_AMT 
+			   	   	   FROM  TB_ODINFOXD A, TB_SPINFOXM B
+					      	WHERE A.SUPR_ID = B.SUPR_ID
+					    	GROUP BY A.REG_DTM, A.SUPR_ID, B.SUPR_NAME,B.RPRS_NAME, B.BIZR_NUM, A.ORDER_AMT,A.RFND_AMT 
+				)
+			GROUP BY  SUPR_ID, SUPR_NAME, RPRS_NAME, BIZR_NUM
+			ORDER BY SUPR_NAME ASC
+		)
+	</select>
+	
+	<select id="paginatedList" parameterType="mall.web.domain.TB_TOTINFOXM" resultType="mall.web.domain.TB_TOTINFOXM">
+		<include refid="default.pagerHeader"/>
+	 	SELECT  SUPR_ID, 
+			    SUPR_NAME, 
+			    RPRS_NAME, 
+			    BIZR_NUM,
+			    CASE WHEN SUM(ORDER_AMT) IS NULL THEN 0
+		 			ELSE SUM(ORDER_AMT)
+		 			END AS ORDER_AMT,
+		 		CASE WHEN SUM(RFND_AMT) IS NULL THEN 0
+		 			ELSE SUM(RFND_AMT)
+		 			END AS RFND_AMT
+			FROM (    
+			   		 SELECT  A.SUPR_ID,
+					         B.SUPR_NAME,
+					         B.RPRS_NAME,
+					         B.BIZR_NUM,
+					         TO_CHAR(A.REG_DTM ,'YYYY-MM-DD') AS REG_DTM,
+					         A.ORDER_AMT,
+					         A.RFND_AMT 
+			   	   	   FROM  TB_ODINFOXD A, TB_SPINFOXM B
+					      	WHERE A.SUPR_ID = B.SUPR_ID
+			<include refid="searchCondition"/>
+					    	GROUP BY A.REG_DTM, A.SUPR_ID, B.SUPR_NAME,B.RPRS_NAME, B.BIZR_NUM, A.ORDER_AMT,A.RFND_AMT 
+				)
+			GROUP BY  SUPR_ID, SUPR_NAME, RPRS_NAME, BIZR_NUM
+			ORDER BY SUPR_NAME ASC
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 공급사별 디테일카운트  -->
+	<select id="countDetail" parameterType="mall.web.domain.TB_ODINFOXD" resultType="int">
+		SELECT COUNT(*) 
+			FROM( SELECT A.ORDER_NUM 
+					   , TO_CHAR(A.REG_DTM ,'YYYY-MM-DD') AS REG_DTM
+					   , A.PD_CODE 
+					   , FC_GET_ORDER_PD_NM(A.ORDER_NUM, A.PD_CODE, A.ORDER_DTNUM)  AS PD_NAME 
+					   , A.ORDER_AMT 
+					   , A.RFND_AMT 
+				FROM TB_ODINFOXD A
+				WHERE A.SUPR_ID =#{SUPR_ID}
+				<include refid="searchCondition"/>
+			)
+	</select>
+	
+	<!-- 공급사별 디테일목록 -->
+	<select id="paginatedListDetail" parameterType="mall.web.domain.TB_ODINFOXD" resultType="mall.web.domain.TB_ODINFOXD">
+		<include refid="default.pagerHeader"/>
+			SELECT A.ORDER_NUM 
+				   , TO_CHAR(A.REG_DTM ,'YYYY-MM-DD') AS REG_DTM
+				   , A.PD_CODE 
+				   , FC_GET_ORDER_PD_NM(A.ORDER_NUM, A.PD_CODE, A.ORDER_DTNUM)  AS PD_NAME 
+				   , A.ORDER_AMT 
+				   , A.RFND_AMT 
+			FROM TB_ODINFOXD A
+			WHERE A.SUPR_ID =#{SUPR_ID}
+			<include refid="searchCondition"/>
+			ORDER BY ORDER_NUM DESC
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	
+	<!-- 엑셀리스트 -->
+	<select id="excelList" parameterType="mall.web.domain.TB_TOTINFOXM" resultType="HashMap"> 
+		<include refid="default.pagerHeader"/>
+	 	SELECT  SUPR_ID, 
+			    SUPR_NAME, 
+			    RPRS_NAME, 
+			    BIZR_NUM,
+			    CASE WHEN SUM(ORDER_AMT) IS NULL THEN 0 ELSE SUM(ORDER_AMT) END AS ORDER_AMT,
+		 		CASE WHEN SUM(RFND_AMT) IS NULL THEN 0 ELSE SUM(RFND_AMT) END AS RFND_AMT,
+		 		CASE WHEN SUM(REAL_AMT) IS NULL THEN 0 ELSE SUM(REAL_AMT) END AS REAL_AMT
+			FROM (    
+			   		 SELECT  A.SUPR_ID,
+					         B.SUPR_NAME,
+					         B.RPRS_NAME,
+					         B.BIZR_NUM,
+					         TO_CHAR(A.REG_DTM ,'YYYY-MM-DD') AS REG_DTM,
+					         A.ORDER_AMT,
+					         A.RFND_AMT,
+					         A.ORDER_AMT - A.RFND_AMT AS REAL_AMT
+			   	   	   FROM  TB_ODINFOXD A, TB_SPINFOXM B
+					      	WHERE A.SUPR_ID = B.SUPR_ID
+					      	<if test="list != null and list.size!=0">
+								AND A.SUPR_ID IN
+								<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+									#{item}
+								</foreach> 
+							</if>
+			<include refid="searchCondition"/>
+					    	GROUP BY A.REG_DTM, A.SUPR_ID, B.SUPR_NAME,B.RPRS_NAME, B.BIZR_NUM, A.ORDER_AMT,A.RFND_AMT 
+				)
+			GROUP BY  SUPR_ID, SUPR_NAME, RPRS_NAME, BIZR_NUM
+			ORDER BY SUPR_NAME ASC
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 공급사 디테일 엑셀다운  -->
+	<select id="excelDownDetail" parameterType="mall.web.domain.TB_ODINFOXD" resultType="HashMap">
+		<include refid="default.pagerHeader"/>
+			SELECT A.ORDER_NUM 
+				   , TO_CHAR(A.REG_DTM ,'YYYY-MM-DD') AS REG_DTM
+				   , A.PD_CODE 
+				   , FC_GET_ORDER_PD_NM(A.ORDER_NUM, A.PD_CODE, A.ORDER_DTNUM)  AS PD_NAME 
+				   , A.ORDER_AMT 
+				   , A.RFND_AMT 
+				    , A.ORDER_AMT -A.RFND_AMT AS REAL_AMT
+			FROM TB_ODINFOXD A
+			WHERE A.SUPR_ID =#{SUPR_ID}
+		  	<if test="list != null and list.size!=0">
+				AND A.ORDER_NUM IN
+				<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+					#{item}
+				</foreach> 
+			</if>
+			<include refid="searchCondition"/>
+			ORDER BY ORDER_NUM DESC
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	
+
+</mapper>

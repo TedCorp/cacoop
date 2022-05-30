@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.mall.MemberMapper">
+	<!-- 공통 조건절 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test="MEMB_NAME != null and MEMB_NAME != ''">
+			    AND MEMB_NAME = #{MEMB_NAME}
+			</if>	
+			<if test="MEMB_GUBN != null and MEMB_GUBN != ''">
+			    AND MEMB_GUBN = #{MEMB_GUBN}
+			</if>	
+			<if test="SCSS_YN != null and SCSS_YN != ''">
+			    AND SCSS_YN = #{SCSS_YN}
+			</if>
+			<if test="SUPR_ID != null and SUPR_ID != ''">
+			    AND SUPR_ID = #{SUPR_ID}
+			</if>
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "SUPR_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND SUPR_NAME LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>		
+				<if test='schGbn == "MEMB_ID"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND MEMB_ID LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>			
+				<if test='schGbn == "MEMB_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND MEMB_NAME LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>	
+			</if>
+		</where>  
+	</sql>
+	
+	<!-- 회원 CNT -->
+	<select id="count" parameterType="mall.web.domain.TB_MBINFOXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT	  MEMB_ID
+						, MEMB_GUBN
+						, SUPR_ID
+						, SUPMEM_APST
+						, APRF_RESN
+						, MEMB_NAME
+						, MEMB_PW
+						, MEMB_SEX
+						, SLCAL_GUBN
+						, MEMB_BTDY
+						, MEMB_MAIL
+						, MEMB_IRA
+						, MEMB_PN
+						, MEMB_BADR
+						, MEMB_DADR
+						, MEMB_CPON
+						, MEMB_CSRA
+						, MEMB_TELN
+						, COM_NAME
+						, COM_BUNB
+						, COM_TELN
+						, COM_PN
+						, COM_BADR
+						, COM_DADR
+						, SCSS_YN
+						, REGP_ID
+						, REG_DTM
+						, MODP_ID
+						, MOD_DTM
+						, COM_OPEN
+						, COM_CLOSE
+						, BANK_NAME
+						, BANK_BUNB
+						<!-- , MBDC_RATE -->
+			FROM TB_MBINFOXM
+		)
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 회원 리스트 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_MBINFOXM" resultType="mall.web.domain.TB_MBINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+				SELECT	  MEMB_ID
+							, MEMB_GUBN
+							, FC_GET_COMCOD_NM(MEMB_GUBN) MEMB_GUBN_NM
+							, SUPR_ID
+							, FC_GET_SUPRID_NM(SUPR_ID) SUPR_NAME
+							, SUPMEM_APST
+							, FC_GET_COMCOD_NM(SUPMEM_APST) SUPMEM_APST_NM
+							, APRF_RESN
+							, MEMB_NAME
+							, MEMB_PW
+							, MEMB_SEX
+							, SLCAL_GUBN
+							, MEMB_BTDY
+							, MEMB_MAIL
+							, MEMB_IRA
+							, MEMB_PN
+							, MEMB_BADR
+							, MEMB_DADR
+							, MEMB_CPON
+							, MEMB_CSRA
+							, MEMB_TELN
+							, COM_NAME
+							, COM_BUNB
+							, COM_TELN
+							, COM_PN
+							, COM_BADR
+							, COM_DADR
+							, SCSS_YN
+							, REGP_ID
+							, REG_DTM
+							, MODP_ID
+							, MOD_DTM
+							, COM_OPEN
+							, COM_CLOSE
+							, BANK_NAME
+							, BANK_BUNB
+							, STOP_YN
+							, STOP_DTM
+							, DLVY_CPON
+				FROM TB_MBINFOXM
+			)
+			<include refid="searchCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 회원정보 상세 -->
+	<select id="find" parameterType="mall.web.domain.TB_MBINFOXM" resultType="mall.web.domain.TB_MBINFOXM">
+		SELECT	  MEMB_ID
+					, MEMB_GUBN
+					, SUPR_ID
+					, SUPMEM_APST
+					, APRF_RESN
+					, MEMB_NAME
+					, MEMB_PW
+					<!-- , MEMB_SEX -->
+					, SLCAL_GUBN
+					<!-- , MEMB_BTDY -->
+					, MEMB_MAIL
+					, MEMB_IRA
+					, MEMB_PN
+					, MEMB_BADR
+					, MEMB_DADR
+					, MEMB_CPON
+					, MEMB_CSRA
+					, MEMB_TELN
+					, COM_NAME
+					, COM_BUNB
+					, COM_TELN
+					, COM_PN
+					, COM_BADR
+					, COM_DADR
+					, SCSS_YN
+					, REGP_ID
+					, REG_DTM
+					, MODP_ID
+					, MOD_DTM
+					<!-- , COM_OPEN
+					, COM_CLOSE -->
+					, REGEXP_SUBSTR(COM_OPEN, '[^:]+', 1, 1) COM_OPEN_HH
+					, REGEXP_SUBSTR(COM_OPEN, '[^:]+', 1, 2) COM_OPEN_MM
+					, REGEXP_SUBSTR(COM_CLOSE, '[^:]+', 1, 1) COM_CLOSE_HH
+					, REGEXP_SUBSTR(COM_CLOSE, '[^:]+', 1, 2) COM_CLOSE_MM
+					, KEEP_LOCATION
+					, BANK_NAME
+					, BANK_BUNB
+					, STOP_YN
+					, STOP_DTM
+					, DLVY_CPON
+					, MONTH_YN
+					, CACOOP_NO
+		FROM TB_MBINFOXM
+		WHERE MEMB_ID = #{MEMB_ID}
+	</select>
+	
+	<!-- 조합원 찾기 - 이유리 -->
+	<select id="findSupr" parameterType="mall.web.domain.TB_SPINFOXM" resultType="mall.web.domain.TB_SPINFOXM">
+			   SELECT SUPR_ID
+					, BIZR_NUM
+					, RPRS_NAME
+					, SUPR_NAME
+					, TEL_NUM
+					, FAX_NUM
+					, RPR_MAIL
+					, POST_NUM
+					, BASC_ADDR
+					, DTL_ADDR
+					, DLVY_AMT
+					, DLVA_FCON
+					, PS_COM
+					, APR_PROD
+					, APD_PROD
+					, SBK_PROD
+					, SVMN_USCON
+					, DLVREF_CONT
+					, BIZR_STYLE
+					, BIZR_EVENT
+					, REGP_ID
+					, REG_DTM
+					, MODP_ID
+					, MOD_DTM	
+					, USE_YN
+		FROM
+			  TB_SPINFOXM
+		WHERE
+			  BIZR_NUM = #{BIZR_NUM}
+	</select>
+	
+	<!--
+	<insert id="insert" parameterType="mall.web.domain.TB_MBINFOXM">
+		INSERT INTO TB_MBINFOXM (
+			  MEMB_ID
+			, MEMB_GUBN
+			, SUPR_ID
+			, SUPMEM_APST
+			, APRF_RESN
+			, MEMB_NAME
+			, MEMB_PW
+			, MEMB_SEX
+			, SLCAL_GUBN
+			, MEMB_BTDY
+			, MEMB_MAIL
+			, MEMB_IRA
+			, MEMB_PN
+			, MEMB_BADR
+			, MEMB_DADR
+			, MEMB_CPON
+			, MEMB_CSRA
+			, MEMB_TELN
+			, COM_NAME
+			, COM_BUNB
+			, COM_TELN
+			, COM_PN
+			, COM_BADR
+			, COM_DADR
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+			, COM_OPEN
+			, COM_CLOSE
+			, KEEP_LOCATION
+			, BANK_NAME
+			, BANK_BUNB
+		) VALUES (
+			  #{MEMB_ID}
+			, #{MEMB_GUBN}
+			, #{SUPR_ID}
+			, #{SUPMEM_APST}
+			, #{APRF_RESN}
+			, #{MEMB_NAME}
+			, #{MEMB_PW}
+			, #{MEMB_SEX}
+			, #{SLCAL_GUBN}
+			, #{MEMB_BTDY}
+			, #{MEMB_MAIL}
+			, #{MEMB_IRA}
+			, #{MEMB_PN}
+			, #{MEMB_BADR}
+			, #{MEMB_DADR}
+			, #{MEMB_CPON}
+			, #{MEMB_CSRA}
+			, #{MEMB_TELN}
+			, #{COM_NAME}
+			, #{COM_BUNB}
+			, #{COM_TELN}
+			, #{COM_PN}
+			, #{COM_BADR}
+			, #{COM_DADR}
+			, #{MEMB_ID}
+			, SYSDATE
+			, #{MEMB_ID}
+			, SYSDATE
+			, #{COM_OPEN}
+			, #{COM_CLOSE}
+			, #{KEEP_LOCATION}
+			, #{BANK_NAME}
+			, #{BANK_BUNB}
+		)
+	</insert>
+	 -->
+	 <!-- 멤버 등록 -  이유리 -->
+	 <insert id="insert" parameterType="mall.web.domain.TB_MBINFOXM">
+		INSERT INTO TB_MBINFOXM (
+			MEMB_ID
+			, MEMB_GUBN
+			, SUPR_ID
+			, SUPMEM_APST
+			, APRF_RESN
+			, MEMB_NAME
+			, MEMB_PW
+			, MEMB_SEX
+			, SLCAL_GUBN
+			, MEMB_BTDY
+			, MEMB_MAIL
+			, MEMB_IRA
+			, MEMB_PN
+			, MEMB_BADR
+			, MEMB_DADR
+			, MEMB_CPON
+			, MEMB_CSRA
+			, MEMB_TELN
+			, COM_NAME
+			, COM_BUNB
+			, COM_TELN
+			, COM_PN
+			, COM_BADR
+			, COM_DADR
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+			, COM_OPEN
+			, COM_CLOSE
+			, KEEP_LOCATION
+			, BANK_NAME
+			, BANK_BUNB
+			, CACOOP_NO
+		) VALUES (
+			  #{MEMB_ID}
+			, #{MEMB_GUBN}
+			<if test="MEMB_GUBN == 'MEMB_GUBN_01' or MEMB_GUBN == 'MEMB_GUBN_02'">
+			, #{SUPR_ID}
+			</if>
+			<if test="MEMB_GUBN == 'MEMB_GUBN_04' and (SUPR_ID != null or SUPR_ID != '')">
+			, #{SUPR_ID}
+			</if>
+			<if test="MEMB_GUBN == 'MEMB_GUBN_04' and (SUPR_ID == null or SUPR_ID == '')">
+			, (SELECT 'C' || LPAD(NVL(MAX(SUBSTR(SUPR_ID,2)),0) + 1, 5, 0) FROM TB_SPINFOXM)
+			</if>
+			, #{SUPMEM_APST}
+			, DEFAULT
+			, #{MEMB_NAME}
+			, #{MEMB_PW}
+			, DEFAULT
+			, DEFAULT
+			, DEFAULT
+			, #{MEMB_MAIL}
+			, DEFAULT
+			, #{MEMB_PN}
+			, #{MEMB_BADR}
+			, #{MEMB_DADR}
+			, #{MEMB_CPON}
+			, DEFAULT
+			, #{MEMB_TELN}
+			, #{COM_NAME}
+			, #{COM_BUNB}
+			, #{COM_TELN}
+			, #{COM_PN}
+			, #{COM_BADR}
+			, #{COM_DADR}
+			, #{MEMB_ID}
+			, SYSDATE
+			, #{MEMB_ID}
+			, SYSDATE
+			, DEFAULT
+			, DEFAULT
+			, DEFAULT
+			, DEFAULT
+			, DEFAULT
+			, #{CACOOP_NO}
+		)
+	</insert>
+	
+	<!-- 조합원 등록 - 이유리 -->
+	<insert id="suprInsert" parameterType="mall.web.domain.TB_SPINFOXM">
+		INSERT INTO 
+			TB_SPINFOXM (
+				SUPR_ID
+				, BIZR_NUM
+				, RPRS_NAME
+				, SUPR_NAME
+				, TEL_NUM
+				, FAX_NUM
+				, RPR_MAIL
+				, POST_NUM
+				, BASC_ADDR
+				, DTL_ADDR
+				, DLVY_AMT
+				, DLVA_FCON
+				, PS_COM
+				, APR_PROD
+				, APD_PROD
+				, SBK_PROD
+				, SVMN_USCON
+				, DLVREF_CONT
+				, SCSS_YN
+				, BIZR_STYLE
+				, BIZR_EVENT
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				, USE_YN
+			) VALUES (
+				(SELECT 'C' || LPAD(NVL(MAX(SUBSTR(SUPR_ID,2)),0) + 1, 5, 0) FROM TB_SPINFOXM)
+				, #{BIZR_NUM}
+				, #{RPRS_NAME}
+				, #{SUPR_NAME}
+				, #{TEL_NUM}
+				, NULL
+				, #{RPR_MAIL}
+				, #{POST_NUM}
+				, #{BASC_ADDR}
+				, #{DTL_ADDR}
+				, #{DLVY_AMT}
+				, #{DLVA_FCON}
+				, #{PS_COM}
+				, NULL
+				, #{APD_PROD}
+				, NULL
+				, NULL
+				, NULL
+				, 'N'
+				, NULL
+				, NULL
+				, #{REGP_ID}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+				, #{USE_YN}
+			)
+	</insert>
+	
+	<!-- 회원정보 수정 -->
+	<!-- <update id="update" parameterType="mall.web.domain.TB_MBINFOXM">
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			  MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+			<if test="SUPMEM_APST != null and SUPMEM_APST != ''">
+			    , SUPMEM_APST = #{SUPMEM_APST}
+			</if>
+			<if test="MEMB_PW != null and MEMB_PW != ''">
+				, MEMB_PW = #{MEMB_PW}
+			</if>
+			, APRF_RESN = #{APRF_RESN}
+			, MEMB_NAME = #{MEMB_NAME}
+			, MEMB_SEX = #{MEMB_SEX}
+			, MEMB_GUBN = #{MEMB_GUBN}
+			, SLCAL_GUBN = #{SLCAL_GUBN}
+			, MEMB_BTDY = #{MEMB_BTDY}
+			, MEMB_MAIL = #{MEMB_MAIL}
+			, MEMB_IRA = #{MEMB_IRA}
+			, MEMB_PN = #{MEMB_PN}
+			, MEMB_BADR = #{MEMB_BADR}
+			, MEMB_DADR = #{MEMB_DADR}
+			, MEMB_CPON = #{MEMB_CPON}
+			, MEMB_CSRA = #{MEMB_CSRA}
+			, MEMB_TELN = #{MEMB_TELN}
+			, COM_NAME = #{COM_NAME}
+			, COM_BUNB = #{COM_BUNB}
+			, COM_TELN = #{COM_TELN}
+			, COM_PN = #{COM_PN}
+			, COM_BADR = #{COM_BADR}
+			, COM_DADR = #{COM_DADR}
+			<if test="SCSS_YN != null and SCSS_YN != ''">
+				, SCSS_YN = #{SCSS_YN}
+			</if>
+			, COM_OPEN = #{COM_OPEN}
+			, COM_CLOSE = #{COM_CLOSE}
+			, KEEP_LOCATION = #{KEEP_LOCATION}
+			, BANK_NAME = #{BANK_NAME}
+			, BANK_BUNB = #{BANK_BUNB}
+		WHERE MEMB_ID = #{MEMB_ID}
+	</update> -->
+	
+	<!-- 회원정보 수정 - 이유리 -->
+	<update id="update" parameterType="mall.web.domain.TB_MBINFOXM">
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			  MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+			<if test="SUPMEM_APST != null and SUPMEM_APST != ''">
+			    , SUPMEM_APST = #{SUPMEM_APST}
+			</if>
+			<if test="MEMB_PW != null and MEMB_PW != ''">
+				, MEMB_PW = #{MEMB_PW}
+			</if>
+			, MEMB_MAIL = #{MEMB_MAIL}
+			, MEMB_CPON = #{MEMB_CPON}
+			, MEMB_TELN = #{MEMB_TELN}
+			, MEMB_PN = #{MEMB_PN}
+			, MEMB_BADR = #{MEMB_BADR}
+			, MEMB_DADR = #{MEMB_DADR}
+			<if test="COM_BUNB != null and COM_BUNB != ''">
+			, COM_BUNB = #{COM_BUNB}
+			</if>
+			<if test="CACOOP_NO != null and CACOOP_NO != ''">
+			, CACOOP_NO = #{CACOOP_NO}
+			</if>
+		WHERE MEMB_ID = #{MEMB_ID}
+	</update>
+	
+	<!-- 회원탈퇴 -->
+	<update id="delete" parameterType="mall.web.domain.TB_MBINFOXM">
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			  SCSS_YN = 'Y'
+			, MODP_ID = #{MODP_ID}
+			, MOD_DTM = SYSDATE
+		WHERE
+			  MEMB_ID = #{MEMB_ID}
+	</update>
+	
+	<!-- 약관정보 리스트-->
+	<select id="termList" parameterType="mall.web.domain.TB_TMINFOXM" resultType="mall.web.domain.TB_TMINFOXM">
+		SELECT TERM_GUBN
+		     	 , TERM_CONT
+		FROM TB_TMINFOXM
+	</select>
+	
+	<!-- 아이디 중복체크 -->
+	<select id="idCheck" parameterType="mall.web.domain.TB_MBINFOXM" resultType="int">
+		SELECT COUNT(*) AS count
+		FROM TB_MBINFOXM
+		WHERE MEMB_ID = #{MEMB_ID_TMP}
+	</select>
+	
+	<!-- 비밀번호 체크 -->
+	<select id="pwCheck" parameterType="mall.web.domain.TB_MBINFOXM" resultType="int">
+		SELECT COUNT(*) AS count
+		FROM TB_MBINFOXM
+		WHERE MEMB_ID = #{MEMB_ID}
+		AND MEMB_PW = #{MEMB_PW}
+	</select>
+	
+	<!-- 사업자번호 중복체크 -->
+	<select id="comBunbChk" parameterType="mall.web.domain.TB_MBINFOXM" resultType="int">
+		SELECT COUNT(*) AS count
+		FROM TB_MBINFOXM
+		WHERE REGEXP_REPLACE(COM_BUNB, '[^0-9]') = REGEXP_REPLACE(#{COM_BUNB_TMP}, '[^0-9]')
+	</select>
+	
+	<!-- 배송료쿠폰 -->
+	<select id="deliCpCnt" parameterType="mall.web.domain.TB_MBINFOXM" resultType="int">
+		SELECT DLVY_CPON
+		FROM TB_MBINFOXM
+		WHERE MEMB_ID = #{MEMB_ID}
+	</select>
+	
+	<!-- 배송료쿠폰갯수 업데이트 -->
+	<update id="updateCpon" parameterType="mall.web.domain.TB_MBINFOXM">
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			  DLVY_CPON 	= (TO_NUMBER(#{DLVY_CPON}) -1)
+			, MODP_ID 		= #{REGP_ID}
+			, MOD_DTM 	= SYSDATE
+		WHERE
+			MEMB_ID = #{MEMB_ID}
+	</update>
+</mapper>

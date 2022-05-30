@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.SupplierMgrMapper">
+	<!-- 공통 조건절 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test="SCSS_YN != null and SCSS_YN != ''">
+			    AND SCSS_YN = #{SCSS_YN}
+			</if>
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "SUPR_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND SUPR_NAME LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>		
+				<if test='schGbn == "RPRS_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND RPRS_NAME LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>			
+			</if>
+		</where> 
+	</sql>
+
+	<!-- 기업회원 Cnt -->
+	<select id="count" parameterType="mall.web.domain.TB_SPINFOXM" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			TB_SPINFOXM
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 기업회원 페이징 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_SPINFOXM" resultType="mall.web.domain.TB_SPINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT
+				SUPR_ID
+				, BIZR_NUM
+				, RPRS_NAME
+				, SUPR_NAME
+				, TEL_NUM
+				, FAX_NUM
+				, RPR_MAIL
+				, POST_NUM
+				, BASC_ADDR
+				, DTL_ADDR
+				, DLVY_AMT
+				, DLVA_FCON
+				, PS_COM
+				, APR_PROD
+				, APD_PROD
+				, SBK_PROD
+				, SVMN_USCON
+				, DLVREF_CONT
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				<!-- 	, AUTH_MAIL
+					, RPR_PASS
+					, MAIL_GUBN -->
+			FROM
+				TB_SPINFOXM
+			<include refid="searchCondition"/>
+			ORDER BY REG_DTM ASC 
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 기업별 회원목록 -->
+	<select id="list" parameterType="mall.web.domain.TB_SPINFOXM" resultType="mall.web.domain.TB_SPINFOXM">
+		SELECT SUPR_ID
+			, BIZR_NUM
+			, RPRS_NAME
+			, SUPR_NAME
+			, TEL_NUM
+			, FAX_NUM
+			, RPR_MAIL
+			, POST_NUM
+			, BASC_ADDR
+			, DTL_ADDR
+			, DLVY_AMT
+			, DLVA_FCON
+			, PS_COM
+			, APR_PROD
+			, APD_PROD
+			, SBK_PROD
+			, SVMN_USCON
+			, DLVREF_CONT
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_SPINFOXM
+		WHERE SCSS_YN = 'N' 
+			AND ROWID IN (SELECT MAX(ROWID) FROM TB_SPINFOXM GROUP BY SUPR_NAME)
+		ORDER BY REG_DTM DESC
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 기업회원 상세정보 -->
+	<select id="find" parameterType="mall.web.domain.TB_SPINFOXM" resultType="mall.web.domain.TB_SPINFOXM">
+		SELECT	  SUPR_ID
+					, BIZR_NUM
+					, RPRS_NAME
+					, SUPR_NAME
+					, TEL_NUM
+					, FAX_NUM
+					, RPR_MAIL
+					, POST_NUM
+					, BASC_ADDR
+					, DTL_ADDR
+					, DLVY_AMT
+					, DLVA_FCON
+					, PS_COM
+					, APR_PROD
+					, APD_PROD
+					, SBK_PROD
+					, SVMN_USCON
+					, DLVREF_CONT
+					, BIZR_STYLE
+					, BIZR_EVENT
+					, REGP_ID
+					, REG_DTM
+					, MODP_ID
+					, MOD_DTM	
+					<!-- , AUTH_MAIL			
+					, RPR_PASS
+					, MAIL_GUBN -->
+		FROM
+			TB_SPINFOXM
+		WHERE
+			SUPR_ID = #{SUPR_ID}
+	</select>
+	
+	<!-- 기업회원 등록 -->
+	<insert id="insert" parameterType="mall.web.domain.TB_SPINFOXM">
+		INSERT INTO 
+			TB_SPINFOXM (
+				SUPR_ID
+				, BIZR_NUM
+				, RPRS_NAME
+				, SUPR_NAME
+				, TEL_NUM
+				, FAX_NUM
+				, RPR_MAIL
+				, POST_NUM
+				, BASC_ADDR
+				, DTL_ADDR
+				, DLVY_AMT
+				, DLVA_FCON
+				, PS_COM
+				, APR_PROD
+				, APD_PROD
+				, SBK_PROD
+				, SVMN_USCON
+				, DLVREF_CONT
+				, SCSS_YN
+				<!-- , BIZR_STYLE
+				, BIZR_EVENT -->
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			) VALUES (
+				(SELECT 'C' || LPAD(NVL(MAX(SUBSTR(SUPR_ID,2)),0) + 1, 5, 0) FROM TB_SPINFOXM)
+				, #{BIZR_NUM}
+				, #{RPRS_NAME}
+				, #{SUPR_NAME}
+				, #{TEL_NUM}
+				, #{FAX_NUM}
+				, #{RPR_MAIL}
+				, #{POST_NUM}
+				, #{BASC_ADDR}
+				, #{DTL_ADDR}
+				, #{DLVY_AMT}
+				, #{DLVA_FCON}
+				, #{PS_COM}
+				, #{APR_PROD}
+				, #{APD_PROD}
+				, #{SBK_PROD}
+				, #{SVMN_USCON}
+				, #{DLVREF_CONT}
+				, 'N'
+				<!-- , #{BIZR_STYLE}
+				, #{BIZR_EVENT} -->
+				, #{REGP_ID}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+			)
+	</insert>
+	
+	<!-- 기업회원 정보수정 -->
+	<update id="update" parameterType="mall.web.domain.TB_SPINFOXM">
+		UPDATE 
+			TB_SPINFOXM
+		SET
+			  BIZR_NUM		=   #{BIZR_NUM}
+			, RPRS_NAME		=   #{RPRS_NAME}
+			, SUPR_NAME		=   #{SUPR_NAME}
+			, TEL_NUM			=   #{TEL_NUM}
+			, FAX_NUM			=   #{FAX_NUM}
+			, RPR_MAIL 		=   #{RPR_MAIL}
+			, POST_NUM 		=   #{POST_NUM}
+			, BASC_ADDR		=   #{BASC_ADDR}
+			, DTL_ADDR 		=   #{DTL_ADDR}
+			, DLVY_AMT 		=   #{DLVY_AMT}
+			, DLVA_FCON		=   #{DLVA_FCON}
+			, PS_COM			=   #{PS_COM}
+			, APR_PROD 		=   #{APR_PROD}
+			, APD_PROD 		=   #{APD_PROD}
+			, SBK_PROD 		=   #{SBK_PROD}
+			, SVMN_USCON 	=   #{SVMN_USCON}
+			, DLVREF_CONT 	=   #{DLVREF_CONT}
+			<!-- , BIZR_STYLE		=   #{BIZR_STYLE}
+			, BIZR_EVENT 	=   #{BIZR_EVENT} -->
+			, MODP_ID			=   #{REGP_ID}
+			, MOD_DTM 		=   SYSDATE
+		WHERE 
+			SUPR_ID =   #{SUPR_ID}
+	</update>
+	
+	<!-- 기업회원 삭제 -->
+	<update id="delete" parameterType="mall.web.domain.TB_SPINFOXM">
+		UPDATE 
+			TB_SPINFOXM
+		SET
+			  SCSS_YN = 'Y'
+			, MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+		WHERE
+			SUPR_ID = #{SUPR_ID}
+	</update>
+
+	<!-- 기업회원관리 팝업용 (임시)_20190405 -->
+	<update id="update2" parameterType="mall.web.domain.TB_MBINFOXM">
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			 MEMB_NAME = #{MEMB_NAME}
+			, MEMB_MAIL = #{MEMB_MAIL}
+			, MEMB_CPON = #{MEMB_CPON}
+			<if test="MEMB_PW != null and MEMB_PW != ''">
+			, MEMB_PW = #{MEMB_PW}
+			</if>
+			<if test="SUPMEM_APST != null and SUPMEM_APST != ''">
+			, SUPMEM_APST = #{SUPMEM_APST}
+			</if>
+			<if test="APRF_RESN != null and APRF_RESN != ''">
+			, APRF_RESN = #{APRF_RESN}
+			</if>
+			, MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+		WHERE
+			MEMB_ID = #{MEMB_ID}
+	</update>
+	
+	<update id="listUpdate" parameterType="mall.web.domain.TB_MBINFOXM">
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			SUPMEM_APST = #{SUPMEM_APST}
+			, MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+		WHERE
+			MEMB_ID = #{MEMB_ID}
+	</update>
+	
+	<!-- 사업자번호 중복체크 -->
+	<select id="comBunbChk" parameterType="mall.web.domain.TB_SPINFOXM" resultType="int">
+		SELECT COUNT(*) AS count
+		FROM TB_SPINFOXM
+		WHERE REGEXP_REPLACE(BIZR_NUM, '[^0-9]') = REGEXP_REPLACE(#{BIZR_NUM}, '[^0-9]')
+	</select>
+	
+	<!-- 이메일 정보수정 -->
+	<!-- <update id="email" parameterType="mall.web.domain.TB_SPINFOXM">
+		UPDATE 
+			TB_SPINFOXM
+		SET
+			  AUTH_MAIL 		=   #{AUTH_MAIL}
+			, RPR_PASS			=   #{RPR_PASS}
+			, MAIL_GUBN		=   #{MAIL_GUBN}
+			, MODP_ID			=   #{REGP_ID}ㄱ
+			, MOD_DTM 		=   SYSDATE
+		WHERE 
+			SUPR_ID =   #{SUPR_ID}
+	</update> -->
+	
+</mapper>

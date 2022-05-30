@@ -1,0 +1,121 @@
+.product_list li {
+    /* width: 19.8%; */
+    background: #fff;
+    border-right: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    float: left;
+    height: 248px;
+    text-align: center;
+    margin-bottom: 0px;
+}
+.product_list .pro {
+    margin: 25px;
+    letter-spacing: 2;
+    max-width:151px;
+    max-height:120px;
+    width:auto; height:auto;
+}
+.new-list .goodsImg {
+    max-width:132px;
+    max-height:88px;
+    width:auto; height:auto;
+}
+.panel {
+    border-radius: 4px;
+    border: 0px solid transparent; 
+    border-image: none;
+    margin-bottom: 0px;
+    box-shadow: 0px 1px 1px rgba(0,0,0,0.05);
+    background-color: rgb(255, 255, 255);
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+} 
+.product_list .price {
+    font-size: 20px;
+    /* display: inline-block; */
+    color: #000;
+}
+.pname{
+	overflow: hidden; 
+  	text-overflow: ellipsis;
+  	white-space: nowrap; 
+  	height: 20px;
+}
+
+.carousel-indicators {
+    /* list-style: none; */
+    left: 65%;
+    width: 60%;
+    text-align: right;
+    bottom: 0px;
+    padding-left: 0px;
+    margin-left: -30%;
+    position: absolute;
+    z-index: 15;
+}
+ol {
+    margin-top: 0px;
+    argin-bottom: 10px;
+}
+.tab-con-main {
+    border-left: 1px solid #efefef;
+    border-bottom: 1px solid #efefef;
+    border-right: 1px solid #efefef;
+    min-height: 300px;
+    max-height: 300px;
+    overflow: hidden;
+}
+.category_list > li > p.title {
+    /* font-weight: bold; */
+    font-size: 13px;
+    padding-left: 15px;
+    margin: 0;
+    /* background: url(../img/common/cate_dot.png) no-repeat left center; */
+}
+a.pname{
+	display: block;
+    /* padding-left: 5px; */
+    /* margin: 2px; */
+}
+/* ∏ﬁ¿Œ ≈« */
+.procago{
+	border: 1px solid white;
+	background: white;
+}
+.procago ul li{
+	border: 1px solid #c3d510;
+	float:left; 
+	width : 16.66666%;
+	height: 44px;
+	text-align: center;
+}
+.procago ul li a{
+	width: 100%;
+    text-align: center;
+    display: block;
+    height: 100%;
+    vertical-align:middle;
+    background-color: #c3d510;
+    font-family: 'hanna', Roboto, Arial, sans-serif;
+    font: caption;
+    color: initial;
+    font-weight: bolder;
+}
+
+.procago li.sprice a{
+	width: 100%;
+    text-align: center;
+    display: block;
+    height: 100%;
+    vertical-align:middle;
+    background-color: #ff7f00;
+    font-family: 'hanna', Roboto, Arial, sans-serif;
+    font: caption;
+    color: initial;
+    font-weight: bolder;
+}
+
+.procago li.active a.sp{
+	border-bottom: 1px solid #ffffff; 
+	background: #ffffff; 
+	color: #ff7f00;
+}

@@ -1,0 +1,923 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.ProductSalTotalMgrMapper">
+	<!-- 공통 조건절 -->
+	<sql id="searchCondition">
+		AND A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03','ORDER_CON_09','ORDER_CON_05','ORDER_CON_06','ORDER_CON_08')
+		<if test="schGbn != null and schGbn != ''">
+			<if test='schGbn == "PD_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+					AND PD_NAME LIKE '%' || #{schTxt} || '%'
+				</if>
+			</if>	
+			<if test='schGbn == "PD_CODE"'>
+				<if test="schTxt != null and schTxt != ''">
+					AND PD_CODE = #{schTxt}
+				</if>
+			</if>	
+			<if test='schGbn == "PD_BARCD"'>
+				<if test="schTxt != null and schTxt != ''">
+					AND PD_BARCD = #{schTxt}
+				</if>
+			</if>
+		</if>
+		<if test="datepickerStr != null and datepickerStr != ''">
+			AND TO_CHAR (PAY_DTM, 'YYYY-MM-DD') <![CDATA[>=]]> #{datepickerStr}
+		</if>
+		<if test="datepickerEnd != null and datepickerEnd != ''">
+			AND TO_CHAR (PAY_DTM, 'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+		</if>		
+		<if test="SALE_CON != null and SALE_CON != ''">
+			AND SALE_CON = #{SALE_CON}
+		</if>
+	</sql>
+	
+	<!-- 공통 정렬순서 -->
+	<sql id="orderbyCondition">
+		<if test="sortGubun != null and sortGubun != ''">
+			<if test='sortGubun == "PD_NAME"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY PD_NAME DESC, REAL_PRICE DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY PD_NAME ASC, REAL_PRICE DESC
+				</if>	
+			</if>
+			<if test='sortGubun == "REG_DTM"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY REG_DTM DESC, REAL_PRICE DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY REG_DTM ASC, REAL_PRICE DESC
+				</if>
+			</if>
+			<if test='sortGubun == "MOD_DTM"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY MOD_DTM DESC, REAL_PRICE DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY MOD_DTM ASC, REAL_PRICE DESC
+				</if>
+			</if>
+			<if test='sortGubun == "ORDER_QTY"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY ORDER_QTY DESC, REAL_PRICE DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY ORDER_QTY ASC, REAL_PRICE DESC
+				</if>
+			</if>
+			<if test='sortGubun == "REAL_PRICE"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY REAL_PRICE DESC, PD_PRICE DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY REAL_PRICE ASC, PD_PRICE DESC
+				</if>
+			</if>
+			<if test='sortGubun == "MEMB_NAME"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY MEMB_NAME DESC, REAL_PRICE DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY MEMB_NAME ASC, REAL_PRICE DESC
+				</if>
+			</if>
+			<if test='sortGubun == "COM_NAME"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY COM_NAME DESC, REAL_PRICE DESC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY COM_NAME ASC, REAL_PRICE DESC
+				</if>
+			</if>
+			<!-- <if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PAY_DTM DESC
+			</if> -->
+		</if>
+	</sql>
+	
+	<!-- 상품 매출 집계 count -->
+	<select id="countTotal" parameterType="mall.web.domain.TB_PDTOTXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE,
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE,
+			    SUM(ORDER_QTY) AS ORDER_QTY    
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.ORDER_DTM,
+			        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+		        	C.TAX_GUBN,
+        			A.PAY_METD
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM 
+				    <include refid="searchCondition"/>
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME,
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PD_CODE ASC, REAL_PRICE DESC
+			</if>
+		)
+	</select>
+	
+	<!-- 상품 매출 집계 페이징 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_PDTOTXM" resultType="mall.web.domain.TB_PDTOTXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE,
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE,
+			    SUM(ORDER_QTY) AS ORDER_QTY
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.ORDER_DTM,
+			        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+		        	C.TAX_GUBN,
+		        	A.PAY_METD
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM 
+				    <include refid="searchCondition"/>
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PD_CODE ASC, REAL_PRICE DESC
+			</if>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 상품 매출 집계 목록 (엑셀) -->
+	<select id="excelList" parameterType="mall.web.domain.TB_PDTOTXM" resultType="HashMap">
+		SELECT
+		    PD_CODE, 
+		    PD_BARCD, 
+		    PD_NAME,
+		    FC_GET_COMCOD_NM(TAX_GUBN) AS TAX_GUBN,
+		    PD_PRICE,
+		    FC_GET_COMCOD_NM(PDDC_GUBN) AS PDDC_GUBN,
+		    PDDC_VAL, 
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+					ELSE PD_PRICE
+		    END REAL_PRICE,
+		    SUM(ORDER_QTY) AS ORDER_QTY,
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN (PD_PRICE - PDDC_VAL) * SUM(ORDER_QTY)
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN (PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))) * SUM(ORDER_QTY)
+					ELSE PD_PRICE * SUM(ORDER_QTY)
+		    END SUM_PRICE
+		FROM (    
+		    SELECT 
+		        A.ORDER_NUM,
+		        A.ORDER_DTM,
+		        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+		        B.ORDER_DTNUM, 
+		        B.PD_CODE, 
+		        C.PD_BARCD, 
+		        B.PD_NAME, 
+		        B.PD_PRICE, 
+		        B.ORDER_QTY,
+		        B.PDDC_GUBN, 
+		        B.PDDC_VAL,
+		        C.TAX_GUBN,
+		        A.PAY_METD
+		    FROM TB_ODINFOXM A
+		    INNER JOIN TB_ODINFOXD B
+		    	ON A.ORDER_NUM = B.ORDER_NUM 
+			    <include refid="searchCondition"/>
+		    LEFT JOIN TB_PDINFOXM C
+		    	ON B.PD_CODE = C.PD_CODE
+		    WHERE 1=1
+		    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+				<if test="PAY_METD != null and PAY_METD != ''">
+					AND A.PAY_METD = #{PAY_METD}
+				</if>
+		)
+		GROUP BY 
+		    PD_CODE,
+		    PD_BARCD,  
+		    PD_NAME, 
+		    PDDC_GUBN, 
+		    PDDC_VAL, 
+		    PD_PRICE,
+		    TAX_GUBN
+		<include refid="orderbyCondition"/>
+		<if test="sortGubun == null or sortGubun == ''">
+			ORDER BY PD_CODE ASC, REAL_PRICE DESC
+		</if>
+	</select>
+	
+	<!-- 상품 일자별 집계  count -->
+	<select id="countDate" parameterType="mall.web.domain.TB_PDTOTXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT
+			    PAY_DTM, 
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE, 
+			    SUM(ORDER_QTY) AS ORDER_QTY, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.ORDER_DTM,
+			        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+			        C.TAX_GUBN
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM 
+				    <include refid="searchCondition"/>
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    PAY_DTM, 
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PAY_DTM DESC
+			</if>
+		)
+	</select>
+	
+	<!-- 상품 일자별 집계 페이징 목록 (특정상품에 대하여 일자별로 매출되는 수량과 단가 , 합계금액) -->
+	<select id="paginatedListDate" parameterType="mall.web.domain.TB_PDTOTXM" resultType="mall.web.domain.TB_PDTOTXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT
+			    PAY_DTM, 
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE, 
+			    SUM(ORDER_QTY) AS ORDER_QTY, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.ORDER_DTM,
+			        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+			        C.TAX_GUBN
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM 
+				    <include refid="searchCondition"/>
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    PAY_DTM, 
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PAY_DTM DESC
+			</if>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 상품 일자별 집계 목록 (엑셀) -->
+	<select id="excelDate" parameterType="mall.web.domain.TB_PDTOTXM" resultType="HashMap">
+		SELECT
+		    PAY_DTM, 
+		    PD_CODE, 
+		    PD_BARCD, 
+		    PD_NAME, 
+		    FC_GET_COMCOD_NM(TAX_GUBN) AS TAX_GUBN,
+		    PD_PRICE, 
+		    FC_GET_COMCOD_NM(PDDC_GUBN) AS PDDC_GUBN, 
+		    PDDC_VAL, 
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+					ELSE PD_PRICE
+		    END REAL_PRICE,
+		    SUM(ORDER_QTY) AS ORDER_QTY,
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN (PD_PRICE - PDDC_VAL) * SUM(ORDER_QTY)
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN (PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))) * SUM(ORDER_QTY)
+					ELSE PD_PRICE * SUM(ORDER_QTY)
+		    END SUM_PRICE
+		FROM (    
+		    SELECT 
+		        A.ORDER_NUM,
+		        A.ORDER_DTM,
+		        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+		        B.ORDER_DTNUM, 
+		        B.PD_CODE, 
+		        C.PD_BARCD, 
+		        B.PD_NAME, 
+		        B.PD_PRICE, 
+		        B.ORDER_QTY,
+		        B.PDDC_GUBN, 
+		        B.PDDC_VAL,
+		        C.TAX_GUBN
+		    FROM TB_ODINFOXM A
+		    INNER JOIN TB_ODINFOXD B
+		    	ON A.ORDER_NUM = B.ORDER_NUM 
+			    <include refid="searchCondition"/>
+		    LEFT JOIN TB_PDINFOXM C
+		    	ON B.PD_CODE = C.PD_CODE
+		    WHERE 1=1
+		    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+				<if test="PAY_METD != null and PAY_METD != ''">
+					AND A.PAY_METD = #{PAY_METD}
+				</if>
+		)
+		GROUP BY 
+		    PAY_DTM, 
+		    PD_CODE,
+		    PD_BARCD,  
+		    PD_NAME, 
+		    PDDC_GUBN, 
+		    PDDC_VAL, 
+		    PD_PRICE,
+		    TAX_GUBN
+		<include refid="orderbyCondition"/>
+		<if test="sortGubun == null or sortGubun == ''">
+			ORDER BY PAY_DTM DESC
+		</if>
+	</select>
+	
+	
+	<!-- 상품 기간별 집계  count -->
+	<select id="countPeriod" parameterType="mall.web.domain.TB_PDTOTXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT
+			    PAY_DTM, 
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE, 
+			    SUM(ORDER_QTY) AS ORDER_QTY, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.ORDER_DTM,
+			        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+			        C.TAX_GUBN
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM 
+				    <include refid="searchCondition"/>
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    PAY_DTM, 
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PAY_DTM DESC
+			</if>
+		)
+	</select>
+	
+	<!-- 상품 기간별 집계 페이징 목록 (특정상품에 대하여 조회기간이 장기간임) -->
+	<select id="paginatedListPeriod" parameterType="mall.web.domain.TB_PDTOTXM" resultType="mall.web.domain.TB_PDTOTXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT
+			    PAY_DTM, 
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE, 
+			    SUM(ORDER_QTY) AS ORDER_QTY, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.ORDER_DTM,
+			        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+			        C.TAX_GUBN
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM 
+				    <include refid="searchCondition"/>
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    PAY_DTM, 
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PAY_DTM DESC
+			</if>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 상품 기간별 집계 목록 (엑셀) -->
+	<select id="excelPeriod" parameterType="mall.web.domain.TB_PDTOTXM" resultType="HashMap">
+		SELECT
+		    PAY_DTM, 
+		    PD_CODE, 
+		    PD_BARCD, 
+		    PD_NAME, 
+		    FC_GET_COMCOD_NM(TAX_GUBN) AS TAX_GUBN,
+		    PD_PRICE,
+		    FC_GET_COMCOD_NM(PDDC_GUBN) AS PDDC_GUBN, 
+		    PDDC_VAL, 
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+					ELSE PD_PRICE
+		    END REAL_PRICE,
+		    SUM(ORDER_QTY) AS ORDER_QTY,
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN (PD_PRICE - PDDC_VAL) * SUM(ORDER_QTY)
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN (PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))) * SUM(ORDER_QTY)
+					ELSE PD_PRICE * SUM(ORDER_QTY)
+		    END SUM_PRICE
+		FROM (    
+		    SELECT 
+		        A.ORDER_NUM,
+		        A.ORDER_DTM,
+		        TO_CHAR(A.PAY_DTM ,'YYYY-MM-DD') AS PAY_DTM,
+		        B.ORDER_DTNUM, 
+		        B.PD_CODE, 
+		        C.PD_BARCD, 
+		        B.PD_NAME, 
+		        B.PD_PRICE, 
+		        B.ORDER_QTY,
+		        B.PDDC_GUBN, 
+		        B.PDDC_VAL,
+		        C.TAX_GUBN
+		    FROM TB_ODINFOXM A
+		    INNER JOIN TB_ODINFOXD B
+		    	ON A.ORDER_NUM = B.ORDER_NUM 
+			    <include refid="searchCondition"/>
+		    LEFT JOIN TB_PDINFOXM C
+		    	ON B.PD_CODE = C.PD_CODE
+		    WHERE 1=1
+		    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+				<if test="PAY_METD != null and PAY_METD != ''">
+					AND A.PAY_METD = #{PAY_METD}
+				</if>
+		)
+		GROUP BY 
+		    PAY_DTM, 
+		    PD_CODE,
+		    PD_BARCD,  
+		    PD_NAME, 
+		    PDDC_GUBN, 
+		    PDDC_VAL, 
+		    PD_PRICE,
+		    TAX_GUBN
+		<include refid="orderbyCondition"/>
+		<if test="sortGubun == null or sortGubun == ''">
+			ORDER BY PAY_DTM DESC
+		</if>
+	</select>
+	
+	
+	<!-- 상품 회원별 집계 count -->
+	<select id="countMember" parameterType="mall.web.domain.TB_PDTOTXM" resultType="int">
+		SELECT COUNT(*)
+		FROM(
+			SELECT
+			    MEMB_ID, 
+			    MEMB_NAME,
+			    COM_NAME,
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE, 
+			    SUM(ORDER_QTY) AS ORDER_QTY, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.MEMB_ID,  
+			        M.MEMB_NAME,
+			        M.COM_NAME,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+			        C.TAX_GUBN
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM
+				    <include refid="searchCondition"/>
+				INNER JOIN TB_MBINFOXM M
+					ON A.MEMB_ID = M.MEMB_ID
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    MEMB_ID, 
+			    MEMB_NAME,
+			    COM_NAME,
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY MEMB_ID DESC, REAL_PRICE DESC
+			</if>
+		)
+	</select>
+	
+	<!-- 상품 회원별 집계 페이징 목록 (상품이 어떤 회원에게 매출이 되었는지 (수량과 단가, 총 매출금액)) -->
+	<select id="paginatedListMember" parameterType="mall.web.domain.TB_PDTOTXM" resultType="mall.web.domain.TB_PDTOTXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT
+			    MEMB_ID, 
+			    MEMB_NAME,
+			    COM_NAME,
+			    PD_CODE, 
+			    PD_BARCD, 
+			    PD_NAME, 
+			    TAX_GUBN,
+			    PD_PRICE, 
+			    SUM(ORDER_QTY) AS ORDER_QTY, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+						WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+						ELSE PD_PRICE
+			    END REAL_PRICE
+			FROM (    
+			    SELECT 
+			        A.ORDER_NUM,
+			        A.MEMB_ID,  
+			        M.MEMB_NAME,
+			        M.COM_NAME,
+			        B.ORDER_DTNUM, 
+			        B.PD_CODE, 
+			        C.PD_BARCD, 
+			        B.PD_NAME, 
+			        B.PD_PRICE, 
+			        B.ORDER_QTY,
+			        B.PDDC_GUBN, 
+			        B.PDDC_VAL,
+			        C.TAX_GUBN,
+			        A.PAY_METD
+			    FROM TB_ODINFOXM A
+			    INNER JOIN TB_ODINFOXD B
+			    	ON A.ORDER_NUM = B.ORDER_NUM
+				    <include refid="searchCondition"/>
+				INNER JOIN TB_MBINFOXM M
+					ON A.MEMB_ID = M.MEMB_ID
+			    LEFT JOIN TB_PDINFOXM C
+			    	ON B.PD_CODE = C.PD_CODE
+			    WHERE 1=1
+			    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+					<if test="PAY_METD != null and PAY_METD != ''">
+						AND A.PAY_METD = #{PAY_METD}
+					</if>
+			)
+			GROUP BY 
+			    MEMB_ID, 
+			    MEMB_NAME,
+			    COM_NAME,
+			    PD_CODE,
+			    PD_BARCD,  
+			    PD_NAME, 
+			    PDDC_GUBN, 
+			    PDDC_VAL, 
+			    PD_PRICE,
+			    TAX_GUBN
+			<include refid="orderbyCondition"/>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY MEMB_ID DESC, REAL_PRICE DESC
+			</if>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 상품 회원별 집계 목록 (엑셀) -->
+	<select id="excelMember" parameterType="mall.web.domain.TB_PDTOTXM" resultType="HashMap">
+		SELECT
+		    MEMB_ID, 
+		    MEMB_NAME,
+		    COM_NAME,
+		    PD_CODE, 
+		    PD_BARCD, 
+		    PD_NAME, 
+		    FC_GET_COMCOD_NM(TAX_GUBN) AS TAX_GUBN,
+		    PD_PRICE,
+		    FC_GET_COMCOD_NM(PDDC_GUBN) AS PDDC_GUBN, 
+		    PDDC_VAL, 
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+					ELSE PD_PRICE
+		    END REAL_PRICE,
+		    SUM(ORDER_QTY) AS ORDER_QTY,
+		    CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN (PD_PRICE - PDDC_VAL) * SUM(ORDER_QTY)
+					WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN (PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))) * SUM(ORDER_QTY)
+					ELSE PD_PRICE * SUM(ORDER_QTY)
+		    END SUM_PRICE
+		FROM (    
+		    SELECT 
+		        A.ORDER_NUM,
+		        A.MEMB_ID,  
+		        M.MEMB_NAME,
+		        M.COM_NAME,
+		        B.ORDER_DTNUM, 
+		        B.PD_CODE, 
+		        C.PD_BARCD, 
+		        B.PD_NAME, 
+		        B.PD_PRICE, 
+		        B.ORDER_QTY,
+		        B.PDDC_GUBN, 
+		        B.PDDC_VAL,
+		        C.TAX_GUBN,
+		        A.PAY_METD
+		    FROM TB_ODINFOXM A
+		    INNER JOIN TB_ODINFOXD B
+		    	ON A.ORDER_NUM = B.ORDER_NUM
+			    <include refid="searchCondition"/>
+			INNER JOIN TB_MBINFOXM M
+				ON A.MEMB_ID = M.MEMB_ID
+		    LEFT JOIN TB_PDINFOXM C
+		    	ON B.PD_CODE = C.PD_CODE
+		    WHERE 1=1
+		    	AND (A.DEL_YN IS NULL OR A.DEL_YN = 'N')	
+				<if test="PAY_METD != null and PAY_METD != ''">
+					AND A.PAY_METD = #{PAY_METD}
+				</if>
+		)
+		GROUP BY 
+		    MEMB_ID, 
+		    MEMB_NAME,
+		    COM_NAME,
+		    PD_CODE,
+		    PD_BARCD,  
+		    PD_NAME, 
+		    PDDC_GUBN, 
+		    PDDC_VAL, 
+		    PD_PRICE,
+		    TAX_GUBN
+		<include refid="orderbyCondition"/>
+		<if test="sortGubun == null or sortGubun == ''">
+			ORDER BY MEMB_ID DESC, REAL_PRICE DESC
+		</if>
+	</select>
+	
+	
+	<!-- 상품 선택 팝업 목록 -->
+	<sql id="popupCondition">
+		<where>
+			1=1
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "PD_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+						AND PD_NAME LIKE '%' || #{schTxt} || '%'
+					</if>
+				</if>	
+				<if test='schGbn == "PD_CODE"'>
+					<if test="schTxt != null and schTxt != ''">
+						AND PD_CODE LIKE '%' || #{schTxt} || '%'
+					</if>
+				</if>	
+				<if test='schGbn == "PD_BARCD"'>
+					<if test="schTxt != null and schTxt != ''">
+						AND PD_BARCD LIKE '%' || #{schTxt} || '%'
+					</if>
+				</if>
+			</if>
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND TO_CHAR (MOD_DTM, 'YYYY-MM-DD') <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				AND TO_CHAR (MOD_DTM, 'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+			</if>		
+			<if test="SALE_CON != null and SALE_CON != ''">
+				AND SALE_CON = #{SALE_CON}
+			</if>
+		</where>  
+	</sql>
+	
+	
+	<!-- 상품 수 -->
+	<select id="count" parameterType="mall.web.domain.TB_PDTOTXM" resultType="int">
+		SELECT COUNT(*) 
+		FROM (
+			SELECT 	PD_CODE, 
+						PD_NAME, 
+						PD_BARCD, 
+						PD_PRICE,
+						PDDC_GUBN,
+						PDDC_VAL,
+						DEL_YN, 
+						SALE_CON, 
+						MODP_ID, 
+						MOD_DTM 
+			FROM TB_PDINFOXM
+			WHERE DEL_YN = 'N'
+		)
+		<include refid="popupCondition"/>
+	</select>
+	
+	<select id="list" parameterType="mall.web.domain.TB_PDTOTXM" resultType="mall.web.domain.TB_PDTOTXM">		
+		SELECT * 
+		FROM (
+			SELECT 	PD_CODE, 
+						PD_NAME, 
+						PD_BARCD, 
+						PD_PRICE,
+						PDDC_GUBN,
+						PDDC_VAL,
+						CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+								WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE * (PDDC_VAL / 100))
+								ELSE PD_PRICE
+					    END REAL_PRICE,
+						SALE_CON, 
+						FC_GET_COMCOD_NM(SALE_CON) AS SALE_CON_NM,						
+						DEL_YN, 
+						MODP_ID, 
+						MOD_DTM 
+			FROM 
+				TB_PDINFOXM
+			WHERE 1=1
+				AND DEL_YN = 'N'
+		)
+		<include refid="popupCondition"/>
+	</select>
+</mapper>

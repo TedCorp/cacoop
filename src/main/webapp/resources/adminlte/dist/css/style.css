@@ -1,0 +1,117 @@
+@charset "utf-8";
+
+/* productMgr goodsImg */
+.goodsImg50 {
+    width: auto; height: auto;
+    max-width: 50px;
+    max-height: 50px;
+    min-width: 25px;
+    min-height: 25px;
+}
+
+/* jundanMgr list noimage */
+.box-body .imgHelp {
+    width:auto;
+    height:auto;
+    max-width:100%;
+    max-height:100%;    
+}
+
+/* jundanMgr rolling priview */
+.imgPreview {
+    width:499px;
+    height:331px;'
+}
+
+/* margin npx */
+.left-5 {
+	margin-left: 5px;
+}
+.left-10 {
+	margin-left: 10px;
+}
+.left-15 {
+	margin-left: 15px;
+}
+.left-20 {
+	margin-left: 20px;
+}
+.right-5 {
+	margin-right: 5px;
+}
+.right-10 {
+	margin-right: 10px;
+}
+.right-15 {
+	margin-right: 15px;
+}
+.right-20 {
+	margin-right: 20px;
+}
+
+/* text-align */
+.txt-right {
+	text-align: right;
+	vertical-align: middle !important;
+}
+.txt-left {
+	text-align: left;
+	vertical-align: middle !important;
+}
+.txt-middle {
+	text-align: center;
+	vertical-align: middle !important;
+}
+
+/* badge */
+.badge-light {
+    display: inline-block;
+    min-width: 10px;
+    padding: .2em .6em;
+    font-size: 80%;
+    font-weight: 700;
+    line-height: 1;
+    color: #333;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #ffffff;
+    border: 1px solid #666;
+    border-radius: 10px;
+}
+
+.badge-default {
+    display: inline-block;
+    min-width: 10px;
+    padding: .3em .6em;
+    font-size: 80%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #777;
+    border-radius: 10px;
+}
+
+.badge-warning {
+    display: inline-block;
+    min-width: 10px;
+    padding: .2em .6em;
+    font-size: 80%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #f39c12;
+    border-radius: 10px;
+}
+
+div label.required:before {
+	content: '* ';
+	color: #f00;
+	font-weight: bold; 
+}

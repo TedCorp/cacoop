@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="default">
+
+	<sql id="pagerHeader">
+	SELECT
+	    *
+	FROM (
+	    SELECT /*+ FIRST_ROWS(${pageNum*rowCnt-(rowCnt)} ) */
+	        ROWNUM RNUM,
+	        QRSLT.*
+	    FROM (
+    </sql>
+    
+    <sql id="pagerFooter">
+        ) QRSLT
+	    WHERE
+	        ROWNUM &lt;= ${pageNum*rowCnt}
+	) WHERE
+	    RNUM &gt; ${pageNum*rowCnt-(rowCnt)} 
+    </sql>
+    
+    <sql id="pagerHeaderJqGrid">
+	SELECT
+	    *
+	FROM (
+	    SELECT /*+ FIRST_ROWS(${pagerMaxPageItems}) */
+	        ROWNUM RNUM,
+	        QRSLT.*
+	    FROM (
+    </sql>
+    
+    <sql id="pagerFooterJqGrid">
+        ) QRSLT
+	    WHERE
+	        ROWNUM &lt;= ${endRows}
+	) WHERE
+	    RNUM &gt; ${startRows}
+    </sql>
+	
+</mapper>

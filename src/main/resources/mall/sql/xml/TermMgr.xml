@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.TermMgrMapper">
+	<select id="find" parameterType="mall.web.domain.TB_TMINFOXM" resultType="mall.web.domain.TB_TMINFOXM">
+		SELECT
+			TERM_GUBN
+			, TERM_CONT
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_TMINFOXM
+		WHERE
+			TERM_GUBN = #{TERM_GUBN}
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_TMINFOXM">
+		INSERT INTO 
+			TB_TMINFOXM (
+							TERM_GUBN
+							, TERM_CONT
+							, REGP_ID
+							, REG_DTM
+							, MODP_ID
+							, MOD_DTM
+						) VALUES (
+							#{TERM_GUBN}
+							, #{TERM_CONT}
+							, #{REGP_ID}
+							, SYSDATE
+							, #{REGP_ID}
+							, SYSDATE
+						)
+							
+	</insert>
+
+	<insert id="update" parameterType="mall.web.domain.TB_TMINFOXM">
+		UPDATE TB_TMINFOXM
+		   SET TERM_CONT = #{TERM_CONT}
+			 , MODP_ID = #{REGP_ID}
+			 , MOD_DTM =SYSDATE
+		WHERE TERM_GUBN = #{TERM_GUBN} 
+	</insert>
+	
+</mapper>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.OrderRfndMgrMapper">
+	<!-- 공통 where 조건 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test='schGbn == "MEMB_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND MEMB_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test='schGbn == "ORIGIN_NUM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND ORIGIN_NUM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test="PAY_METD != null and PAY_METD != ''">
+			    AND PAY_METD = #{PAY_METD}
+			</if>
+			<if test="schParam != null and schParam != ''">
+			    AND RFND_CON = #{schParam}
+			</if>
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND TO_CHAR(ORDER_DTM,'YYYY-MM-DD')  <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				AND TO_CHAR(ORDER_DTM,'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+			</if>
+		</where>  
+	</sql>
+	
+	<sql id="orderByCondition">
+		<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+			<if test='ORDER_GUBUN == "DATE_ORDER"'>
+				<if test='DATE_ORDER == "desc"'>
+					ORDER BY ORDER_DATE desc
+				</if>	
+				<if test='DATE_ORDER == "asc"'>
+					ORDER BY ORDER_DATE asc
+				</if>	
+			</if>
+			<if test='ORDER_GUBUN == "MEMB_NM_ORDER"'>
+				<if test='MEMB_NM_ORDER == "desc"'>
+					ORDER BY MEMB_NM desc
+				</if>	
+				<if test='MEMB_NM_ORDER == "asc"'>
+					ORDER BY MEMB_NM asc
+				</if>
+			</if>
+			<if test='ORDER_GUBUN == "RFND_REQDTM"'>
+				<if test='RFND_REQDTM == "desc"'>
+					ORDER BY RFND_REQDTM desc
+				</if>	
+				<if test='RFND_REQDTM == "asc"'>
+					ORDER BY RFND_REQDTM asc
+				</if>
+			</if>
+		</if>
+		<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+			ORDER BY ORDER_DATE desc
+		</if>
+	</sql>
+	
+	<!-- 리스트 카운트 20211215 장보라-->
+	<select id="count" parameterType="mall.web.domain.TB_ODINFOXM" resultType="int">
+	SELECT COUNT(*)
+		FROM (
+			SELECT A.ORDER_NUM
+				  ,A.ORDER_DATE
+				  ,A.ORDER_DTM
+				  ,A.ORIGIN_NUM
+				  ,A.RFND_CON
+				  ,A.PAY_METD
+				  ,A.MEMB_ID
+				  ,(SELECT FC_GET_MEMBID_NM(A.MEMB_ID) FROM DUAL) AS MEMB_NM
+			FROM TB_ODINFOXM A
+			WHERE
+			<choose>
+				<when test='MEMB_GUBN == "MEMB_GUBN_03" '>
+					FC_GET_REFUND_YN(A.ORDER_NUM,#{MEMB_ID}, 'RFND_CON_01') = 'Y'
+				</when>
+				<otherwise>
+					FC_GET_REFUND_YN(A.ORDER_NUM,#{MEMB_ID}, '') = 'Y'
+				</otherwise>
+			</choose>
+		)
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 리스트 목록 20211215:장보라-->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+	<include refid="default.pagerHeader"/>	
+		SELECT *
+		FROM (
+			SELECT A.ORDER_NUM
+				  ,TO_CHAR( TO_DATE( ORDER_DATE, DECODE(LENGTH(ORDER_DATE), 8, 'YYYYMMDD', 'YYYYMMDDHH24MISS')),  DECODE(LENGTH(ORDER_DATE), 8, 'yyyy-MM-dd', 'yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE <!-- 날짜 -->
+				  ,A.ORDER_DTM
+				  ,A.MEMB_ID
+				  ,(SELECT FC_GET_MEMBID_NM(A.MEMB_ID) FROM DUAL) AS MEMB_NM
+				<choose><!-- 멤버권한이 MEMB_GUBN_03(관리자)가 아니라면 SUPR_ID필요 -->
+					<when test='MEMB_GUBN != "MEMB_GUBN_03" '>
+						,(SELECT SUM(ORDER_AMT) FROM TB_ODINFOXD WHERE ORDER_NUM=A.ORDER_NUM AND ORDER_CON='ORDER_CON_10' AND SUPR_ID=#{LOGIN_SUPR_ID}) AS ORDER_AMT
+					</when>
+					<otherwise>
+						 ,(SELECT SUM(ORDER_AMT) FROM TB_ODINFOXD WHERE ORDER_NUM=A.ORDER_NUM AND ORDER_CON='ORDER_CON_10') AS ORDER_AMT
+					</otherwise>
+				</choose>
+				  ,A.ORDER_CON															<!-- 주문상태 -->
+				  ,(SELECT FC_GET_COMCOD_NM(A.ORDER_CON) FROM DUAL) AS ORDER_CON_NM		
+				  ,A.PAY_METD															<!-- 결제수단 -->
+				  ,(SELECT FC_GET_COMCOD_NM(A.PAY_METD) FROM DUAL) AS PAY_METD_NM
+				  ,A.RFND_REQDTM
+				  ,A.RFND_CON
+				  ,(SELECT FC_GET_COMCOD_NM(A.RFND_CON) FROM DUAL) AS RFND_CON_NM
+				  ,FC_GET_REFUND_PRODUCT(A.ORDER_NUM, #{MEMB_ID}) AS PD_NAME
+				  ,(SELECT COUNT(*)-1 FROM TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM) AS count
+				  ,A.REGP_ID
+				  ,A.REG_DTM
+				  ,A.MODP_ID
+				  ,A.MOD_DTM
+			FROM TB_ODINFOXM A
+			WHERE 
+			<choose>
+				<when test='MEMB_GUBN == "MEMB_GUBN_03" '>
+					FC_GET_REFUND_YN(A.ORDER_NUM,#{MEMB_ID}, 'RFND_CON_01') = 'Y'
+				</when>
+				<otherwise>
+					FC_GET_REFUND_YN(A.ORDER_NUM,#{MEMB_ID}, '') = 'Y'
+				</otherwise>
+			</choose>
+		)
+		<include refid="searchCondition"/>
+		<include refid="orderByCondition"/>
+	<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 주문정보 마스터 정보 - 상세화면 -->
+	<select id="getMasterInfo" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT A.ORDER_NUM																	/*주문번호*/
+			  ,TO_CHAR(TO_DATE(A.ORDER_DATE
+				      ,DECODE(LENGTH(A.ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+				      ,DECODE(LENGTH(A.ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')
+			  ) AS ORDER_DATE																/*주문일자*/
+			, A.ORDER_DTM																	/*주문일시*/
+			, A.MEMB_ID																		/*주문자ID*/
+			, M.MEMB_NAME AS MEMB_NM														/*회원명*/
+			, M.MEMB_CPON																	/*회원연락처*/
+			, A.ORDER_AMT																	/*주문금액*/
+			, A.ORDER_CON																	/*주문상태*/
+			, (SELECT FC_GET_COMCOD_NM(A.ORDER_CON) FROM DUAL) AS ORDER_CON_NM				/*주문상태 명*/
+			, A.PAY_METD																	/*결제수단*/
+			, (SELECT FC_GET_COMCOD_NM(A.PAY_METD) FROM DUAL) AS PAY_METD_NM				/*결제수단 명*/
+			, A.DAP_YN																		/*배송비결재여부*/
+			, A.DLVY_CON																	/*배송상태*/
+			, (SELECT FC_GET_COMCOD_NM(A.DLVY_CON) FROM DUAL) AS DLVY_CON_NM				/*배송상태 명*/
+			, A.DLVY_COM																	/*배송업체*/
+			, (SELECT FC_GET_COMCOD_NM(A.DLVY_COM) FROM DUAL) AS DLVY_COM_NM				/*배송업체 명*/
+			, A.DLVY_TDN																	/*배송운송장번호*/
+			, A.CNCL_CON																	/*취소상태*/
+			, (SELECT FC_GET_COMCOD_NM(A.CNCL_CON) FROM DUAL) AS CNCL_CON_NM				/*취소상태 명*/
+			, A.CNCL_MSG																	/*취소환불사유*/
+			, A.RFND_CON																	/*환불상태*/
+			, (SELECT FC_GET_COMCOD_NM(A.RFND_CON) FROM DUAL) AS RFND_CON_NM				/*환불상태 명*/
+			, A.RFND_MSG																	/*환불사유*/
+			, (SELECT FC_GET_COMCOD_NM(A.RFND_MSG) FROM DUAL) AS RFND_MSG_NM				/*환불사유 명*/
+			, A.RFND_RMK																	/*환불거절사유*/
+			, FC_GET_DLVPRICE(A.ORDER_NUM, #{MEMB_ID}) AS DLVY_AMT																		/*배송비*/
+			, A.PAY_DTM																		/*결제일시*/
+			, A.ORIGIN_NUM																	/*원 주문번호*/
+			, A.CPON_YN																		/*쿠폰사용여부*/
+			, M.COM_BUNB																	/*사업자번호*/
+		FROM TB_ODINFOXM A
+		INNER JOIN TB_MBINFOXM M
+		   ON A.MEMB_ID = M.MEMB_ID
+		WHERE ORDER_NUM = #{ORDER_NUM}
+	</select>
+	
+	<!-- 리스트 디테일 -->
+	<select id="getDetailsList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT ORDER_DTNUM
+		     , ORDER_NUM
+		     , PD_CODE
+		     , FC_GET_ORDER_PD_NM(ORDER_NUM,PD_CODE,ORDER_DTNUM)  AS PD_NAME 
+			 , OPTION1_VALUE
+			 , OPTION2_VALUE
+			 , OPTION3_VALUE  
+		     , PDDC_GUBN
+		     , PDDC_VAL
+		     , PD_PRICE
+		     , ORDER_QTY
+		     , ORDER_AMT
+			 , FC_GET_DLVPRICE_SUPR(A.ORDER_NUM, SUPR_ID) AS DLVY_AMT   
+             , SUPR_ID
+             , ORDER_CON
+             , DLVY_CON
+             , DLVY_TDN
+			 , RFND_CON
+			 , CNCL_MSG
+             , (SELECT PS_COM FROM TB_SPINFOXM WHERE A.SUPR_ID=SUPR_ID) AS DLVY_COM
+             , (SELECT FC_GET_COMCOD_NM(PS_COM) FROM TB_SPINFOXM WHERE A.SUPR_ID=SUPR_ID) AS DLVY_COM_NAME
+             , LINK_ORDER_KEY
+			FROM TB_ODINFOXD A
+			WHERE ORDER_NUM =  #{ORDER_NUM}
+				 AND FC_GET_ORDER_SUPRID(ORDER_NUM,  #{MEMB_ID}) = 'Y'
+				 AND (A.RFND_CON ='RFND_CON_01' OR A.ORDER_CON ='ORDER_CON_10')
+				<if test='MEMB_GUBN != "MEMB_GUBN_03" '>
+		   			AND A.SUPR_ID = #{LOGIN_SUPR_ID}
+		 		</if> 
+		 		ORDER BY ORDER_DTNUM DESC
+	</select>
+	
+	<!-- 마스터 환불 업데이트 -->
+	<update id="getMasterupdate" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE
+			TB_ODINFOXM
+		SET  
+			PAY_DTM = SYSDATE 					<!-- 환불일시 -->
+			,RFND_REQDTM = SYSDATE 				<!-- 환불요청 -->
+		<if test="RFND_RMK != null and RFND_RMK != ''">  <!-- 환불거절사유 -->
+			,RFND_RMK = #{RFND_RMK}
+		</if>
+			,MODP_ID = #{MODP_ID}
+		    ,MOD_DTM = SYSDATE
+		WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	<!-- 디테일 환불 업데이트  -->
+	<update id="getDetailsUpdate" parameterType="mall.web.domain.TB_ODINFOXD">
+		UPDATE
+			TB_ODINFOXD
+		SET  
+			 RFND_CON = #{RFND_CON}
+			,ORDER_CON = #{ORDER_CON}
+			,MODP_ID = #{MODP_ID}
+			,RFND_AMT = #{RFND_AMT}
+			,RFND_DLVY_AMT = #{RFND_DLVY_AMT}
+		    ,MOD_DTM = SYSDATE
+		WHERE ORDER_NUM = #{ORDER_NUM}
+		 AND PD_CODE = #{PD_CODE}
+		 <if test=" OPTION1_VALUE !=  '' and OPTION1_VALUE != null ">
+			AND OPTION1_VALUE = #{OPTION1_VALUE}
+		</if>
+		<if test=' OPTION2_VALUE != "" and OPTION2_VALUE != null '>
+			AND OPTION2_VALUE = #{OPTION2_VALUE}
+		</if>
+		<if test=' OPTION3_VALUE != "" and OPTION3_VALUE != null '>
+			AND OPTION3_VALUE = #{OPTION3_VALUE}
+		</if>
+		<if test='MEMB_GUBN != "MEMB_GUBN_03" '>
+		   	AND SUPR_ID=#{LOGIN_SUPR_ID}
+		 </if> 
+	</update>
+	
+	
+	
+</mapper>

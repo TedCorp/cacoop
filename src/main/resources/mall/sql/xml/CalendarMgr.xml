@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.CalendarMgrMapper">
+
+	
+	
+	<!-- 타입01 리스트 카운트 -->
+	<select id="count01" parameterType="mall.web.domain.TB_PDBORDXM" resultType="int">
+		
+	</select>
+	
+	<!-- 일정 전체리스트 -->
+	<select id="schedulTotList" parameterType="mall.web.domain.TB_SYSCALXM" resultType="mall.web.domain.TB_SYSCALXM">
+		SELECT CAL_DATE, COUNT(CAL_DATE) CNT
+		  FROM TB_SYSCALXM
+		 WHERE MEMB_ID = #{MEMB_ID} 
+		 GROUP BY CAL_DATE
+	</select>
+
+
+	<select id="schedulList" parameterType="mall.web.domain.TB_SYSCALXM" resultType="mall.web.domain.TB_SYSCALXM">
+		SELECT *
+		  FROM TB_SYSCALXM
+		 WHERE CAL_DATE = #{CAL_DATE}
+		     AND MEMB_ID = #{MEMB_ID} 
+		 ORDER BY CAL_SEQ
+	</select>
+	
+	<insert id="insertSchdul" parameterType="mall.web.domain.TB_SYSCALXM">
+	INSERT INTO TB_SYSCALXM (
+		  CAL_SEQ,
+		  MEMB_ID,
+		  CAL_CONT,
+		  CMPLT_YN,
+		  REG_DTM,
+		  REGP_ID,
+		  MOD_DTM,
+		  MODP_ID,
+		  CAL_DATE
+		) VALUES (
+		
+		DECODE((SELECT MAX(CAL_SEQ) FROM TB_SYSCALXM),NULL,1,
+		            (SELECT MAX(CAL_SEQ) FROM TB_SYSCALXM)+1)
+		, #{MEMB_ID}
+		, #{CAL_CONT}
+		, ''
+		, SYSDATE
+		, #{MEMB_ID}
+		, SYSDATE
+		, #{MEMB_ID}
+		, #{CAL_DATE} 
+		)
+	</insert>
+	
+	<update id="updateSchdul" parameterType="mall.web.domain.TB_SYSCALXM">
+	UPDATE TB_SYSCALXM 
+		   SET CAL_CONT=#{CAL_CONT}
+	 WHERE CAL_SEQ = #{CAL_SEQ}
+	   AND MEMB_ID = #{MEMB_ID} 
+	</update>
+	
+	<delete id="deleteSchdul" parameterType="mall.web.domain.TB_SYSCALXM">
+	DELETE TB_SYSCALXM
+	 WHERE CAL_SEQ = #{CAL_SEQ}
+	   AND MEMB_ID = #{MEMB_ID} 
+	</delete>
+	
+</mapper>

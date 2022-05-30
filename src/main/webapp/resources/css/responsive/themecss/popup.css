@@ -1,0 +1,83 @@
+/* 팝업 레이어 */
+.layer-pop {
+	position: absolute;
+	z-index: 51;
+	/* 크기 조정 */
+	left: 25%;
+	top: 25%;
+	width: 50%;
+	margin: auto;
+	border: 5px solid #3571b5;
+	background-color: #fff;
+	/* display:none; */
+}
+
+.device-layer {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  /* display: none; */
+  width: 100%;
+  height: 70%;
+}
+
+/* 팝업 레이어 : 내용 */
+.layer-pop img {
+	width: 100%;
+	margin-bottom: 20px;
+}
+
+/* 팝업 레이어 : 버튼 속성 */
+.layer-pop .exit-btn {
+	width: 100%;
+	margin: 0 0 10px;
+	padding-top: 10px;
+	padding-right: 10px;
+	text-align: right;
+	border-top: 1px solid #ddd;
+}
+
+a.layer-exit {
+	font-size: 13px;
+	line-height: 25px;
+	display: inline-block;
+	height: 25px;
+	padding: 0 14px;
+	color: #fff;
+	border: 1px solid #304a8a;
+	background-color: #3f5a9d;
+}
+
+a.layer-exit:hover {
+	color: #fff;
+	border: 1px solid #091940;
+	background-color: #1f326a;
+}
+
+.day-exit  {
+	font-size: 13px;
+	line-height: 25px;
+	display: inline-block;
+	height: 25px;
+	padding: 0 14px;
+	color: #000;	
+}
+
+.layer-pop .exit-btn > b {
+	text-decoration:underline;
+}
+
+@media (max-width: 767px) {
+	.layer-pop {
+	position: absolute;
+	z-index: 51;
+	/* 크기 조정 */
+	left: 5%;
+	top: 40%;
+	width: 90%;
+	margin: auto;
+	border: 5px solid #3571b5;
+	background-color: #fff;
+	/* display:none; */
+}

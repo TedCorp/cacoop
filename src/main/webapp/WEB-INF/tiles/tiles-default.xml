@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" 
+"http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+	
+	<!-- ################################################# 관리자 레이아웃 ################################################ -->
+	<definition id="html5.layout" name="html5.layout" template="/layout/html/html5.jsp">
+		<put-attribute name="page.title" value="" />
+		<put-attribute name="page.body" value="" />
+	</definition>
+	
+	<definition id="admin.layout" name="admin.layout" extends="html5.layout">
+		<put-attribute name="page.title" value="" />
+		<put-attribute name="page.body">
+			<definition template="/layout/admin/body-layout.jsp">
+				<put-attribute name="main-header" value="/layout/admin/main-header.jsp" />
+				<put-attribute name="main-sidebar" value="/layout/admin/main-sidebar.jsp" />
+				<put-attribute name="content-wrapper" expression="/WEB-INF/jsp/${jsp}.jsp" />
+				<put-attribute name="main-footer" value="/layout/admin/main-footer.jsp" />
+				<put-attribute name="control-sidebar" value="/layout/admin/control-sidebar.jsp" />
+			</definition>
+		</put-attribute>	
+	</definition>
+
+<!--회원가입  -->
+	<definition name="blank.layout" templateExpression="/layout/blank/layout.jsp">
+		<put-attribute name="center"   expression="/layout/blank/center.jsp" />
+	</definition>
+<!-- 회원가입 -->
+	<definition name="blankPage" extends="blank.layout">
+		<put-attribute name="title" value="Form 객체 출력" />
+		<put-attribute name="center"  expression="/WEB-INF/jsp/${jsp}.jsp" />
+	</definition>
+
+
+	<definition name="alertMessage" extends="blank.layout">
+		<put-attribute name="title" value="Alert 메시지 화면" />
+		<put-attribute name="center"  expression="/WEB-INF/jsp/common/alertMessage.jsp" />
+	</definition>
+	
+	<definition id="popup.layout" name="popup.layout" extends="html5.layout">
+		<put-attribute name="page.title" value="" />
+		<put-attribute name="page.body" expression="/WEB-INF/jsp/${jsp}.jsp" />
+	</definition>
+	<!-- ################################################# 관리자 레이아웃 ################################################ -->
+
+
+
+
+	<!-- ################################################# 사용자 레이아웃 ################################################ -->
+
+	<definition name="mallNew.layout" templateExpression="/layout/mallNew/layout.jsp">
+		<put-attribute name="header" expression="/layout/mallNew/header.jsp" />
+		<put-attribute name="left"	 expression="/layout/mallNew/left.jsp" />
+		<put-attribute name="center" expression="/WEB-INF/jsp/${jsp}.jsp" />
+		<put-attribute name="center_footer" expression="/layout/mallNew/center_footer.jsp" />
+		<put-attribute name="footer" expression="/layout/mallNew/footer.jsp" />
+	</definition>
+
+	<definition name="main.layout" templateExpression="/layout/mallNew/main.layout.jsp">
+		<put-attribute name="header" expression="/layout/mallNew/header.jsp" />
+		<put-attribute name="center" expression="/WEB-INF/jsp/${jsp}.jsp" />
+		<put-attribute name="footer" expression="/layout/mallNew/footer.jsp" />
+	</definition>
+	
+
+	<definition name="mall.layout" templateExpression="/layout/mall3/layout.jsp">
+		<put-attribute name="header" expression="/layout/mall3/header.jsp" />
+		<put-attribute name="left"	 expression="/layout/mall3/left.jsp" />
+		<put-attribute name="center" expression="/WEB-INF/jsp/${jsp}.jsp" />
+		<put-attribute name="footer" expression="/layout/mall3/footer.jsp" />
+	</definition>
+	
+		<!-- ################################################# 반응형웹 ################################################ -->
+		<definition name="main.responsive2.layout" templateExpression="/layout/responsiveMall/style1/main.layout.jsp">
+			<put-attribute name="header" expression="/layout/responsiveMall/style1/header.jsp" />
+			<put-attribute name="center" expression="/WEB-INF/jsp/responsiveMall/style1/${jsp}.jsp" />
+			<put-attribute name="footer" expression="/layout/responsiveMall/style1/footer.jsp" />
+		</definition>
+		
+		<definition name="main.responsive1.layout" templateExpression="/layout/responsiveMall/style2/main.layout.jsp">
+			<put-attribute name="header" expression="/layout/responsiveMall/style2/header.jsp" />
+			<put-attribute name="center" expression="/WEB-INF/jsp/responsiveMall/style2/${jsp}.jsp" />
+			<put-attribute name="footer" expression="/layout/responsiveMall/style2/footer.jsp" />
+		</definition>
+		
+		<!-- 2020-03-25 진입카테고리 추가 -->
+		<definition name="main.responsive1_entcago.layout" templateExpression="/layout/responsiveMall/style2/main.layout.jsp">
+			<put-attribute name="header" expression="/layout/responsiveMall/style2/header_entcago.jsp" />
+			<put-attribute name="center" expression="/WEB-INF/jsp/responsiveMall/style2/${jsp}.jsp" />
+			<put-attribute name="footer" expression="/layout/responsiveMall/style2/footer.jsp" />
+		</definition>
+		
+	
+		<definition name="mall.responsive.layout" templateExpression="/layout/responsiveMall/style2/layout.jsp">
+			<put-attribute name="header" expression="/layout/responsiveMall/style2/header.jsp" />
+			<put-attribute name="center" expression="/WEB-INF/jsp/responsiveMall/${jsp}.jsp" />
+			<put-attribute name="footer" expression="/layout/responsiveMall/style2/footer.jsp" />
+		</definition>
+		<!-- ################################################# 반응형웹 ################################################ -->
+	
+	<!-- ################################################# 사용자 레이아웃 ################################################ -->
+
+
+</tiles-definitions>

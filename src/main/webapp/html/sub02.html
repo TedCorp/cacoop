@@ -1,0 +1,484 @@
+﻿<!DOCTYPE HTML>
+
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>프로젝트명</title>
+
+    <!-- CSS -->
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/common.css" rel="stylesheet">
+    <link href="css/NanumBarunGothic.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/non-responsive.css" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="js/ie-emulation-modes-warning.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+<!-- header -->
+<header class="head">
+    <div class="container">
+        <div class="col-sm-3 left pd_n"><a href="index.html"><img src="img/common/logo.png"></a></div>
+        <div class="col-sm-9 right">
+            <div class="row">
+                <div class="col-sm-6 pd_n">
+                    <form class="form-inline">
+                        <div class="form-group">
+                            <label for="inputId" class="mt_5">ID</label>
+                            <input type="text" class="form-control" style="width:120px;"  id="inputId" placeholder="아이디">
+                        </div>
+                        <div class="form-group">
+                            <label for="inputPw" class="mt_5">PW</label>
+                            <input type="password" class="form-control" style="width:120px;"  id="inputPw" placeholder="비밀번호">
+                        </div>
+                        <button type="submit" class="btn btn-xs btn-success">로그인</button>
+                    </form>
+                </div>
+                <div class="col-sm-6 pd_n">
+                    <ul class="nav nav-utill">
+                        <li><a href="#">회원가입</a></li>
+                        <li><a href="#">로그인</a></li>
+                        <li><a href="#">마이페이지</a></li>
+                        <li><a href="#">장바구니</a></li>
+                        <li><a href="#">배송/주문조회</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 내용 -->
+<nav class="navbar navbar-bg">
+    <div class="container">
+        <div class="navbar-header">
+            <img src="img/common/gnb_img1.png">
+        </div>
+
+        <div id="navbar">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">쇼핑기획전</a></li>
+                <li><a href="#">베스트셀러</a></li>
+                <li><a href="#">이달의 특가상품</a></li>
+                <li><a href="#">커뮤니티</a></li>
+                <li><a href="#">회사소개</a></li>
+            </ul>
+            <form class="navbar-form navbar-gnb pd_n navbar-right">
+                <div class="form-group">
+                    <input class="form-control" style="width:150px;" type="text" placeholder="검색어를 입력하세요" value="">
+                </div>
+                <button class="btn btn-xs btn-black" type="submit">검색</button>
+            </form>
+        </div><!--/nav -->
+    </div>
+</nav>
+
+<div class="container main_con">
+    <div class="row_01 mb_25">
+    <div class="col-1 lnb">
+        <div class="category mb_20">
+            <img src="img/common/cate_title.png">
+            <hr>
+            <ul class="category_list">
+                <li>
+                    <p class="title">농산물코너</p>
+                    <dl>
+                        <dd><a>유기농쌀</a></dd>
+                        <dd><a>국산쌀</a></dd>
+                        <dd><a>수입쌀</a></dd>
+                    </dl>
+                    <dl>
+                        <dd><a>시금치</a></dd>
+                        <dd><a>콩나물</a></dd>
+                        <dd><a>고사리</a></dd>
+                    </dl>
+                    <hr>
+                </li>
+                <li>
+                    <p class="title">수산/건어물코너</p>
+                    <dl>
+                        <dd><a>고등어</a></dd>
+                        <dd><a>꽁치</a></dd>
+                        <dd><a>김치</a></dd>
+                        <dd><a>삼치</a></dd>
+                    </dl>
+                    <dl>
+                        <dd><a>시금치</a></dd>
+                        <dd><a>콩나물</a></dd>
+                        <dd><a>고사리</a></dd>
+                    </dl>
+                    <hr>
+                </li>
+                <li>
+                    <p class="title">축산/육류코너</p>
+                    <dl>
+                        <dd><a>고등어</a></dd>
+                        <dd><a>꽁치</a></dd>
+                        <dd><a>김치</a></dd>
+                        <dd><a>삼치</a></dd>
+                    </dl>
+                    <dl>
+                        <dd><a>시금치</a></dd>
+                        <dd><a>콩나물</a></dd>
+                        <dd><a>고사리</a></dd>
+                    </dl>
+                    <hr>
+                </li>
+                <li>
+                    <p class="title">과즙/차/음료코너</p>
+                    <dl>
+                        <dd><a>고등어</a></dd>
+                        <dd><a>꽁치</a></dd>
+                        <dd><a>김치</a></dd>
+                        <dd><a>삼치</a></dd>
+                    </dl>
+                    <dl>
+                        <dd><a>시금치</a></dd>
+                        <dd><a>콩나물</a></dd>
+                        <dd><a>고사리</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+        <div class="hit-box mb_20">
+            <div class="row_02_title">
+                <p><span class="green">HIT</span> 상품전</p>
+                <ul class="controller">
+                    <li><a><img src="img/main/hit_arrow_left.gif"></a></li>
+                    <li><a><img src="img/main/hit_arrow_right.gif"></a></li>
+                </ul>
+            </div>
+
+            <ul class="hit-list">
+                <li>
+                    <a>
+                        <img src="img/main/hit_product.jpg">
+                        <div class="text-box">
+                            <small class="label label-danger">HIT</small>
+                            <p class="txt_wg">제주감귤</p>
+                            <p class="gray">세콤달콤제주감귤</p>
+                            <p class="price">\20,000</p>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/main/hit_product.jpg">
+                        <div class="text-box">
+                            <small class="label label-danger">HIT</small>
+                            <p class="txt_wg">영광굴비</p>
+                            <p class="gray">청정해역영광제일굴비</p>
+                            <p class="price">\150,000</p>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/main/hit_product.jpg">
+                        <div class="text-box">
+                            <small class="label label-danger">HIT</small>
+                            <p class="txt_wg">제주감귤</p>
+                            <p class="gray">세콤달콤제주감귤</p>
+                            <p class="price">\20,000</p>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/main/hit_product.jpg">
+                        <div class="text-box">
+                            <small class="label label-danger">HIT</small>
+                            <p class="txt_wg">영광굴비</p>
+                            <p class="gray">청정해역영광제일굴비</p>
+                            <p class="price">\150,000</p>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="best-box">
+            <div class="row_02_title">
+                <p><span class="green">Best of Best</span> 인기상품</p>
+            </div>
+            <div class="best-box">
+                <a href="#" class="mb_10"><img src="img/main/best_img.jpg" class="img-responsive"> </a>
+                <a href="#"><img src="img/main/best_img2.jpg" class="img-responsive"> </a>
+            </div>
+        </div>
+        <div class="banner-box">
+            <a><img src="img/main/banner_1.jpg" class="img-responsive"> </a>
+            <hr>
+            <a><img src="img/main/banner_2.jpg" class="img-responsive"> </a>
+        </div>
+    </div>
+        <!--col-1 end-->
+    <div class="col-5">
+        <div class="top-banner pd_n">
+            <img src="img/sub/sub02/banner.png" class="img-responsive">
+        </div>
+
+        <div class="submenu-box">
+            <div class="panel panel-submenu">
+                <div class="panel-heading">
+                   <p>과일/야채/과즙류</p>
+                </div>
+                <div class="panel-body">
+                    <ul class="submenu-list">
+                        <li><a>하우스수박(30)</a></li>
+                        <li class="active"><a>키위(25)</a></li>
+                        <li><a>토마토(40)</a></li>
+                        <li><a>바나나(10)</a></li>
+                        <li><a>청포도(30)</a></li>
+                        <li><a>키위(30)</a></li>
+                        <li><a>제주감귤(30)</a></li>
+                        <li><a>레몬(30)</a></li>
+                        <li><a>토마토(40)</a></li>
+                        <li><a>바나나(10)</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-title sub-title-underline">
+           <h2>상품목록 <small class="ml_5">| 엄선된 상품만을 제공합니다.</small></h2>
+            <ul>
+                <li><a>HOME</a></li>
+                <li><a>상세보기</a></li>
+                <li>한과세트</li>
+            </ul>
+            <div class="clearfix"></div>
+        </div>
+
+        <!--제품리스트-->
+        <div class="product-box">
+            <ul class="product-box-list">
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a>
+                        <img src="img/sub/sub02/product.gif" class="img-thumbnail">
+                        <div class="prod_info">
+                            <p class="title">제주감귤1박스</p>
+                            <p class="price"><img src="img/sub/sub02/price.png"> 20,000원<span class="label label-warning">NEW</span></p>
+                            <p class="point"><img src="img/sub/sub02/point.png"> 2%</p>
+                            <button class="btn btn-buy">구매하기</button>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+            <div class="clearfix"></div>
+        </div>
+
+    </div>
+        <!--col-5 end-->
+    <div class="clearfix"></div>
+</div>
+
+    <div class="custom-box mt_30">
+        <div class="customer">
+            <h4 class="txt_wg eng"><span class="green">CUSTOMER</span> CENTER</h4>
+            <img src="img/common/customer.png">
+            <div class="row mt_10 mb_10">
+                <div class="col-sm-6"><a class="fl_l" href="#"><img src="img/common/customer_01.png"></a></div>
+                <div class="col-sm-6"><a class="fl_l" href="#"><img src="img/common/customer_02.png"></a></div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="notice">
+            <h4 class="txt_wg eng gray">NOTICE & NEWS</h4>
+            <ul>
+                <li><a>정기세일 이벤트 당첨자 발표</a></li>
+                <li><a>신규 브랜드 오픈기념 이벤트 당첨..</a></li>
+                <li><a>사용후기 당첨자 안내</a></li>
+                <li><a>아사농사물에서는 상품후기를..</a></li>
+                <li><a>12월 상품정보 당첨자 공지</a></li>
+                <li><a>신규 브랜드 오픈기념 이벤트 당첨자 발표합니다</a></li>
+            </ul>
+        </div>
+        <div class="review">
+            <h4 class="txt_wg eng gray">PRODUCT REVIEW</h4>
+            <ul>
+                <li><a><span class="green">[상품평]</span>정기세일 이벤트 당첨자 발표</a></li>
+                <li class="reply"><a class="text-danger">고객님 물건 잘받으셨죠?</a></li>
+                <li><a><span class="green">[상품평]</span>사용후기 당첨자 안내</a></li>
+                <li class="reply"><a class="text-danger">아사농사물에서는 상품후기를 이용해</a></li>
+                <li><a><span class="green">[상품평]</span>12월 상품정보 당첨자 공지</a></li>
+                <li class="reply"><a class="text-danger">고객님 물건 잘받으셨나요</a></li>
+            </ul>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div><!-- /container -->
+
+<footer>
+<div class="col-sm-12 foot-header">
+    <div class="container">
+    <ul class="foot-link">
+        <li><a href="#">회사소개</a></li>
+        <li><a href="#">개인정보보호정책</a></li>
+        <li><a href="#">이용약관</a></li>
+        <li><a href="#">제휴/입점문의</a></li>
+        <li><a href="#">물품공급문의</a></li>
+        <li><a href="#">입점신청</a></li>
+    </ul>
+        <div class="clearfix"></div>
+    <div class="gotop">
+        <a>TOP</a>
+    </div>
+    </div>
+</div>
+    <div class="container">
+     <div class="col-sm-3 pd_n">
+         <a href="index.html"><img src="img/common/logo_footer.png"></a>
+     </div>
+     <div class="col-sm-9 sm_ft gray mb_20">
+         <p>상호: 아사푸드몰  |  대표자: 홍길동  |  사업자등록번호: 012-345-6789  |  통신판매업신고: 제1-234호  |  foodlove486@asafoodmall.com</p>
+         <p>개인정보관리책임자 : 홍길자 주소: 서울특별시 가나구  다라동  123번지  |  TEL: 02-345-6789  |  FAX: 02-345-6789</p>
+         <p>asafoodmall company All right reserverd.</p>
+     </div>
+    </div>
+</footer>
+
+
+
+<!-- Bootstrap core JavaScript
+    ================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="js/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')</script>
+<script src="js/bootstrap.min.js"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="js/ie10-viewport-bug-workaround.js"></script>
+</body>
+</html>

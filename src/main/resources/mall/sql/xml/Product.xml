@@ -1,0 +1,2809 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.mall.ProductMapper">
+	<!-- 공통 조건절 -->
+	<sql id="searchCondition">
+		<where>
+			<!-- supr_id 관계없이 검색, 조회 되도록 변경. 2020-02-26 -->
+			<!-- <if test="SUPR_ID != null and SUPR_ID != ''">
+			    AND SUPR_ID = #{SUPR_ID}
+			</if> -->
+			<!-- <if test="schTxt != null and schTxt != ''">
+			    AND PD_NAME LIKE '%' || #{schTxt} || '%'
+			</if>
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "PD_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND PD_NAME LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>	
+				<if test='schGbn == "PD_CODE"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND PD_CODE LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>
+				<if test='schGbn == "PD_DINFO"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND PD_DINFO LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>
+				<if test='schGbn == "MAKE_COM"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND MAKE_COM LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>
+			</if> -->
+			<choose>
+				<when test="schGbn != null and schGbn != ''">
+					<if test='schGbn == "PD_NAME"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+						            AND PD_NAME LIKE '%' || #{item} || '%'
+						        </foreach>
+						    </when>
+						</choose>
+					</if>	
+					<if test='schGbn == "PD_CODE"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+								    AND PD_CODE LIKE '%' || #{item} || '%'
+								</foreach>
+							</when>
+						</choose>
+					</if>
+					<if test='schGbn == "PD_DINFO"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+								    AND PD_DINFO LIKE '%' || #{item} || '%'
+								</foreach>
+							</when>
+						</choose>
+					</if>
+					<if test='schGbn == "MAKE_COM"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+								    AND MAKE_COM LIKE '%' || #{item} || '%'
+								</foreach>
+							</when>
+						</choose>
+					</if>
+					<if test='schGbn == "SUPR_NAME"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+								    AND SUPR_NAME LIKE '%' || #{item} || '%'
+								</foreach>
+							</when>
+						</choose>
+					</if>
+				</when>
+			</choose>
+			<if test="SALE_CON != null and SALE_CON != ''">
+			    AND SALE_CON = #{SALE_CON}
+			</if>
+			<if test="min_value != null and min_value != ''">
+				<![CDATA[ 
+			    	AND PD_PRICE >= #{min_value}
+			    ]]>
+			</if>
+			<if test="max_value != null and max_value != ''">
+			<![CDATA[ 
+			    AND PD_PRICE <= #{max_value}
+			]]>
+			</if>
+		</where>  
+	</sql>
+	
+	<!-- 현재 카테고리 -->
+	<select id="cagoFind" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT LVL, CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR, CAGO_ID_PATH, CAGO_NM_PATH
+		FROM (
+			SELECT	LEVEL LVL, CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+						SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+					    SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+			FROM ( SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N' )
+			START WITH UPCAGO_ID IS NULL
+			CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+			ORDER SIBLINGS BY SORT_ORDR
+		)
+		WHERE CAGO_ID = #{CAGO_ID}
+	</select>
+	
+	<!-- 현 카테고리의 하위 레벨 카테고리 리스트 -->
+	<select id="cagoList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+	    SELECT	A.CAGO_ID, 
+	    			A.CAGO_NAME, 
+	    			A.UPCAGO_ID, 
+	    			A.SORT_ORDR , 
+	    			FC_GET_CAGO_PRD_CNT2(A.CAGO_ID) AS PRD_CNT
+	    FROM (
+	    	SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR
+			FROM (
+				SELECT * FROM TB_PDCAGOXM 
+				WHERE USE_YN = 'Y' 
+					AND DEL_YN = 'N' 
+					AND UPCAGO_ID = #{CAGO_ID}
+			)
+		) A
+	    ORDER BY A.SORT_ORDR
+	</select>
+	
+	<select id="cagoDownList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+	    SELECT A.CAGO_ID, A.CAGO_NAME, A.UPCAGO_ID, A.SORT_ORDR, '0'<!-- FC_GET_CAGO_PRD_CNT(A.CAGO_ID, #{SUPR_ID}) AS PRD_CNT -->
+	        , (SELECT CAGO_NAME FROM TB_PDCAGOXM WHERE CAGO_ID = A.UPCAGO_ID) AS UPCAGO_NAME
+	    FROM (SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR
+	          FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND  UPCAGO_ID = (
+	          SELECT NVL((SELECT UPCAGO_ID FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND UPCAGO_ID = #{CAGO_ID} AND ROWNUM = 1),
+            (SELECT UPCAGO_ID FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CAGO_ID = #{CAGO_ID}))
+			FROM DUAL
+	          ))
+	         ) A
+	    ORDER BY A.SORT_ORDR
+	</select>
+	
+	<!-- 홈화면 카테고리 리스트 -->
+	<select id="cagoAllList" parameterType="mall.web.domain.TB_PDCAGOXM" resultType="mall.web.domain.TB_PDCAGOXM">
+		SELECT LVL, CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR, CAGO_ID_PATH, CAGO_NM_PATH
+		FROM (
+			SELECT	LEVEL LVL, CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+						SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+					    SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+			FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+			START WITH UPCAGO_ID IS NULL
+			CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+			ORDER SIBLINGS BY SORT_ORDR
+        )
+	</select>
+	
+	<select id="cagoTargetList" parameterType="String" resultType="mall.web.domain.TB_PDCAGOXM">
+		SELECT LVL
+		     	, CAGO_ID
+		     	, CAGO_NAME
+		     	, UPCAGO_ID
+				, SORT_ORDR
+				, CAGO_ID_PATH
+				, CAGO_NM_PATH 
+		FROM (
+			SELECT	LEVEL LVL
+		              , CAGO_ID
+		              , CAGO_NAME
+		              , UPCAGO_ID
+		              , SORT_ORDR
+		              , SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH
+		              , SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH 
+			FROM ( SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N' ) 
+			START WITH UPCAGO_ID IS NULL
+			CONNECT BY UPCAGO_ID = PRIOR CAGO_ID 
+			ORDER SIBLINGS BY SORT_ORDR 
+		)
+		WHERE UPCAGO_ID IN(
+			SELECT ENTRYD_ID 
+			FROM TB_ENTRYCAGOXD 
+		    WHERE ENTRY_ID = #{value}
+		)  
+		OR CAGO_ID IN( 
+			SELECT ENTRYD_ID 
+		    FROM TB_ENTRYCAGOXD 
+		    WHERE ENTRY_ID = #{value}
+		)
+	</select>
+	
+	<!-- 상품목록 CNT -->
+	<select id="count" parameterType="mall.web.domain.TB_PDINFOXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT	A.PD_CODE
+						, A.SUPR_ID
+						, FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+						, A.PD_NAME
+						, A.CAGO_ID
+						, FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+						, A.PD_PRICE
+						, CASE WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+						       WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE* A.PDDC_VAL/100)
+						       ELSE A.PD_PRICE
+						  END REAL_PRICE
+						, A.PDDC_GUBN
+						, A.PDDC_VAL
+						, A.SVMN_GUBN
+						, A.SVMN_VAL
+						, A.INVEN_QTY
+						, A.POS_NAME
+						, A.PD_BARCD
+						, A.STORE_CTR
+						, A.PD_STD
+						, A.DTB_DLINE
+						, A.MAKE_COM
+						, A.ORG_CT
+						, A.SALE_CON
+						, A.PD_DINFO
+						, A.DLVREF_GUIDE
+						, A.ATFL_ID
+						, A.RPIMG_SEQ
+						, A.ADC1_NAME
+						, A.ADC2_NAME
+						, A.ADC3_NAME
+						, A.ADC4_NAME
+						, A.ADC5_NAME
+						, A.ADC1_VAL
+						, A.ADC2_VAL
+						, A.ADC3_VAL
+						, A.ADC4_VAL
+						, A.ADC5_VAL
+						, A.PD_ICON
+						, A.STD_UNIT
+						, A.REGP_ID
+						, A.REG_DTM
+						, A.MODP_ID
+						, A.MOD_DTM
+						, A.DTL_ATFL_ID
+						, A.DTL_USE_YN
+						, A.BUNDLE_CNT
+						, B.CAGO_ID_PATH
+						, B.CAGO_NM_PATH
+						, A.BOX_PDDC_GUBN
+						, A.BOX_PDDC_VAL
+			FROM TB_PDINFOXM A,
+			(
+				SELECT	CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+							SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+							SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+				FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N' )
+				START WITH UPCAGO_ID IS NULL
+				CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+			) B,
+			TB_COATFLXD C
+			WHERE A.CAGO_ID = B.CAGO_ID 
+				AND A.ATFL_ID = C.ATFL_ID(+)
+				AND A.RPIMG_SEQ = C.ATFL_SEQ(+)
+				<!-- AND A.SUPR_ID = #{SUPR_ID} -->
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+				AND A.DEL_YN = 'N'
+			<if test="CAGO_ID != null and CAGO_ID != ''">
+				AND A.CAGO_ID IN (
+					SELECT CAGO_ID
+					FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+					START WITH CAGO_ID = #{CAGO_ID}
+					CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+				)
+			</if>
+		)
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 상품 페이징 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+				SELECT	A.PD_CODE
+	                        , A.SUPR_ID
+	                        , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+	                        , A.PD_NAME
+	                        , A.CAGO_ID
+	                        , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+	                        , A.PD_PRICE
+	                    <!--     , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+										WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * (A.PDDC_VAL/100))
+										ELSE A.PD_PRICE
+	                          END 
+	                        , A.PDDC_GUBN
+	                        , A.PDDC_VAL -->
+	                        , A.ADD_NUM
+	                        , A.MEMBER_PRICE
+	                        , A.SVMN_GUBN
+	                        , A.SVMN_VAL
+	                        , A.INVEN_QTY
+	                        , A.POS_NAME
+	                        , A.PD_BARCD
+	                        , A.STORE_CTR
+	                        , A.PD_STD
+	                        , A.DTB_DLINE
+	                        , A.MAKE_COM
+	                        , A.ORG_CT
+	                        , A.SALE_CON
+	                        , A.PD_DINFO
+	                        , A.DLVREF_GUIDE
+	                        , A.ATFL_ID
+	                        , A.RPIMG_SEQ
+	                        , A.ADC1_NAME
+	                        , A.ADC2_NAME
+	                        , A.ADC3_NAME
+	                        , A.ADC4_NAME
+	                        , A.ADC5_NAME
+	                        , A.ADC1_VAL
+	                        , A.ADC2_VAL
+	                        , A.ADC3_VAL
+	                        , A.ADC4_VAL
+	                        , A.ADC5_VAL
+	                        , A.PD_ICON
+	                        , A.STD_UNIT
+	                        , A.REGP_ID
+	                        , A.REG_DTM
+	                        , A.MODP_ID
+	                        , A.MOD_DTM
+							, A.DTL_ATFL_ID
+							, A.DTL_USE_YN
+							, A.BUNDLE_CNT
+	                        , B.CAGO_ID_PATH
+	                        , B.CAGO_NM_PATH
+	                        , B.SORT_ORDR
+	                        , C.STFL_PATH
+	                        , C.STFL_NAME
+	                        , C.FILEPATH_FLAG
+	                        , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+	                        , A.OPTION_GUBN
+	                        , A.BOX_PDDC_GUBN
+	                        , A.BOX_PDDC_VAL
+	                        , A.DLVY_GUBN
+	                        , (SELECT FC_GET_COMCOD_NM(A.DLVY_GUBN) FROM DUAL) AS DLVY_GUBN_NM
+	                        , (SELECT NVL(COUNT(*), '0') FROM TB_PDOPTION O WHERE O.PD_CODE = A.PD_CODE) AS OPTION_CNT
+	                        , CASE WHEN MEMBER_PRICE = 0 OR MEMBER_PRICE IS NULL THEN PD_PRICE 
+					    		ELSE MEMBER_PRICE 
+					    		END AS PD_PRICE_RESULT
+					    	, A.IMGURL
+				FROM TB_PDINFOXM A,
+				(
+					SELECT	CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+								SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+								SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+					FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' )
+					START WITH UPCAGO_ID IS NULL
+					CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+				) B,
+				TB_COATFLXD C
+				WHERE 1=1
+					AND A.CAGO_ID = B.CAGO_ID 
+					AND A.ATFL_ID = C.ATFL_ID(+)
+					AND A.RPIMG_SEQ = C.ATFL_SEQ(+)
+					<!-- AND A.SUPR_ID = #{SUPR_ID} -->
+					AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+					AND A.DEL_YN = 'N'
+				<if test="CAGO_ID != null and CAGO_ID != ''">
+					AND A.CAGO_ID IN (SELECT CAGO_ID
+					FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+					START WITH CAGO_ID = #{CAGO_ID}
+					CONNECT BY PRIOR CAGO_ID = UPCAGO_ID)
+				</if>
+			)
+			<include refid="searchCondition"/>
+			<if test="sortGubun != null and sortGubun != ''">
+				<if test='sortGubun == "PD_NAME"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY PD_NAME desc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY PD_NAME asc
+					</if>	
+				</if>
+				<if test='sortGubun == "CAGO_SORT"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY SORT_ORDR desc, PD_NAME asc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY SORT_ORDR asc, PD_NAME asc
+					</if>
+				</if>
+				<if test='sortGubun == "PD_PRICE"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY PD_PRICE_RESULT desc, PD_NAME asc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY PD_PRICE_RESULT asc, PD_NAME asc
+					</if>
+				</if>
+			</if>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PD_PRICE_RESULT asc, PD_NAME asc
+			</if>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 상품 상세정보 -->
+	<select id="find" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT	A.PD_CODE
+			        , A.SUPR_ID
+			        , FC_GET_SUPRID_NM(A.SUPR_ID) AS SUPR_NAME
+			        , A.PD_NAME
+			        , A.CAGO_ID
+			        , FC_GET_CAGOID_NM(A.CAGO_ID) AS CAGO_NAME
+			        , A.PD_PRICE
+			        , A.ADD_NUM
+					, TO_NUMBER(FC_GET_PRICE_SALE(A.PD_CODE, #{MEMB_ID})) AS MEMBERS_PRICE
+					, A.MEMBER_PRICE
+			        , A.SVMN_GUBN
+			        , A.SVMN_VAL
+			        , A.INVEN_QTY
+			        , A.POS_NAME
+			        , A.PD_BARCD
+			        , A.STORE_CTR
+			        , A.PD_STD
+			        , A.DTB_DLINE
+			        , A.MAKE_COM
+			        , A.ORG_CT
+			        , A.SALE_CON
+			        , A.PD_DINFO
+			        , A.DLVREF_GUIDE
+			        , A.ATFL_ID
+			        , A.RPIMG_SEQ
+			        , A.ADC1_NAME
+			        , A.ADC2_NAME
+			        , A.ADC3_NAME
+			        , A.ADC4_NAME
+			        , A.ADC5_NAME
+			        , A.ADC1_VAL
+			        , A.ADC2_VAL
+			        , A.ADC3_VAL
+			        , A.ADC4_VAL
+			        , A.ADC5_VAL
+			        , A.PD_ICON
+			        , A.STD_UNIT
+			        , A.REGP_ID
+			        , A.REG_DTM
+			        , A.MODP_ID
+			        , A.MOD_DTM
+			        , A.DTL_ATFL_ID
+			        , A.DTL_USE_YN
+			        , A.BUNDLE_CNT
+			        , (SELECT ROUND(AVG(PD_PTS)) FROM TB_PDBORDXM WHERE BRD_GUBN = 'BRD_GUBN_02' AND PD_CODE = #{PD_CODE}) AVG_PD_PTS
+			        , A.LIMIT_QTY
+			        , A.INPUT_CNT
+			        , A.QNT_LIMT_USE
+			        , A.OPTION_GUBN
+			        , A.BOX_PDDC_GUBN
+			        , A.BOX_PDDC_VAL
+			        , B.STFL_PATH
+			        , B.STFL_NAME
+			        , A.DLVY_GUBN	
+			        , (SELECT FC_GET_COMCOD_NM(A.DLVY_GUBN) FROM DUAL) AS DLVY_GUBN_NM
+			        , B.FILEPATH_FLAG
+			        , C.DLVY_AMT 
+			        , C.DLVA_FCON
+			        , A.IMGURL
+		FROM TB_PDINFOXM A
+    	LEFT JOIN TB_COATFLXD B
+        	ON A.ATFL_ID = B.ATFL_ID AND A.RPIMG_SEQ = B.ATFL_SEQ
+        LEFT JOIN TB_SPINFOXM C 
+        	ON(A.SUPR_ID = C.SUPR_ID )
+		WHERE PD_CODE = #{PD_CODE}
+	</select>
+		
+	<select id="basketSelect" parameterType="mall.web.domain.TB_BKINFOXM" resultType="int">
+		SELECT COUNT(*)
+		FROM TB_BKINFOXM
+		WHERE PD_CODE = #{PD_CODE}
+		  AND MEMB_ID = #{REGP_ID}
+		<if test="PD_CUT_SEQ != null and PD_CUT_SEQ != ''">
+		  AND PD_CUT_SEQ = #{PD_CUT_SEQ}
+		</if>
+		<if test="OPTION_CODE != null and OPTION_CODE != ''">
+		  AND OPTION_CODE = #{OPTION_CODE}
+		</if>		
+		<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+		  AND OPTION1_NAME = #{OPTION1_NAME}
+		</if>
+		<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+		  AND OPTION1_VALUE = #{OPTION1_VALUE}
+		</if>
+		<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+		  AND OPTION2_NAME = #{OPTION2_NAME}
+		</if>
+		<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+		  AND OPTION2_VALUE = #{OPTION2_VALUE}
+		</if>
+		<if test="OPTION3_NAME != null and OPTION3_NAME != ''">
+		  AND OPTION3_NAME = #{OPTION3_NAME}
+		</if>
+		<if test="OPTION3_VALUE != null and OPTION3_VALUE != ''">
+		  AND OPTION3_VALUE = #{OPTION3_VALUE}
+		</if>
+	</select>
+	
+	<!-- 장바구니 담기 -->
+	<insert id="basketInst" parameterType="mall.web.domain.TB_BKINFOXM">
+		INSERT INTO 
+			TB_BKINFOXM (
+				BSKT_REGNO
+				, PD_CODE
+				, BSKT_REGDT
+				, MEMB_ID
+				, PD_NAME
+				, PD_QTY
+				, PD_PRICE
+				, OCCUR_SVMN
+				, DLVY_AMT
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+					, OPTION1_NAME
+				</if>
+				<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+					, OPTION1_VALUE
+				</if>
+				<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+					, OPTION2_NAME
+				</if>
+				<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+					, OPTION2_VALUE
+				</if>
+				<if test="OPTION3_NAME != null and OPTION3_NAME != ''">
+					, OPTION3_NAME
+				</if>
+				<if test="OPTION3_VALUE != null and OPTION3_VALUE != ''">
+					, OPTION3_VALUE
+				</if>
+				<if test="EXTRA_YN != null and EXTRA_YN != ''">
+					, EXTRA_YN
+				</if>
+				<if test="SETPD_CODE != null and SETPD_CODE != ''">
+				, SETPD_CODE
+				</if>
+			)
+			SELECT (SELECT NVL(MAX(TO_NUMBER(BSKT_REGNO)), 0) + 1 FROM TB_BKINFOXM)
+				    , A.PD_CODE
+				    , SYSDATE
+				    , #{REGP_ID}
+				    , A.PD_NAME
+				    , DECODE(REGEXP_INSTR(1,'[^0-9]'),1,FC_GET_COMCOD_NM(#{PD_QTY}),#{PD_QTY})
+				    <if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+					 , (SELECT TO_NUMBER(FC_GET_PRICE_SALE(A.PD_CODE, #{REGP_ID})) AS MEMBERS_PRICE FROM DUAL) + B.PRICE AS PD_PRICE
+				   	</if>
+				   	<if test="OPTION1_NAME == null || OPTION1_NAME == ''">
+				  	, TO_NUMBER(FC_GET_PRICE_SALE(A.PD_CODE, #{REGP_ID})) AS PD_PRICE
+				   	</if>
+				    , 0
+				    , #{DLVY_AMT}
+					, #{REGP_ID}
+					, SYSDATE
+					, #{REGP_ID}
+					, SYSDATE
+					<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+						, B.OPTION1_NAME
+					</if>
+					<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+						, B.OPTION1_VALUE 
+					</if>
+					<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+						, B.OPTION2_NAME 
+					</if>
+					<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+						, B.OPTION2_VALUE
+					</if>
+					<if test="OPTION3_NAME != null and OPTION3_NAME != ''">
+						, B.OPTION3_NAME 
+					</if>
+					<if test="OPTION3_VALUE != null and OPTION3_VALUE != ''">
+						, B.OPTION3_VALUE
+					</if>
+					<if test="EXTRA_YN != null and EXTRA_YN != ''">
+						, #{EXTRA_YN}
+					</if>
+					<if test="SETPD_CODE != null and SETPD_CODE != ''">
+					, #{SETPD_CODE}
+					</if>
+			FROM TB_PDINFOXM A
+			<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+				JOIN TB_PDOPTION B 
+				ON (A.PD_CODE = B.PD_CODE)
+			</if>
+				WHERE A.PD_CODE = #{PD_CODE}
+			<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+				AND B.OPTION1_VALUE =#{OPTION1_VALUE}
+				AND B.DEL_YN ='N'
+			</if>
+			<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+				AND B.OPTION2_VALUE =#{OPTION2_VALUE}
+			</if>
+			<if test="OPTION3_VALUE != null and OPTION3_VALUE != ''">
+				AND B.OPTION3_VALUE =#{OPTION3_VALUE}
+			</if>
+	</insert>
+
+	<!-- 관심상품 중복확인 -->
+	<select id="wishSelect" parameterType="mall.web.domain.TB_BKINFOXM" resultType="int">
+		SELECT COUNT(*)
+		FROM TB_IPINFOXM
+		WHERE PD_CODE = #{PD_CODE}
+		  AND MEMB_ID = #{REGP_ID}
+		<if test="PD_CUT_SEQ != null and PD_CUT_SEQ != ''">
+		  AND PD_CUT_SEQ = #{PD_CUT_SEQ}
+		</if>
+		<if test="OPTION_CODE != null and OPTION_CODE != ''">
+		  AND OPTION_CODE = #{OPTION_CODE}
+		</if>
+		
+		<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+		  AND OPTION1_NAME = #{OPTION1_NAME}
+		</if>
+		<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+		  AND OPTION1_VALUE = #{OPTION1_VALUE}
+		</if>
+		<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+		  AND OPTION2_NAME = #{OPTION2_NAME}
+		</if>
+		<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+		  AND OPTION2_VALUE = #{OPTION2_VALUE}
+		</if>
+	</select>
+	
+	<!-- 관심상품 등록 -->
+	<insert id="wishInst" parameterType="mall.web.domain.TB_BKINFOXM">
+		INSERT INTO 
+			TB_IPINFOXM (
+				INTPD_REGNO
+				, PD_CODE
+				, INTPD_REGDT
+				, MEMB_ID
+				, PD_NAME
+				, PD_QTY
+				, PD_PRICE
+				, OCCUR_SVMN
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+				, PD_CUT_SEQ
+				, OPTION_CODE
+				<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+				  , OPTION1_NAME
+				</if>
+				<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+				  , OPTION1_VALUE
+				</if>
+				<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+				  , OPTION2_NAME
+				</if>
+				<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+				  , OPTION2_VALUE
+				</if>
+			) 
+			SELECT (SELECT NVL(MAX(INTPD_REGNO), 0) + 1 FROM TB_IPINFOXM)
+			     , #{PD_CODE}
+			     , SYSDATE
+			     , #{REGP_ID}
+			     , PD_NAME
+			     , DECODE(REGEXP_INSTR(#{PD_QTY},'[^0-9]'),1,FC_GET_COMCOD_NM(#{PD_QTY}),#{PD_QTY})
+			     , PD_PRICE
+			     <!-- <choose>
+					<when test = "OPTION2_VALUE != null and OPTION2_VALUE != ''">
+						, (SELECT PRICE FROM TB_PDOPTION TMP WHERE TMP.PD_CODE = A.PD_CODE AND TMP.OPTION2_NAME = #{OPTION2_NAME} AND TMP.OPTION2_VALUE = #{OPTION2_VALUE})
+					</when>
+					
+					<when test = "OPTION1_VALUE != null and OPTION1_VALUE != ''">
+						, (SELECT PRICE FROM TB_PDOPTION TMP WHERE TMP.PD_CODE = A.PD_CODE AND TMP.OPTION1_NAME = #{OPTION1_NAME} AND TMP.OPTION1_VALUE = #{OPTION1_VALUE})
+					</when>
+					
+					<otherwise>
+						, PD_PRICE
+					</otherwise>
+				 </choose> -->
+			     <!-- , PD_PRICE
+			     , (CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN PD_PRICE - PDDC_VAL
+                         WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN PD_PRICE - (PD_PRICE* PDDC_VAL/100)
+                    	 ELSE PD_PRICE END) -->
+			     , 0
+				, #{REGP_ID}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+				, #{PD_CUT_SEQ}
+				, #{OPTION_CODE}
+				<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+				  , #{OPTION1_NAME}
+				</if>
+				<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+				  , #{OPTION1_VALUE}
+				</if>
+				<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+				  , #{OPTION2_NAME}
+				</if>
+				<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+				  , #{OPTION2_VALUE}
+				</if>
+			FROM TB_PDINFOXM A
+			WHERE PD_CODE = #{PD_CODE}
+	</insert>
+	
+	<!-- 사용가능 카테고리에 포함된 전체상품 리스트 -->
+	<select id="mainProductList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+            	SELECT	A.PD_CODE
+							, A.SUPR_ID
+							, FC_GET_SUPRID_NM(A.SUPR_ID) AS SUPR_NAME
+							, A.PD_NAME
+							, A.CAGO_ID
+							, FC_GET_CAGOID_NM(A.CAGO_ID) AS CAGO_NAME
+							, A.PD_PRICE
+							, CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+										WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE* A.PDDC_VAL/100)
+										ELSE A.PD_PRICE
+							  END REAL_PRICE
+							, A.PDDC_GUBN
+							, A.PDDC_VAL
+							, A.SVMN_GUBN
+							, A.SVMN_VAL
+							, A.INVEN_QTY
+							, A.POS_NAME
+							, A.PD_BARCD
+							, A.STORE_CTR
+							, A.PD_STD
+							, A.DTB_DLINE
+							, A.MAKE_COM
+							, A.ORG_CT
+							, A.SALE_CON
+							, A.PD_DINFO
+							, A.DLVREF_GUIDE
+							, A.ATFL_ID
+							, A.RPIMG_SEQ
+							, A.ADC1_NAME
+							, A.ADC2_NAME
+							, A.ADC3_NAME
+							, A.ADC4_NAME
+							, A.ADC5_NAME
+							, A.ADC1_VAL
+							, A.ADC2_VAL
+							, A.ADC3_VAL
+							, A.ADC4_VAL
+							, A.ADC5_VAL
+							, A.PD_ICON
+							, A.STD_UNIT
+							, A.REGP_ID
+							, A.REG_DTM
+							, A.MODP_ID
+							, A.MOD_DTM
+							, B.CAGO_ID_PATH
+							, B.CAGO_NM_PATH
+							, A.BOX_PDDC_GUBN
+							, A.BOX_PDDC_VAL
+				FROM TB_PDINFOXM A,
+				(
+					SELECT	CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+								SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+								SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+					FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+					START WITH UPCAGO_ID IS NULL
+					CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+				) B
+				WHERE A.CAGO_ID = B.CAGO_ID 
+  					<!-- AND A.SUPR_ID = #{SUPR_ID} -->
+           			AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02'))			
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 추천상품 그룹 조회 (탭변경) -->
+	<select id="tabRecommandProductList" parameterType="mall.web.domain.TB_PDRCMDXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+		FROM (
+			SELECT  A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					    END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , C.GRP_NM
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+                      , D.FILEPATH_FLAG
+                      , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+                      , C.RCMD_GUBN
+                      , A.DLVY_GUBN
+					  , (SELECT FC_GET_COMCOD_NM(A.DLVY_GUBN) FROM DUAL) AS DLVY_GUBN_NM
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ(+)
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = #{RCMD_GUBN}
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 오른쪽 미니 추천상품 -->
+	<select id="mainRecommandProductList8" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+		FROM (
+			SELECT  A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					    END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , C.GRP_NM
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.FILEPATH_FLAG
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+			          , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+			          , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+				FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+				WHERE A.PD_CODE = B.PD_CODE
+					AND A.ATFL_ID = D.ATFL_ID(+)
+					AND A.RPIMG_SEQ = D.ATFL_SEQ(+)
+					AND B.GRP_CD = C.GRP_CD
+					AND C.USE_YN = 'Y'
+					AND A.DEL_YN = 'N'
+					AND C.RCMD_GUBN = 'RCMD_GUBN_08'
+					AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 세절방식 목록 -->
+	<select id="proCutList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDCUTXM">
+		SELECT *
+		FROM TB_PDCUTXM
+		WHERE PD_CODE=#{PD_CODE}
+			AND USE_YN ='Y'
+		ORDER BY SEQ
+	</select>
+	
+	<!--  -->
+	<select id="proCutFind" parameterType="java.util.List" resultType="mall.web.domain.TB_PDCUTXM">
+		SELECT CUT_UNIT
+		FROM TB_PDCUTXM
+		WHERE PD_CODE=#{PD_CODE}
+			AND USE_YN ='Y'
+			AND SEQ IN 
+		<foreach collection="list" item="item" separator="," open="(" close=")" >
+	 		#{item}
+	 	</foreach>
+	</select>
+	
+	<!-- 추천상품1 (사용안함) -->
+	<select id="mainNewProductList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">	
+		SELECT DISTINCT *
+		FROM (
+			SELECT	A.PD_CODE
+		              , A.SUPR_ID
+		              , FC_GET_SUPRID_NM(A.SUPR_ID) AS SUPR_NAME
+		              , A.PD_NAME
+		              , A.CAGO_ID
+		              , FC_GET_CAGOID_NM(A.CAGO_ID) AS CAGO_NAME
+		              , A.PD_PRICE
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					   END REAL_PRICE
+		              , A.PDDC_GUBN
+		              , A.PDDC_VAL
+		              , A.SVMN_GUBN
+		              , A.SVMN_VAL
+		              , A.INVEN_QTY
+		              , A.POS_NAME
+		              , A.PD_BARCD
+		              , A.STORE_CTR
+		              , A.PD_STD
+		              , A.DTB_DLINE
+		              , A.MAKE_COM
+		              , A.ORG_CT
+		              , A.SALE_CON
+		              , A.ATFL_ID
+		              , A.RPIMG_SEQ
+		              , A.PD_ICON
+		              , A.STD_UNIT
+		              , A.REGP_ID
+		              , A.REG_DTM
+		              , A.MODP_ID
+		              , A.MOD_DTM
+		              , A.DEL_YN
+		              , A.BOX_PDDC_GUBN
+					  , A.BOX_PDDC_VAL
+		              , B.GRP_CD
+		              , B.SORT_ORDR AS DTL_SORT
+		              , C.SORT_ORDR AS MST_SORT
+		              , A.OPTION_GUBN
+		              , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+		              , D.STFL_PATH
+		              , D.STFL_NAME
+		              , D.FILEPATH_FLAG
+		              , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+		              , (SELECT NVL(COUNT(*), '0') FROM TB_PDOPTION O WHERE O.PD_CODE = A.PD_CODE) AS OPTION_CNT
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ(+)
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_01'	<!-- RCMD_GUBN_02 -->
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 추천상품2 (사용안함) -->
+	<select id="mainRecommandProductList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+        FROM (
+                SELECT A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE                      
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					   END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.FILEPATH_FLAG
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+			          , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+			          , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_02'	<!-- RCMD_GUBN_01 -->
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 추천상품3 (사용안함) -->
+	<select id="mainRecommandProductList3" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+        FROM (
+			SELECT  A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE                      
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					    END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.FILEPATH_FLAG
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+			          , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+			          , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_03'
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 추천상품4 (사용안함) -->
+	<select id="mainRecommandProductList4" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+        FROM (
+			SELECT  A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE                      
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					    END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.FILEPATH_FLAG
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+			          , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+			          , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_04'
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 추천상품 5 (사용안함) -->
+	<select id="mainRecommandProductList5" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+		FROM (
+			SELECT  A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					    END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.FILEPATH_FLAG
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+			          , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+			          , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_05'
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 추천상품 6 (사용안함) -->
+	<select id="mainRecommandProductList6" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+		FROM (
+			SELECT  A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					    END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.FILEPATH_FLAG
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+			          , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+			          , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_06'
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<!-- 추천상품 7 (사용안함) -->
+	<select id="mainRecommandProductList7" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT DISTINCT *
+		FROM (
+			SELECT  A.PD_CODE
+                      , A.SUPR_ID
+                      , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                      , A.PD_NAME
+                      , A.CAGO_ID
+                      , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                      , A.PD_PRICE
+		              , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+								WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * A.PDDC_VAL/100)
+								ELSE A.PD_PRICE
+					    END REAL_PRICE
+                      , A.PDDC_GUBN
+                      , A.PDDC_VAL
+                      , A.SVMN_GUBN
+                      , A.SVMN_VAL
+                      , A.INVEN_QTY
+                      , A.POS_NAME
+                      , A.PD_BARCD
+                      , A.STORE_CTR
+                      , A.PD_STD
+                      , A.DTB_DLINE
+                      , A.MAKE_COM
+                      , A.ORG_CT
+                      , A.SALE_CON
+                      , A.ATFL_ID
+                      , A.RPIMG_SEQ
+                      , A.PD_ICON
+                      , A.STD_UNIT
+                      , A.REGP_ID
+                      , A.REG_DTM
+                      , A.MODP_ID
+                      , A.MOD_DTM
+                      , A.DEL_YN
+                      , A.BOX_PDDC_GUBN
+                      , A.BOX_PDDC_VAL
+                      , B.GRP_CD
+                      , B.SORT_ORDR AS DTL_SORT
+                      , C.SORT_ORDR AS MST_SORT
+                      , D.FILEPATH_FLAG
+                      , D.STFL_PATH
+                      , D.STFL_NAME
+			          , A.OPTION_GUBN
+			          , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+			          , (SELECT FC_GET_COMCOD_NM(C.RCMD_GUBN) FROM DUAL) AS RCMD_GUBN
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_07'
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<select id="getEntCagoRcmdCagoList" parameterType="String" resultType="mall.web.domain.TB_PDRCMDXM_ENTCAGO">
+		SELECT GRP_CD
+			 , GRP_NM
+			 , SORT_ORDR
+			 , USE_YN
+			 , DEL_YN
+			 , REG_DTM
+			 , REGP_ID
+			 , MOD_DTM
+			 , MODP_ID
+			 , RCMD_GUBN
+			 , ENTRY_ID		
+          FROM TB_PDRCMDXM_ENTCAGO
+         WHERE ENTRY_ID = #{value}
+           AND RCMD_GUBN = 'ENT_RCMD_GUBN_01'
+           AND USE_YN = 'Y'
+           AND DEL_YN = 'N'
+         ORDER BY SORT_ORDR
+	</select>
+	
+	<select id="getEntCagoSaleCagoList" parameterType="String" resultType="mall.web.domain.TB_PDRCMDXM_ENTCAGO">
+		SELECT GRP_CD
+			 , GRP_NM
+			 , SORT_ORDR
+			 , USE_YN
+			 , DEL_YN
+			 , REG_DTM
+			 , REGP_ID
+			 , MOD_DTM
+			 , MODP_ID
+			 , RCMD_GUBN
+			 , ENTRY_ID		
+          FROM TB_PDRCMDXM_ENTCAGO
+         WHERE ENTRY_ID = #{value}
+           AND RCMD_GUBN = 'ENT_RCMD_GUBN_02'
+           AND USE_YN = 'Y'
+           AND DEL_YN = 'N'
+           AND ROWNUM = '1'
+         ORDER BY SORT_ORDR
+	</select>
+	
+	<select id="getEntCagoRcmdPdList" parameterType="mall.web.domain.TB_PDRCMDXM_ENTCAGO" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT *
+		  FROM (
+		        SELECT A.PD_CODE
+		              , A.SUPR_ID
+		              , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+		              , A.PD_NAME
+		              , A.CAGO_ID
+		              , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+		              , A.PD_PRICE
+		              , A.PD_PRICE - PDDC_VAL AS REAL_PRICE  
+		              , A.PDDC_GUBN
+		              , A.PDDC_VAL
+		              , A.SVMN_GUBN
+		              , A.SVMN_VAL
+		              , A.INVEN_QTY
+		              , A.POS_NAME
+		              , A.PD_BARCD
+		              , A.STORE_CTR
+		              , A.PD_STD
+		              , A.DTB_DLINE
+		              , A.MAKE_COM
+		              , A.ORG_CT
+		              , A.SALE_CON
+		              , A.ATFL_ID
+		              , A.RPIMG_SEQ
+		              , A.PD_ICON
+		              , A.STD_UNIT
+		              , A.REGP_ID
+		              , A.REG_DTM
+		              , A.MODP_ID
+		              , A.MOD_DTM
+		              , A.DEL_YN
+		              , A.MEMBER_PRICE
+		              , A.BOX_PDDC_GUBN
+                         , A.BOX_PDDC_VAL
+		              , B.GRP_CD
+		              , B.SORT_ORDR AS DTL_SORT
+		              , C.SORT_ORDR AS MST_SORT
+		              , A.OPTION_GUBN
+		              , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+		              , D.STFL_PATH
+		              , D.STFL_NAME
+		              , D.FILEPATH_FLAG
+		              , (SELECT NVL(COUNT(*), '0') FROM TB_PDOPTION O WHERE O.PD_CODE = A.PD_CODE) AS OPTION_CNT
+		          FROM TB_PDINFOXM A, TB_PDRCMDXD_ENTCAGO B, TB_PDRCMDXM_ENTCAGO C, TB_COATFLXD D
+		         WHERE A.PD_CODE = B.PD_CODE
+		           AND A.ATFL_ID = D.ATFL_ID(+)
+                      AND A.RPIMG_SEQ = D.ATFL_SEQ(+)
+		           AND B.GRP_CD = C.GRP_CD
+		           AND C.USE_YN = 'Y'
+		           AND A.DEL_YN = 'N'
+		           AND B.ENTRY_ID = C.ENTRY_ID
+		           AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+		           AND C.ENTRY_ID = #{ENTRY_ID}
+		           AND C.GRP_CD = #{GRP_CD}
+		           <if test="RCMD_GUBN != null and RCMD_GUBN != ''">
+		           	AND C.RCMD_GUBN = #{RCMD_GUBN}
+		           </if>
+		     )
+		 ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<select id="getEntryCagoInfo" parameterType="String" resultType="mall.web.domain.TB_ENTRYCAGOXM">
+		SELECT ENTRY_ID
+			 , ENTRY_NAME
+			 , SORT_ORDR
+			 , USE_YN
+			 , REGP_ID
+			 , REG_DTM
+			 , MODP_ID
+			 , MOD_DTM
+			 , IMG_URL
+		  FROM TB_ENTRYCAGOXM
+	     WHERE ENTRY_ID=#{value}	      
+	</select>
+	
+	
+	<update id="mergeProduct" parameterType="mall.web.domain.TB_PDINFOXM">
+	
+		<selectKey keyProperty="PD_CNT" resultType="String" order="BEFORE">
+			SELECT COUNT(*) 
+			  FROM TB_PDINFOXM 
+			 WHERE PD_CODE = #{PD_CODE}
+		</selectKey>
+		
+		<if test="PD_CNT == 1">
+			UPDATE TB_PDINFOXM
+		 	   SET SUPR_ID = #{SUPR_ID}
+		 	     , PD_NAME = #{PD_NAME}
+		 	     <if test="CAGO_ID != null and CAGO_ID != ''">
+		 	     , CAGO_ID = #{CAGO_ID}
+		 	     </if>
+		 	     , PD_PRICE = TRUNC(#{PD_PRICE}, -1)
+		 	     , PDDC_GUBN = #{PDDC_GUBN}
+		 	     , PDDC_VAL = #{PDDC_VAL}
+		 	     , SALE_CON = #{SALE_CON}
+		 	     , PD_DINFO = #{PD_DINFO}
+		 	     , ATFL_ID = #{ATFL_ID}
+		 	     , RPIMG_SEQ = #{RPIMG_SEQ}		 	     
+		 	     , MODP_ID = #{MODP_ID}
+		 	     , MOD_DTM = SYSDATE
+		 	     , TAX_GUBN = #{TAX_GUBN}
+		 	     , DEL_YN = #{DEL_YN}
+		 	     , PD_INTERFACE_YN = #{PD_INTERFACE_YN}
+		 	     , PD_IWHUPRC = #{PD_IWHUPRC}
+		 	     , PRICE_POLICY = #{PRICE_POLICY}
+		 	     , LINK_MODP_DATE = #{LINK_MODP_DATE}
+		 	     , MAKE_COM = #{MAKE_COM}
+		 	     , ORG_CT = #{ORG_CT}
+		 	     , PD_STD = #{PD_STD}
+		 	     , INPUT_CNT = #{INPUT_CNT}
+		 	 WHERE PD_CODE = #{PD_CODE}		
+		 	   AND NVL(LINK_MODP_DATE, '0') != #{LINK_MODP_DATE}
+		</if>
+		
+		<if test="PD_CNT == 0">
+			INSERT INTO TB_PDINFOXM ( PD_CODE
+									, PD_BARCD
+						 	        , SUPR_ID
+						 	        , PD_NAME
+						 	        , CAGO_ID
+						 	        , PD_PRICE
+						 	        , PDDC_GUBN
+						 	        , PDDC_VAL
+						 	        , SALE_CON
+						 	        , PD_DINFO
+						 	        , ATFL_ID
+						 	        , RPIMG_SEQ
+						 	        , REGP_ID
+						 	        , REG_DTM
+						 	        , MODP_ID
+						 	        , MOD_DTM
+						 	        , TAX_GUBN
+						 	        , DEL_YN
+						 	        , PD_INTERFACE_YN
+						 	        , PD_IWHUPRC
+						 	        , PRICE_POLICY
+						 	        , LINK_MODP_DATE 
+						 	        , MAKE_COM
+							 	    , ORG_CT
+							 	    , PD_STD
+							 	    , INPUT_CNT)
+						 	 VALUES ( #{PD_CODE}
+						 	 		, #{PD_BARCD}
+						 	        , #{SUPR_ID}
+						 	        , #{PD_NAME}
+						 	        , #{CAGO_ID}
+						 	        , TRUNC(#{PD_PRICE}, -1)
+						 	        , #{PDDC_GUBN}
+						 	        , #{PDDC_VAL}
+						 	        , #{SALE_CON}
+						 	        , #{PD_DINFO}
+						 	        , #{ATFL_ID}
+						 	        , #{RPIMG_SEQ}
+						 	        , #{REGP_ID}
+						 	        , SYSDATE
+						 	        , #{MODP_ID}
+						 	        , SYSDATE
+						 	        , #{TAX_GUBN}
+						 	        , #{DEL_YN}
+						 	        , #{PD_INTERFACE_YN}
+						 	        , #{PD_IWHUPRC}
+						 	        , #{PRICE_POLICY} 
+						 	        , #{LINK_MODP_DATE}
+						 	        , #{MAKE_COM}
+							 	    , #{ORG_CT}
+							 	    , #{PD_STD}
+							 	    , #{INPUT_CNT})
+		</if>		
+		
+	</update>
+	
+	<update id="mergeProduct_bak" parameterType="mall.web.domain.TB_PDINFOXM">
+		MERGE INTO TB_PDINFOXM
+		USING DUAL ON (PD_CODE = #{PD_CODE})
+		 WHEN MATCHED THEN
+		 	UPDATE 
+		 	   SET SUPR_ID = #{SUPR_ID}
+		 	     , PD_NAME = #{PD_NAME}
+		 	     , CAGO_ID = #{CAGO_ID}
+		 	     , PD_PRICE = #{PD_PRICE}
+		 	     , PDDC_GUBN = #{PDDC_GUBN}
+		 	     , PDDC_VAL = #{PDDC_VAL}
+		 	     , SALE_CON = #{SALE_CON}
+		 	     , PD_DINFO = #{PD_DINFO}
+		 	     , ATFL_ID = #{ATFL_ID}
+		 	     , RPIMG_SEQ = #{RPIMG_SEQ}		 	     
+		 	     , MODP_ID = #{MODP_ID}
+		 	     , MOD_DTM = SYSDATE
+		 	     , TAX_GUBN = #{TAX_GUBN}
+		 	     , DEL_YN = #{DEL_YN}
+		 	     , PD_INTERFACE_YN = #{PD_INTERFACE_YN}
+		 	     , PD_IWHUPRC = #{PD_IWHUPRC}
+		 	     , PRICE_POLICY = #{PRICE_POLICY}
+		 WHEN NOT MATCHED THEN
+		 	INSERT ( PD_CODE
+		 	       , SUPR_ID
+		 	       , PD_NAME
+		 	       , CAGO_ID
+		 	       , PD_PRICE
+		 	       , PDDC_GUBN
+		 	       , PDDC_VAL
+		 	       , SALE_CON
+		 	       , PD_DINFO
+		 	       , ATFL_ID
+		 	       , RPIMG_SEQ
+		 	       , REGP_ID
+		 	       , REG_DTM
+		 	       , MODP_ID
+		 	       , MOD_DTM
+		 	       , TAX_GUBN
+		 	       , DEL_YN
+		 	       , PD_INTERFACE_YN
+		 	       , PD_IWHUPRC
+		 	       , PRICE_POLICY )
+		 	VALUES ( #{PD_CODE}
+		 	       , #{SUPR_ID}
+		 	       , #{PD_NAME}
+		 	       , #{CAGO_ID}
+		 	       , #{PD_PRICE}
+		 	       , #{PDDC_GUBN}
+		 	       , #{PDDC_VAL}
+		 	       , #{SALE_CON}
+		 	       , #{PD_DINFO}
+		 	       , #{ATFL_ID}
+		 	       , #{RPIMG_SEQ}
+		 	       , #{REGP_ID}
+		 	       , SYSDATE
+		 	       , #{MODP_ID}
+		 	       , SYSDATE
+		 	       , #{TAX_GUBN}
+		 	       , #{DEL_YN}
+		 	       , #{PD_INTERFACE_YN}
+		 	       , #{PD_IWHUPRC}
+		 	       , #{PRICE_POLICY} )
+	</update>
+	
+	
+	<update id="mergeImgMst" parameterType="mall.web.domain.TB_COATFLXD">
+		MERGE INTO TB_COATFLXM
+		USING DUAL ON (ATFL_ID = #{ATFL_ID})
+		 WHEN NOT MATCHED THEN
+		 	INSERT ( ATFL_ID
+		 		   , REGP_ID
+				   , REG_DTM
+			       , MODP_ID
+			       , MOD_DTM )
+		 	VALUES ( #{ATFL_ID}
+		 	       , #{REGP_ID}
+		 	       , SYSDATE
+		 	       , #{MODP_ID}
+		 	       , SYSDATE )
+	</update>
+	
+	
+	<update id="mergeImgDtl" parameterType="mall.web.domain.TB_COATFLXD">
+		MERGE INTO TB_COATFLXD
+		USING DUAL ON (ATFL_ID = #{ATFL_ID} AND ATFL_SEQ = #{ATFL_SEQ})
+		 WHEN MATCHED THEN
+		 	UPDATE 
+		 	   SET STFL_PATH = #{STFL_PATH}
+		 	     , STFL_NAME = #{STFL_NAME}
+		 	     , ORFL_NAME = #{ORFL_NAME}
+		 	     , FILE_EXT = #{FILE_EXT}
+		 	     , FILE_SIZE = #{FILE_SIZE}
+		 	     , DEL_YN = #{DEL_YN}
+		 	     , MODP_ID = #{MODP_ID}
+		 	     , MOD_DTM = SYSDATE		
+		 	     , FILEPATH_FLAG = #{FILEPATH_FLAG}		
+		 	 WHERE STFL_PATH != #{STFL_PATH}
+		 WHEN NOT MATCHED THEN
+		 	INSERT ( ATFL_ID
+		 	       , ATFL_SEQ
+		 	       , STFL_PATH
+				   , STFL_NAME
+			       , ORFL_NAME
+			       , FILE_EXT
+			       , FILE_SIZE
+			       , DEL_YN
+			       , MODP_ID
+			       , REGP_ID
+			       , REG_DTM
+			       , MOD_DTM
+			       , FILEPATH_FLAG )
+		 	VALUES ( #{ATFL_ID}
+		 	       , #{ATFL_SEQ}
+		 	       , #{STFL_PATH}
+				   , #{STFL_NAME}
+			       , #{ORFL_NAME}
+			       , #{FILE_EXT}
+			       , #{FILE_SIZE}
+			       , #{DEL_YN}
+			       , #{MODP_ID}
+			       , #{REGP_ID}
+			       , SYSDATE
+			       , SYSDATE
+			       , #{FILEPATH_FLAG} )
+	</update>
+
+	<select id="getOwnclanCagoList" resultType="HashMap">
+		SELECT CAGO_ID
+		     , CAGO_NAME
+		  FROM TB_PDCAGOXM
+		 WHERE UPCAGO_ID IN (SELECT CAGO_ID FROM TB_PDCAGOXM WHERE UPCAGO_ID = '050000000')
+	</select>
+	
+	
+	<update id="updateDisSale" parameterType="HashMap">
+		UPDATE TB_PDINFOXM 
+		   SET SALE_CON = 'SALE_CON_03'
+		     , LINK_MODP_DATE = ''
+  		 WHERE SUPR_ID = 'C00004'
+  		   AND CAGO_ID = #{CAGO_ID}
+  		   AND SALE_CON != 'SALE_CON_03'
+  		   AND PD_CODE NOT IN 
+  		   <foreach collection="List" item="item" separator="," open="(" close=")" >
+  		   	#{item}
+  		   </foreach>
+	</update>
+	
+	
+	<delete id="deletePdOption" parameterType="String">
+		DELETE FROM TB_PDOPTION 
+		 WHERE PD_CODE = #{value}
+	</delete>
+	
+	<insert id="insertPdOption" parameterType="mall.web.domain.TB_PDOPTION">
+		INSERT INTO TB_PDOPTION ( PD_CODE
+								, OPTION_VALUE
+								, OPTION_NAME
+								, QUANTITY
+								, SORT_ORDER
+								, PRICE
+								<if test="UP_VALUE != null and UP_VALUE != ''">
+								, UP_VALUE
+								</if>
+								<if test="UP_NAME != null and UP_NAME != ''">
+								, UP_NAME 
+								</if>
+								)
+						 VALUES ( #{PD_CODE}
+								, #{OPTION_VALUE}
+								, #{OPTION_NAME}
+								, #{QUANTITY}
+								, #{SORT_ORDER}
+								, TRUNC(#{PRICE}, -1)
+								<if test="UP_VALUE != null and UP_VALUE != ''"> 
+								, #{UP_VALUE}
+								</if>
+								<if test="UP_NAME != null and UP_NAME != ''">
+								, #{UP_NAME} 
+								</if>
+								)  
+	</insert>
+	
+	<insert id="insertPdOption_back" parameterType="mall.web.domain.TB_PDOPTION">
+		INSERT INTO TB_PDOPTION ( PD_CODE
+								, OPTION_VALUE
+								, OPTION_NAME
+								, QUANTITY
+								, SORT_ORDER
+								, PRICE )
+						 VALUES ( #{PD_CODE}
+								, #{OPTION_VALUE}
+								, #{OPTION_NAME}
+								, #{QUANTITY}
+								, #{SORT_ORDER}
+								, #{PRICE} )  
+	</insert>
+	
+	
+	<select id="selectPdOption" parameterType="String" resultType="mall.web.domain.TB_PDOPTION">
+		SELECT PD_CODE
+			 , OPTION1_VALUE
+			 , OPTION1_NAME
+			 , QUANTITY
+			 , SORT_ORDER
+			 , PRICE
+			 , UP_NAME
+			 , UP_VALUE
+		  FROM TB_PDOPTION
+		 WHERE PD_CODE = #{value}
+		 ORDER BY OPTION1_VALUE DESC, OPTION2_VALUE DESC  
+	</select>
+	
+	<select id="selectPdOptionStart" parameterType="String" resultType="mall.web.domain.TB_PDOPTION">
+		SELECT PD_CODE
+			 , OPTION_VALUE
+			 , OPTION_NAME
+			 , QUANTITY
+			 , SORT_ORDER
+			 , PRICE
+			 , UP_NAME
+			 , UP_VALUE
+		  FROM TB_PDOPTION
+		 WHERE PD_CODE = #{value}  
+		   AND UP_VALUE IS NULL 
+	</select>
+	
+	
+	<select id="selectPdOptionEnd" parameterType="String" resultType="mall.web.domain.TB_PDOPTION">
+		SELECT PD_CODE
+			 , OPTION_VALUE
+			 , OPTION_NAME
+			 , QUANTITY
+			 , SORT_ORDER
+			 , PRICE
+			 , UP_NAME
+			 , UP_VALUE
+		  FROM TB_PDOPTION
+		 WHERE PD_CODE = #{value}
+		   AND PRICE IS NOT NULL 
+	</select>
+	
+	<!-- 모든오피스 대 카테고리 -->
+	<update id="setModenOfficeCagoB" parameterType="HashMap">
+		MERGE INTO TB_PDCAGOXM
+		USING DUAL ON (CAGO_ID = #{McodeB})
+		 WHEN MATCHED THEN
+		 	UPDATE 
+		 	   SET CAGO_NAME = #{MnameB}
+		 	     , MODP_ID = 'admin'
+		 	     , MOD_DTM = SYSDATE
+		 	     , UPCAGO_ID = #{rootCode}
+		 WHEN NOT MATCHED THEN
+		 	INSERT ( CAGO_ID
+		 		   , CAGO_NAME
+		 		   , UPCAGO_ID
+		 		   , SORT_ORDR
+		 		   , USE_YN
+		 		   , REGP_ID
+		 		   , REG_DTM
+		 		   , MODP_ID
+		 		   , MOD_DTM
+		 		   , DEL_YN
+		 	       )
+		 	VALUES ( #{McodeB}
+		 		   , #{MnameB}
+		 		   , #{rootCode}
+		 		   , #{SORT_ORDR}
+		 		   , 'Y'
+		 		   , 'admin'
+		 		   , SYSDATE
+		 		   , 'admin'
+		 		   , SYSDATE
+		 		   , 'N'
+		 	       )		
+	</update>
+	
+	<!-- 모든오피스 중 카테고리 -->
+	<update id="setModenOfficeCagoC" parameterType="HashMap">
+		MERGE INTO TB_PDCAGOXM
+		USING DUAL ON (CAGO_ID = #{McodeC})
+		 WHEN MATCHED THEN
+		 	UPDATE 
+		 	   SET CAGO_NAME = #{MnameC}
+		 	     , MODP_ID = 'admin'
+		 	     , MOD_DTM = SYSDATE
+		 	     , UPCAGO_ID = #{McodeB}
+		 WHEN NOT MATCHED THEN
+		 	INSERT ( CAGO_ID
+		 		   , CAGO_NAME
+		 		   , UPCAGO_ID
+		 		   , SORT_ORDR
+		 		   , USE_YN
+		 		   , REGP_ID
+		 		   , REG_DTM
+		 		   , MODP_ID
+		 		   , MOD_DTM
+		 		   , DEL_YN
+		 	       )
+		 	VALUES ( #{McodeC}
+		 		   , #{MnameC}
+		 		   , #{McodeB}
+		 		   , #{SORT_ORDR}
+		 		   , 'Y'
+		 		   , 'admin'
+		 		   , SYSDATE
+		 		   , 'admin'
+		 		   , SYSDATE
+		 		   , 'N'
+		 	       )		
+	</update>
+	
+	<!-- 모든오피스 소 카테고리 -->
+	<update id="setModenOfficeCagoD" parameterType="HashMap">
+		MERGE INTO TB_PDCAGOXM
+		USING DUAL ON (CAGO_ID = #{McodeD})
+		 WHEN MATCHED THEN
+		 	UPDATE 
+		 	   SET CAGO_NAME = #{MnameD}
+		 	     , MODP_ID = 'admin'
+		 	     , MOD_DTM = SYSDATE
+		 	     , UPCAGO_ID = #{McodeC}
+		 WHEN NOT MATCHED THEN
+		 	INSERT ( CAGO_ID
+		 		   , CAGO_NAME
+		 		   , UPCAGO_ID
+		 		   , SORT_ORDR
+		 		   , USE_YN
+		 		   , REGP_ID
+		 		   , REG_DTM
+		 		   , MODP_ID
+		 		   , MOD_DTM
+		 		   , DEL_YN
+		 	       )
+		 	VALUES ( #{McodeD}
+		 		   , #{MnameD}
+		 		   , #{McodeC}
+		 		   , #{SORT_ORDR}
+		 		   , 'Y'
+		 		   , 'admin'
+		 		   , SYSDATE
+		 		   , 'admin'
+		 		   , SYSDATE
+		 		   , 'N'
+		 	       )		
+	</update>
+	
+	<insert id="insertPdinfo_ModenOffice" parameterType="HashMap">
+	
+		<selectKey keyProperty="PD_CNT" resultType="String" order="BEFORE">
+			SELECT NVL(COUNT(*), '0') 
+			  FROM TB_PDINFOXM 
+			 WHERE PD_CODE = #{Mcode}
+		</selectKey>
+		
+		<if test="PD_CNT == 1">
+			UPDATE TB_PDINFOXM
+		 	   SET PD_CODE = #{Mcode}
+		 	     , SUPR_ID = #{SUPR_ID}
+		 		 , PD_NAME = #{Mname}
+		 		 , CAGO_ID = #{McodeD}
+		 		 <!-- , PD_PRICE = TRUNC(#{MpriceCustomerB2C} , -1) -->
+		 		 , PD_BARCD = #{McodeBar}
+		 		 , MAKE_COM = #{McodeBrand}
+		 		 , ORG_CT = #{MspecOrigin}
+		 		 , SALE_CON = #{Msales}
+		 		 , PD_DINFO = #{MspecLong}
+		 		 , STD_UNIT = #{MsaleUnit}
+		 		 , MODP_ID = 'scheduler'
+		 		 , MOD_DTM = SYSDATE
+		 		 , ATFL_ID = #{Mcode}
+		 		 , DTL_ATFL_ID = #{Mcode}
+		 		 , RPIMG_SEQ = '1'
+		 		 , PD_IWHUPRC = #{MpricePurchase}
+		     WHERE PD_CODE = #{Mcode}
+		</if>
+		
+		<if test="PD_CNT == 0">
+			INSERT INTO  TB_PDINFOXM ( PD_CODE
+		 		   , SUPR_ID
+		 		   , PD_NAME
+		 		   , CAGO_ID
+		 		   , PD_PRICE
+		 		   , PDDC_GUBN
+		 		   , INVEN_QTY
+		 		   , PD_BARCD
+		 		   , MAKE_COM
+		 		   , ORG_CT
+		 		   , SALE_CON
+		 		   , PD_DINFO
+		 		   , STD_UNIT
+		 		   , REGP_ID
+		 		   , REG_DTM
+		 		   , MODP_ID
+		 		   , MOD_DTM
+		 		   , TAX_GUBN
+		 		   , ATFL_ID
+		 		   , DTL_ATFL_ID
+		 		   , RPIMG_SEQ
+		 		   , PD_IWHUPRC
+		 	       )
+		 	VALUES ( #{Mcode}
+		 		   , #{SUPR_ID}
+		 		   , #{Mname}
+		 		   , #{McodeD}
+		 		   , TRUNC(#{MpriceCustomerB2C}, -1)
+		 		   , 'PDDC_GUBN_01'
+		 		   , '9999'
+		 		   , #{McodeBar}
+		 		   , #{McodeBrand}
+		 		   , #{MspecOrigin}
+		 		   , #{Msales}
+		 		   , #{MspecLong}
+		 		   , #{MsaleUnit}
+		 		   , 'scheduler'
+		 		   , SYSDATE
+		 		   , 'scheduler'
+		 		   , SYSDATE
+		 		   , 'TAX_GUBN_01'
+		 		   , #{Mcode}
+		 		   , #{Mcode}
+		 		   , '1'
+		 		   , #{MpricePurchase}
+		 	       )
+		</if>		
+		
+	</insert>
+	
+	<insert id="insertCoatflxm_ModenOffice" parameterType="HashMap">
+		MERGE INTO TB_COATFLXM
+		USING DUAL ON ( ATFL_ID = #{Mcode} )		 	 		 
+		 WHEN NOT MATCHED THEN
+		 	INSERT (  ATFL_ID 
+		 		    , MODP_ID 
+		 		    , MOD_DTM 		 	
+		 		    , REGP_ID 
+		 		    , REG_DTM 
+		 	       )
+		    VALUES ( #{Mcode}
+		           , 'scheduler'
+		           , SYSDATE
+		           , 'scheduler'
+		           , SYSDATE
+		           )
+	</insert>
+	
+	<insert id="insertCoatflxd_ModenOffice" parameterType="HashMap">
+		MERGE INTO TB_COATFLXD
+		USING DUAL ON ( ATFL_ID = #{Mcode} )		 	 		 
+		 WHEN MATCHED THEN
+		 	   UPDATE 
+		 	      SET STFL_NAME = #{Mimg500}
+		 	        , STFL_PATH = #{Mimg500}
+		 	        , ORFL_NAME = #{Mimg500}
+		 	        , MODP_ID = 'scheduler'
+		 	        , MOD_DTM = SYSDATE
+		 WHEN NOT MATCHED THEN
+		 	INSERT ( ATFL_ID
+					, ATFL_SEQ
+					, DEL_YN
+					, FILEPATH_FLAG
+					, FILE_EXT
+					, FILE_SIZE
+					, MODP_ID
+					, MOD_DTM
+					, ORFL_NAME
+					, REGP_ID
+					, REG_DTM
+					, STFL_NAME
+					, STFL_PATH
+		 	       )
+		    VALUES ( #{Mcode}
+					, '1'
+					, 'N'
+					, 'modenoffice'
+					, 'jpg'
+					, '1'
+					, 'scheduler'
+					, SYSDATE
+					, #{Mimg500}
+					, 'scheduler'
+					, SYSDATE
+					, #{Mimg500}
+					, #{Mimg500}
+		           )
+	</insert>
+
+	<update id="setModenOfficeDiscontinuedPd" parameterType="String">
+		UPDATE TB_PDINFOXM 
+		   SET SALE_CON = 'SALE_CON_03'
+		 WHERE PD_CODE = #{value}
+	</update>	
+	
+	<update id="setModenOfficeSoldoutPd" parameterType="String">
+		UPDATE TB_PDINFOXM 
+		   SET SALE_CON = 'SALE_CON_02'
+		 WHERE PD_CODE = #{value}
+	</update>	
+	
+	
+	<update id="setModenOfficeChangedPd" parameterType="HashMap">
+			
+			UPDATE TB_PDINFOXM
+		 	   SET PD_CODE = #{Mcode}
+		 	     , SUPR_ID = #{SUPR_ID}
+		 		 , PD_NAME = #{Mname}
+		 		 , CAGO_ID = #{McodeD}
+		 		 <!-- , PD_PRICE = TRUNC(#{MpriceCustomerB2C} , -1) -->
+		 		 , PD_BARCD = #{McodeBar}
+		 		 , MAKE_COM = #{McodeBrand}
+		 		 , ORG_CT = #{MspecOrigin}
+		 		 , SALE_CON = #{Msales}
+		 		 , PD_DINFO = #{MspecLong}
+		 		 , STD_UNIT = #{MsaleUnit}
+		 		 , MODP_ID = 'scheduler'
+		 		 , MOD_DTM = SYSDATE
+		 		 , ATFL_ID = #{Mcode}
+		 		 , DTL_ATFL_ID = #{Mcode}
+		 		 , RPIMG_SEQ = '1'
+		 		 , PD_IWHUPRC = #{MpricePurchase}
+		     WHERE PD_CODE = #{Mcode}
+		
+	</update>
+	
+	<select id="getCagoid" parameterType="String" resultType="String">
+		SELECT NVL(CAGO_ID, #{value})
+  	      FROM TB_PDCAGOXM RIGHT OUTER JOIN DUAL 
+            ON CAGO_NAME = #{value}
+           AND LENGTH(CAGO_ID) = 8
+           AND ROWNUM = 1
+	</select>
+	
+	
+	<select id="ChkOwnerclanPdList" parameterType="java.util.List" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT PD_CODE
+		  FROM TB_PDINFOXM
+		  WHERE PD_CODE IN 
+		<foreach collection="list" item="item" separator="," open="(" close=")" >
+	 		#{item}
+	 	</foreach>
+	</select>
+	
+	<select id="getRcmdCagoList" parameterType="String" resultType="mall.web.domain.TB_PDRCMDXM">
+		SELECT GRP_CD
+			 , GRP_NM
+			 , SORT_ORDR
+			 , USE_YN
+			 , DEL_YN
+			 , REG_DTM
+			 , REGP_ID
+			 , MOD_DTM
+			 , MODP_ID
+			 , RCMD_GUBN
+			 , ENTRY_ID
+          FROM TB_PDRCMDXM
+         WHERE RCMD_GUBN = 'RCMD_GUBN_02'
+           AND USE_YN = 'Y'
+           AND DEL_YN = 'N'
+         ORDER BY SORT_ORDR
+	</select>	
+	
+	
+	<select id="getRcmdPdList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">	
+		SELECT *
+		FROM (
+			SELECT	A.PD_CODE
+						, A.SUPR_ID
+						, FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+						, A.PD_NAME
+						, A.CAGO_ID
+						, FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+						, A.PD_PRICE
+						, A.PD_PRICE - PDDC_VAL AS REAL_PRICE  
+						, A.PDDC_GUBN
+						, A.PDDC_VAL
+						, A.SVMN_GUBN
+						, A.SVMN_VAL
+						, A.INVEN_QTY
+						, A.POS_NAME
+						, A.PD_BARCD
+						, A.STORE_CTR
+						, A.PD_STD
+						, A.DTB_DLINE
+						, A.MAKE_COM
+						, A.ORG_CT
+						, A.SALE_CON
+						, A.ATFL_ID
+						, A.RPIMG_SEQ
+						, A.PD_ICON
+						, A.STD_UNIT
+						, A.REGP_ID
+						, A.REG_DTM
+						, A.MODP_ID
+						, A.MOD_DTM
+						, A.DEL_YN
+						, A.BOX_PDDC_GUBN
+						, A.BOX_PDDC_VAL
+						, A.MEMBER_PRICE
+						, B.GRP_CD
+						, C.GRP_NM
+						, B.SORT_ORDR AS DTL_SORT
+						, C.SORT_ORDR AS MST_SORT
+						, A.OPTION_GUBN
+						, (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+						, D.STFL_PATH
+						, D.STFL_NAME
+						, D.FILEPATH_FLAG
+						, (SELECT NVL(COUNT(*), '0') FROM TB_PDOPTION O WHERE O.PD_CODE = A.PD_CODE) AS OPTION_CNT
+			FROM TB_PDINFOXM A, TB_PDRCMDXD B, TB_PDRCMDXM C, TB_COATFLXD D
+			WHERE A.PD_CODE = B.PD_CODE
+				AND A.ATFL_ID = D.ATFL_ID(+)
+				AND A.RPIMG_SEQ = D.ATFL_SEQ(+)
+				AND B.GRP_CD = C.GRP_CD
+				AND C.USE_YN = 'Y'
+				AND A.DEL_YN = 'N'
+				AND C.RCMD_GUBN = 'RCMD_GUBN_02'
+				AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+				AND B.GRP_CD = #{GRP_CD}
+		)
+		ORDER BY MST_SORT, DTL_SORT
+	</select>
+	
+	<update id="updateSALE_CON_OUT" parameterType="mall.web.domain.TB_PDINFOXM">
+		UPDATE TB_PDINFOXM 
+		   SET SALE_CON = 'SALE_CON_02'
+		 WHERE PD_CODE = #{PD_CODE} 
+	</update>
+	
+	<update id="updateInvalidProduct" parameterType="String">
+		UPDATE TB_PDINFOXM 
+		   SET SALE_CON = 'SALE_CON_03'
+		 WHERE PD_CODE = #{value} 
+	</update>
+	
+	<!-- 상품 게시판 리스트 목록 (리뉴얼 사이트는 문의게시판이 없어서 사용안함) -->
+	<select id="boardList" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			FROM (
+				SELECT A.BRD_NUM   															/*게시글 번호*/
+			             , A.BRD_GUBN  															/*게시글 구분*/
+			             , A.PD_CODE																/*제품코드*/
+			             , B.PD_NAME																/*제품명*/
+			             , A.BRD_SBJT																/*게시글 제목*/
+			             , A.BRD_CONT															/*게시글 내용*/
+			             , A.PD_PTS																/*상품 별점*/
+			             , A.BRD_HITS																/*게시글 조회수*/
+			             , A.WRTR_ID																/*작성자ID*/
+			             , A.REGP_ID
+			             , FC_GET_MEMBID_NM(A.WRTR_ID) AS WRTR_NM     		/*작성자ID명*/
+			             , TO_CHAR(A.WRT_DTM, 'yyyy-MM-dd') AS WRT_DTM		/*작성일시*/
+			             , A.WRT_DTM AS WRT_DTM_SER   								/*WHERE 조건 작성일시*/			             
+			             , DECODE(A.BRD_PW,NULL, 'N', 'Y') AS SCWT_YN			/*비밀글여부*/
+			             , A.BRD_PW    															/*게시글 비밀번호*/
+			             , A.QNA_REPLY															/*QNA답변*/
+			             , DECODE(A.REP_ID,NULL, 'N', 'Y') AS REPLY_YN				/*답변여부*/
+			             , A.REP_ID																	/*답변자ID*/
+			             , FC_GET_MEMBID_NM(A.REP_ID) AS REP_NM					/*답변자ID명*/
+			             , TO_CHAR(A.REPLY_DTM, 'yyyy-MM-dd') AS REPLY_DTM	/*답변일시*/
+			             , B.CAGO_ID																/*카테고리ID*/
+				FROM TB_PDBORDXM A
+				INNER JOIN TB_PDINFOXM B
+					ON A.PD_CODE = B.PD_CODE
+				WHERE A.BRD_GUBN = #{BRD_GUBN}
+				<if test="PD_CODE != null and PD_CODE != ''">
+					AND A.PD_CODE = #{PD_CODE}
+				</if>	
+			) 
+			ORDER BY WRT_DTM_SER DESC
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<select id="boardList_paging" parameterType="mall.web.domain.TB_PDBORDXM" resultType="mall.web.domain.TB_PDBORDXM">
+			SELECT * FROM (SELECT ROWNUM AS NUM, A.*
+			FROM (
+				SELECT A.BRD_NUM   															/*게시글 번호*/
+			             , A.BRD_GUBN  															/*게시글 구분*/
+			             , A.PD_CODE																/*제품코드*/
+			             , B.PD_NAME																/*제품명*/
+			             , A.BRD_SBJT																/*게시글 제목*/
+			             , A.BRD_CONT															/*게시글 내용*/
+			             , A.PD_PTS																/*상품 별점*/
+			             , A.BRD_HITS																/*게시글 조회수*/
+			             , A.WRTR_ID																/*작성자ID*/
+			             , A.REGP_ID
+			             , FC_GET_MEMBID_NM(A.WRTR_ID) AS WRTR_NM     		/*작성자ID명*/
+			             , TO_CHAR(A.WRT_DTM, 'yyyy-MM-dd') AS WRT_DTM		/*작성일시*/
+			             , A.WRT_DTM AS WRT_DTM_SER   								/*WHERE 조건 작성일시*/			             
+			             , DECODE(A.BRD_PW,NULL, 'N', 'Y') AS SCWT_YN			/*비밀글여부*/
+			             , A.BRD_PW    															/*게시글 비밀번호*/
+			             , A.QNA_REPLY															/*QNA답변*/
+			             , DECODE(A.REP_ID,NULL, 'N', 'Y') AS REPLY_YN				/*답변여부*/
+			             , A.REP_ID																	/*답변자ID*/
+			             , FC_GET_MEMBID_NM(A.REP_ID) AS REP_NM					/*답변자ID명*/
+			             , TO_CHAR(A.REPLY_DTM, 'yyyy-MM-dd') AS REPLY_DTM	/*답변일시*/
+			             , B.CAGO_ID																/*카테고리ID*/
+				FROM TB_PDBORDXM A
+				INNER JOIN TB_PDINFOXM B
+					ON A.PD_CODE = B.PD_CODE
+				WHERE A.PD_CODE = #{PD_CODE}
+				ORDER BY WRT_DTM_SER DESC		
+				) A)
+				WHERE NUM BETWEEN #{pagerOffset} AND #{endItem}
+	</select>
+	
+	
+	<select id="getQnaCount" parameterType="mall.web.domain.TB_PDBORDXM" resultType="int">
+			SELECT COUNT(*) 
+			FROM TB_PDBORDXM 
+			WHERE PD_CODE = #{PD_CODE}
+	</select>
+	
+	
+	
+	
+	<select id="retailCount" parameterType="mall.web.domain.TB_PDINFOXM" resultType="int">
+		SELECT COUNT(*)
+		  FROM (
+                SELECT
+                    A.PD_CODE
+                    , A.SUPR_ID
+                    , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                    , A.PD_NAME
+                    , A.CAGO_ID
+                    , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                    , A.PD_PRICE
+                    , A.PDDC_GUBN
+                    , A.PDDC_VAL
+                    , A.SVMN_GUBN
+                    , A.SVMN_VAL
+                    , A.INVEN_QTY
+                    , A.POS_NAME
+                    , A.PD_BARCD
+                    , A.STORE_CTR
+                    , A.PD_STD
+                    , A.DTB_DLINE
+                    , A.MAKE_COM
+                    , A.ORG_CT
+                    , A.SALE_CON
+                    , A.PD_DINFO
+                    , A.DLVREF_GUIDE
+                    , A.ATFL_ID
+                    , A.RPIMG_SEQ
+                    , A.ADC1_NAME
+                    , A.ADC2_NAME
+                    , A.ADC3_NAME
+                    , A.ADC4_NAME
+                    , A.ADC5_NAME
+                    , A.ADC1_VAL
+                    , A.ADC2_VAL
+                    , A.ADC3_VAL
+                    , A.ADC4_VAL
+                    , A.ADC5_VAL
+                    , A.PD_ICON
+                    , A.STD_UNIT
+                    , A.REGP_ID
+                    , A.REG_DTM
+                    , A.MODP_ID
+                    , A.MOD_DTM
+					, A.DTL_ATFL_ID
+					, A.DTL_USE_YN
+					, A.BUNDLE_CNT
+					, A.BOX_PDDC_GUBN
+                    , A.BOX_PDDC_VAL
+                    , B.CAGO_ID_PATH
+                    , B.CAGO_NM_PATH
+                FROM TB_PDINFOXM A,
+                     (
+                        SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+                               SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+                               SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+                        FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N' )
+                        START WITH UPCAGO_ID IS NULL
+                        CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+                     ) B,
+                     TB_COATFLXD C
+                WHERE A.CAGO_ID = B.CAGO_ID 
+                  AND A.ATFL_ID = C.ATFL_ID(+)
+                  AND A.RPIMG_SEQ = C.ATFL_SEQ(+)
+                  <!-- AND A.SUPR_ID = #{SUPR_ID} -->
+                  AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+                  AND A.DEL_YN = 'N'
+					<if test="CAGO_ID != null and CAGO_ID != ''">
+                      AND A.CAGO_ID IN (SELECT CAGO_ID
+                                          FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+                                         START WITH CAGO_ID = #{CAGO_ID}
+                                       CONNECT BY PRIOR CAGO_ID = UPCAGO_ID)
+					</if>
+				  AND A.RETAIL_YN = 'Y'
+				  AND A.RETAIL_GUBN = #{RETAIL_GUBN}						
+		        )
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 리테일 상품 목록 (사용안함) -->
+	<select id="paginatedRetailList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			  FROM (
+                    SELECT
+                        A.PD_CODE
+                        , A.SUPR_ID
+                        , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                        , A.PD_NAME
+                        , A.CAGO_ID
+                        , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                        , A.PD_PRICE
+                        , CASE	WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+                               		WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE* A.PDDC_VAL/100)
+                               		ELSE A.PD_PRICE
+                          END REAL_PRICE
+                        , A.PDDC_GUBN
+                        , A.PDDC_VAL
+                        , A.SVMN_GUBN
+                        , A.SVMN_VAL
+                        , A.INVEN_QTY
+                        , A.POS_NAME
+                        , A.PD_BARCD
+                        , A.STORE_CTR
+                        , A.PD_STD
+                        , A.DTB_DLINE
+                        , A.MAKE_COM
+                        , A.ORG_CT
+                        , A.SALE_CON
+                        , A.PD_DINFO
+                        , A.DLVREF_GUIDE
+                        , A.ATFL_ID
+                        , A.RPIMG_SEQ
+                        , A.ADC1_NAME
+                        , A.ADC2_NAME
+                        , A.ADC3_NAME
+                        , A.ADC4_NAME
+                        , A.ADC5_NAME
+                        , A.ADC1_VAL
+                        , A.ADC2_VAL
+                        , A.ADC3_VAL
+                        , A.ADC4_VAL
+                        , A.ADC5_VAL
+                        , A.PD_ICON
+                        , A.STD_UNIT
+                        , A.REGP_ID
+                        , A.REG_DTM
+                        , A.MODP_ID
+                        , A.MOD_DTM
+						, A.DTL_ATFL_ID
+						, A.DTL_USE_YN
+						, A.BUNDLE_CNT
+						, A.BOX_PDDC_GUBN
+                        , A.BOX_PDDC_VAL
+                        , B.CAGO_ID_PATH
+                        , B.CAGO_NM_PATH
+                        , B.SORT_ORDR
+                        , C.STFL_PATH
+                        , C.STFL_NAME
+                        , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+                    FROM TB_PDINFOXM A,
+                         (
+                            SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+                            FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' )
+                            START WITH UPCAGO_ID IS NULL
+                            CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+                         ) B,
+                         TB_COATFLXD C
+                    WHERE A.CAGO_ID = B.CAGO_ID 
+                      AND A.ATFL_ID = C.ATFL_ID(+)
+                      AND A.RPIMG_SEQ = C.ATFL_SEQ(+)
+                      <!-- AND A.SUPR_ID = #{SUPR_ID} -->
+                      AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+                      AND A.DEL_YN = 'N'
+						<if test="CAGO_ID != null and CAGO_ID != ''">
+	                      AND A.CAGO_ID IN (SELECT CAGO_ID
+	                                          FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+	                                         START WITH CAGO_ID = #{CAGO_ID}
+	                                       CONNECT BY PRIOR CAGO_ID = UPCAGO_ID)
+						</if>
+					 AND A.RETAIL_YN = 'Y'
+					 <if test="RETAIL_GUBN != null and RETAIL_GUBN != ''">
+					 	AND A.RETAIL_GUBN = #{RETAIL_GUBN}
+					 </if>
+			        )
+			<include refid="searchCondition"/>
+			<if test="sortGubun != null and sortGubun != ''">
+				<if test='sortGubun == "PD_NAME"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY PD_NAME desc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY PD_NAME asc
+					</if>	
+				</if>
+				<if test='sortGubun == "CAGO_SORT"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY SORT_ORDR desc, PD_NAME asc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY SORT_ORDR asc, PD_NAME asc
+					</if>
+				</if>
+				<if test='sortGubun == "PD_PRICE"'>
+					<if test='sortOdr == "desc"'>
+						ORDER BY MEMBER_PRICE desc, PD_NAME asc
+					</if>	
+					<if test='sortOdr == "asc"'>
+						ORDER BY MEMBER_PRICE asc, PD_NAME asc
+					</if>
+				</if>
+			</if>
+			<if test="sortGubun == null or sortGubun == ''">
+				ORDER BY PD_NAME
+			</if>			
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 리테일 상품 (사용안함) -->
+	<select id="rcmdRetailCount" parameterType="mall.web.domain.TB_PDINFOXM" resultType="int">
+		<include refid="default.pagerHeader"/>	
+			SELECT count(*)
+			  FROM (
+                    SELECT
+                        A.PD_CODE
+                        , A.SUPR_ID
+                        , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                        , A.PD_NAME
+                        , A.CAGO_ID
+                        , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                        , A.PD_PRICE
+                        , CASE WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+                               WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE* A.PDDC_VAL/100)
+                               ELSE A.PD_PRICE
+                          END REAL_PRICE
+                        <!-- , A.PD_PRICE - A.PDDC_VAL AS REAL_PRICE -->  
+                        , A.PDDC_GUBN
+                        , A.PDDC_VAL
+                        , A.SVMN_GUBN
+                        , A.SVMN_VAL
+                        , A.INVEN_QTY
+                        , A.POS_NAME
+                        , A.PD_BARCD
+                        , A.STORE_CTR
+                        , A.PD_STD
+                        , A.DTB_DLINE
+                        , A.MAKE_COM
+                        , A.ORG_CT
+                        , A.SALE_CON
+                        , A.PD_DINFO
+                        , A.DLVREF_GUIDE
+                        , A.ATFL_ID
+                        , A.RPIMG_SEQ
+                        , A.ADC1_NAME
+                        , A.ADC2_NAME
+                        , A.ADC3_NAME
+                        , A.ADC4_NAME
+                        , A.ADC5_NAME
+                        , A.ADC1_VAL
+                        , A.ADC2_VAL
+                        , A.ADC3_VAL
+                        , A.ADC4_VAL
+                        , A.ADC5_VAL
+                        , A.PD_ICON
+                        , A.STD_UNIT
+                        , A.REGP_ID
+                        , A.REG_DTM
+                        , A.MODP_ID
+                        , A.MOD_DTM
+						, A.DTL_ATFL_ID
+						, A.DTL_USE_YN
+						, A.BUNDLE_CNT
+                        , B.CAGO_ID_PATH
+                        , B.CAGO_NM_PATH
+                        , B.SORT_ORDR
+                        , C.STFL_PATH
+                        , C.STFL_NAME
+                        , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+                        , A.OPTION_GUBN
+                        , A.BOX_PDDC_GUBN
+                        , A.BOX_PDDC_VAL
+                    FROM TB_PDINFOXM A,
+                         (
+                            SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+                            FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' )
+                            START WITH UPCAGO_ID IS NULL
+                            CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+                         ) B,
+                        TB_COATFLXD C,
+                        TB_PDRCMDXM D,
+						TB_PDRCMDXD E
+                    WHERE A.CAGO_ID = B.CAGO_ID 
+                      AND A.ATFL_ID = C.ATFL_ID(+)
+                      AND A.RPIMG_SEQ = C.ATFL_SEQ(+)
+                      <!-- AND A.SUPR_ID = #{SUPR_ID} -->
+                      AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+                      AND A.DEL_YN = 'N'
+                      AND A.RETAIL_YN = 'Y'
+                 	  AND D.GRP_CD = E.GRP_CD 
+                 	  AND A.PD_CODE = E.PD_CODE
+                 	  AND D.RCMD_GUBN = 'RCMD_GUBN_09'
+					<if test="CAGO_ID != null and CAGO_ID != ''">
+                      AND A.CAGO_ID IN (SELECT CAGO_ID
+                                          FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+                                         START WITH CAGO_ID = #{CAGO_ID}
+                                       CONNECT BY PRIOR CAGO_ID = UPCAGO_ID)
+					</if>
+			        )
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 리테일 상품 목록 (사용안함) -->
+	<select id="rcmdRetailList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">		
+		SELECT *
+		  FROM (
+                   SELECT
+                   	  E.SORT_ORDR AS RCMD_SORT
+                       , A.PD_CODE
+                       , A.SUPR_ID
+                       , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+                       , A.PD_NAME
+                       , A.CAGO_ID
+                       , FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+                       , A.PD_PRICE
+                       , CASE WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+                              WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE* A.PDDC_VAL/100)
+                              ELSE A.PD_PRICE
+                         END REAL_PRICE
+                       <!-- , A.PD_PRICE - A.PDDC_VAL AS REAL_PRICE -->  
+                       , A.PDDC_GUBN
+                       , A.PDDC_VAL
+                       , A.SVMN_GUBN
+                       , A.SVMN_VAL
+                       , A.INVEN_QTY
+                       , A.POS_NAME
+                       , A.PD_BARCD
+                       , A.STORE_CTR
+                       , A.PD_STD
+                       , A.DTB_DLINE
+                       , A.MAKE_COM
+                       , A.ORG_CT
+                       , A.SALE_CON
+                       , A.PD_DINFO
+                       , A.DLVREF_GUIDE
+                       , A.ATFL_ID
+                       , A.RPIMG_SEQ
+                       , A.ADC1_NAME
+                       , A.ADC2_NAME
+                       , A.ADC3_NAME
+                       , A.ADC4_NAME
+                       , A.ADC5_NAME
+                       , A.ADC1_VAL
+                       , A.ADC2_VAL
+                       , A.ADC3_VAL
+                       , A.ADC4_VAL
+                       , A.ADC5_VAL
+                       , A.PD_ICON
+                       , A.STD_UNIT
+                       , A.REGP_ID
+                       , A.REG_DTM
+                       , A.MODP_ID
+                       , A.MOD_DTM
+					, A.DTL_ATFL_ID
+					, A.DTL_USE_YN
+					, A.BUNDLE_CNT
+                       , B.CAGO_ID_PATH
+                       , B.CAGO_NM_PATH
+                       , B.SORT_ORDR
+                       , C.STFL_PATH
+                       , C.STFL_NAME
+                       , (SELECT COUNT(*) FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE) AS PD_CUT_SEQ_CNT
+                       , A.OPTION_GUBN
+                       , A.BOX_PDDC_GUBN
+                       , A.BOX_PDDC_VAL
+                   FROM TB_PDINFOXM A,
+                        (
+                           SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+                                  SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+                                  SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+                           FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' )
+                           START WITH UPCAGO_ID IS NULL
+                           CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+                        ) B,
+                       TB_COATFLXD C,
+                       TB_PDRCMDXM D,
+					TB_PDRCMDXD E
+                   WHERE A.CAGO_ID = B.CAGO_ID 
+                      AND A.ATFL_ID = C.ATFL_ID(+)
+                      AND A.RPIMG_SEQ = C.ATFL_SEQ(+)
+                      <!-- AND A.SUPR_ID = #{SUPR_ID} -->
+                      AND A.SALE_CON IN ('SALE_CON_01', 'SALE_CON_02')
+                      AND A.DEL_YN = 'N'
+                      AND A.RETAIL_YN = 'Y'
+                	  AND D.GRP_CD = E.GRP_CD 
+                	  AND A.PD_CODE = E.PD_CODE
+                	  AND D.RCMD_GUBN = 'RCMD_GUBN_09'
+				<if test="CAGO_ID != null and CAGO_ID != ''">
+                     AND A.CAGO_ID IN (SELECT CAGO_ID
+                                         FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' AND DEL_YN = 'N')
+                                        START WITH CAGO_ID = #{CAGO_ID}
+                                      CONNECT BY PRIOR CAGO_ID = UPCAGO_ID)
+				</if>
+		        )
+		ORDER BY RCMD_SORT
+	</select>
+	
+	<select id="getOption1" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_PDOPTION">
+	  SELECT DISTINCT CASE
+				WHEN OPTION2_VALUE IS NOT NULL THEN OPTION1_VALUE
+				ELSE OPTION1_VALUE
+			 END OPTION1_VALUE	
+	      	,PD_CODE
+	        ,OPTION1_NAME
+	        ,QUANTITY 
+	        ,CASE
+				WHEN OPTION2_VALUE IS NOT NULL THEN 0
+				ELSE PRICE
+			 END PRICE					
+	  FROM TB_PDOPTION 
+	  WHERE PD_CODE = #{PD_CODE}
+	  AND DEL_YN = 'N'
+	  AND SELL_YN = 'Y'
+	  ORDER BY OPTION1_VALUE
+	</select>
+
+	<select id="getOption2" parameterType="HashMap" resultType="mall.web.domain.TB_PDOPTION">
+	  SELECT DISTINCT OPTION2_VALUE
+      	,PD_CODE
+        ,OPTION2_NAME
+        ,QUANTITY
+        ,CASE
+			WHEN OPTION3_VALUE IS NOT NULL THEN 0
+			ELSE PRICE
+		 END PRICE		
+	  FROM TB_PDOPTION 
+	  WHERE PD_CODE = #{Code}
+	  AND OPTION1_VALUE =#{Value1}
+	  AND DEL_YN = 'N'
+	  AND SELL_YN = 'Y'
+	  ORDER BY OPTION2_VALUE 
+	</select>
+				
+	<select id="getOption3" parameterType="HashMap" resultType="mall.web.domain.TB_PDOPTION">
+	  SELECT OPTION3_VALUE
+      	,PD_CODE
+        ,OPTION3_NAME
+        ,QUANTITY 
+        ,PRICE
+	  FROM TB_PDOPTION 
+	  WHERE PD_CODE = #{Code}
+	  AND OPTION1_VALUE = #{Value1}
+	  AND OPTION2_VALUE = #{Value2}
+	  AND OPTION3_VALUE IS NOT NULL 
+	  AND DEL_YN = 'N'
+	  AND SELL_YN = 'Y'
+	  ORDER BY OPTION3_VALUE 
+	</select>
+	
+	<insert id="insertQna" parameterType="mall.web.domain.TB_PDBORDXM">
+		INSERT INTO TB_PDBORDXM
+		(BRD_NUM
+		,BRD_GUBN
+		,PD_CODE
+		,BRD_SBJT
+		,BRD_CONT
+		,BRD_HITS
+		,BRD_PW
+		,WRTR_ID
+		,WRT_DTM
+		,REP_ID
+		,DEL_YN
+		,REGP_ID
+		,REG_DTM
+		,MODP_ID
+		,MOD_DTM)
+	VALUES(SEQ_TB_PDBORDXM.NEXTVAL
+		   ,'BRD_GUBN_02'
+		   ,#{PD_CODE}
+		   ,#{BRD_SBJT}
+		   ,#{BRD_CONT}
+		   ,0
+		   ,#{BRD_PW}
+		   ,#{MEMB_ID}
+		   ,SYSDATE
+		   ,'답변대기'
+		   ,'N'
+		   ,'답변대기'
+		   ,SYSDATE
+		   ,#{MEMB_ID}
+		   ,SYSDATE  )
+	</insert>	
+	
+	<select id="getExtraPrdList" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_EXTRPROD">
+		SELECT EXTR.PD_CODE 
+				,EXTR.EXTRA_PD_CODE 
+				,PDIN.SUPR_ID 
+				,TO_NUMBER(FC_GET_PRICE_SALE(EXTR.EXTRA_PD_CODE , #{MEMB_ID})) AS PD_PRICE
+				<!-- ,PDIN.PD_PRICE  -->
+				,PDIN.PD_NAME
+		FROM TB_EXTRPROD EXTR 
+		LEFT JOIN TB_PDINFOXM PDIN
+		ON EXTR.EXTRA_PD_CODE = PDIN.PD_CODE
+		WHERE EXTR.PD_CODE =#{PD_CODE}
+		AND EXTR.USE_YN ='Y'
+	</select>
+	
+	<select id="getDeliveryInfo" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_DELIVERY_ADDR">
+		SELECT A.ADD_NUM,
+	    	   B.COM_PN,
+	     	  B.COM_BADR,
+	     	  B.COM_DADR
+		FROM TB_PDINFOXM A, TB_DELIVERY_ADDR B 
+		WHERE A.ADD_NUM =B.ADD_NUM 
+		AND A.ADD_NUM =#{ADD_NUM}
+		AND A.PD_CODE=#{PD_CODE}
+	</select>
+	
+	<!-- 템플릿 가져오기 - 이유리 -->
+	<select id="getTempMaster" parameterType="mall.web.domain.TB_SHIPTEXM" resultType="mall.web.domain.TB_SHIPTEXM">
+		SELECT 
+			   TEMP_NUM
+			 , TEMP_NAME
+			 , SUPR_ID
+			 , DLVY_GUBN
+			 , SHIP_GUBN
+			 , GUBN_START
+			 , GUBN_END
+			 , DLVY_AMT
+			 , RFND_DLVY_AMT
+			 , REG_DATE
+		  FROM
+		 	   TB_SHIPTEXM
+		 WHERE
+		   	   TEMP_NUM = #{TEMP_NUM}
+	  ORDER BY
+			   REG_DATE DESC
+	</select>
+</mapper>

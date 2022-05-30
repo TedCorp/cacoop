@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.mall.FindMemberInfoMapper">
+	<!-- 아이디 찾기 -->
+	<select id="findID" parameterType="mall.web.domain.TB_FINDMEMBERINFO" resultType="mall.web.domain.TB_FINDMEMBERINFO">
+		SELECT MEMB_ID
+		  FROM TB_MBINFOXM
+	     WHERE TRIM(MEMB_NAME) = TRIM(#{MEMB_NAME})
+	       <!-- AND MEMB_CPON = #{MEMB_CPON} -->
+	       AND REGEXP_REPLACE(MEMB_CPON, '[^0-9]') = REGEXP_REPLACE(#{MEMB_CPON}, '[^0-9]')   
+	</select>
+	
+	<!-- 비밀번호 찾기 -->
+	<select id="findPW" parameterType="mall.web.domain.TB_FINDMEMBERINFO" resultType="mall.web.domain.TB_FINDMEMBERINFO">
+		SELECT MEMB_PW
+		  FROM TB_MBINFOXM
+	     WHERE TRIM(MEMB_NAME) = TRIM(#{MEMB_NAME})
+	       AND MEMB_ID = #{MEMB_ID}
+	       <!-- AND MEMB_CPON = #{MEMB_CPON} -->
+	       AND REGEXP_REPLACE(MEMB_CPON, '[^0-9]') = REGEXP_REPLACE(#{MEMB_CPON}, '[^0-9]')     
+	       <choose>
+	       		<when test="COM_BUNB != null and COM_BUNB != ''">
+	       			<!-- AND COM_BUNB = #{COM_BUNB}	 -->
+	       			AND REGEXP_REPLACE(COM_BUNB, '[^0-9]') = REGEXP_REPLACE(#{COM_BUNB}, '[^0-9]')
+	       		</when>
+	       		
+	       		<otherwise>
+	       			AND COM_BUNB IS NULL
+	       		</otherwise>
+	       </choose>
+	</select>
+	
+	<!-- 비밀번호 업데이트 -->
+	<update id="update" parameterType="mall.web.domain.TB_FINDMEMBERINFO">
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			  MEMB_PW = #{MEMB_PW}
+			, MODP_ID = #{MEMB_ID}
+			, MOD_DTM = SYSDATE
+		WHERE
+			MEMB_ID = #{MEMB_ID}
+	</update>
+	
+	<!--  -->
+	<select id="find" parameterType="mall.web.domain.TB_FINDMEMBERINFO" resultType="mall.web.domain.TB_FINDMEMBERINFO">
+		SELECT MEMB_ID
+		FROM TB_MBINFOXM
+		WHERE TRIM(MEMB_NAME) = TRIM(#{MEMB_NAME})
+			AND REGEXP_REPLACE(MEMB_CPON, '[^0-9]') = REGEXP_REPLACE(#{MEMB_CPON}, '[^0-9]')
+		<!-- <if test="COM_BUNB != null and COM_BUNB != ''"> -->
+		<if test="MEMB_GUBN == 'MEMB_GUBN_02'">
+			AND REGEXP_REPLACE(COM_BUNB, '[^0-9]') = REGEXP_REPLACE(#{COM_BUNB}, '[^0-9]')
+		</if>
+	</select>
+	
+	<select id="findEmail" parameterType="mall.web.domain.TB_FINDMEMBERINFO" resultType="String">
+		SELECT MEMB_MAIL
+		FROM TB_MBINFOXM
+		WHERE TRIM(MEMB_NAME) = TRIM(#{MEMB_NAME})
+			AND TRIM(MEMB_ID) = TRIM(#{MEMB_ID})
+			AND REGEXP_REPLACE(MEMB_CPON, '[^0-9]') = REGEXP_REPLACE(#{MEMB_CPON}, '[^0-9]')
+		<!-- <if test="COM_BUNB != null and COM_BUNB != ''"> -->
+		<if test="MEMB_GUBN == 'MEMB_GUBN_02'">
+			AND REGEXP_REPLACE(COM_BUNB, '[^0-9]') = REGEXP_REPLACE(#{COM_BUNB}, '[^0-9]')
+		</if>
+	</select>
+	
+</mapper>

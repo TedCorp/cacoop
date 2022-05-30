@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.GroupMenuMgrMapper">
+	
+	<select id="list" parameterType="mall.web.domain.TB_SYSGMNXM" resultType="mall.web.domain.TB_SYSGMNXM">
+		SELECT DECODE(B.GROUP_CD,'','N','Y') AS CHK
+		 	 , A.MENU_CD
+		 	 , A.MENU_NAME
+		     , A.MENU_URL
+	      FROM TB_SYSMNUXM A
+	      LEFT JOIN TB_SYSGMNXM B
+	        ON A.MENU_CD = B.MENU_CD
+		   AND B.GROUP_CD = #{GROUP_CD}
+	     START WITH A.UPPER_MENU_CD IS NULL
+       CONNECT BY PRIOR A.MENU_CD = A.UPPER_MENU_CD
+	     ORDER SIBLINGS BY A.SORT_ORDR
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_SYSGMNXM">
+		INSERT INTO TB_SYSGMNXM (
+			 GROUP_CD
+			,MENU_CD
+			,REGP_ID
+			,REG_DTM
+			,MODP_ID
+			,MOD_DTM )
+		VALUES(
+			 #{GROUP_CD}
+			,#{MENU_CD}
+			,#{REGP_ID}
+			,SYSDATE
+			,#{MODP_ID}
+			,SYSDATE)
+	</insert>
+	
+	<delete id="delete" parameterType="mall.web.domain.TB_SYSGMNXM">
+		DELETE 
+		  FROM TB_SYSGMNXM
+		 WHERE GROUP_CD = #{GROUP_CD}
+	</delete>
+	
+</mapper>

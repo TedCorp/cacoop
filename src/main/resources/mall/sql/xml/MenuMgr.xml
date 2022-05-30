@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.MenuMgrMapper">
+	
+	<select id="list" parameterType="mall.web.domain.TB_SYSMNUXM" resultType="mall.web.domain.TB_SYSMNUXM">
+		SELECT MENU_CD
+		     , MENU_NAME
+		     , MENU_URL
+		     , UPPER_MENU_CD
+		     , SORT_ORDR
+		     , MENU_GUBN
+		     , OUTPT_FG
+		     , MENU_CSS
+		     , REGP_ID
+		     , REG_DTM
+		     , MODP_ID
+		     , MOD_DTM
+		  FROM TB_SYSMNUXM
+		 START WITH UPPER_MENU_CD IS NULL
+		 CONNECT BY PRIOR MENU_CD = UPPER_MENU_CD
+		 ORDER SIBLINGS BY SORT_ORDR
+	</select>
+	
+	<select id="find" parameterType="mall.web.domain.TB_SYSMNUXM" resultType="mall.web.domain.TB_SYSMNUXM">
+		SELECT MENU_CD
+		     , MENU_NAME
+		     , MENU_URL
+		     , UPPER_MENU_CD
+		     , (SELECT MENU_NAME FROM TB_SYSMNUXM WHERE MENU_CD=A.UPPER_MENU_CD) AS UPPER_MENU_NAME
+		     , SORT_ORDR
+		     , MENU_GUBN
+		     , OUTPT_FG
+		     , MENU_CSS
+		     , REGP_ID
+		     , REG_DTM
+		     , MODP_ID
+		     , MOD_DTM
+		  FROM TB_SYSMNUXM A
+		 WHERE MENU_CD = #{MENU_CD}
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_SYSMNUXM">
+		INSERT INTO TB_SYSMNUXM
+			  (MENU_CD,
+			   MENU_NAME,
+			   MENU_URL,
+			   UPPER_MENU_CD,
+			   SORT_ORDR,
+			   MENU_GUBN,
+			   OUTPT_FG,
+			   MENU_CSS,
+			   REGP_ID,
+			   REG_DTM,
+			   MODP_ID,
+			   MOD_DTM)
+			VALUES
+			  (#{MENU_CD},
+			   #{MENU_NAME},
+			   #{MENU_URL},
+			   #{UPPER_MENU_CD},
+			   #{SORT_ORDR},
+			   #{MENU_GUBN},
+			   #{OUTPT_FG},
+			   #{MENU_CSS},
+			   #{REGP_ID},
+			   SYSDATE,
+			   #{MODP_ID},
+			   SYSDATE)
+
+	</insert>
+	
+	<update id="update" parameterType="mall.web.domain.TB_SYSMNUXM">
+		UPDATE TB_SYSMNUXM
+		   SET MENU_NAME     = #{MENU_NAME},
+		       MENU_URL      = #{MENU_URL},
+		       UPPER_MENU_CD = #{UPPER_MENU_CD},
+		       SORT_ORDR     = #{SORT_ORDR},
+		       MENU_GUBN     = #{MENU_GUBN},
+		       OUTPT_FG      = #{OUTPT_FG},
+		       MENU_CSS      = #{MENU_CSS},
+		       MODP_ID       = #{MODP_ID},
+		       MOD_DTM       = SYSDATE
+		 WHERE MENU_CD = #{MENU_CD}
+	</update>
+	
+	
+	<delete id="delete" parameterType="mall.web.domain.TB_SYSMNUXM">
+		DELETE 
+		  FROM TB_SYSMNUXM
+		 WHERE MENU_CD = #{MENU_CD}
+	</delete>
+	
+	
+	<select id="codeSameCnt" parameterType="mall.web.domain.TB_SYSMNUXM" resultType="int">
+		SELECT COUNT(*)
+		  FROM TB_SYSMNUXM
+		 WHERE MENU_CD = #{MENU_CD}
+	</select>
+	
+	
+</mapper>

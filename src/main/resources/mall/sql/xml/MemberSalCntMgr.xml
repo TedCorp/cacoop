@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.MemberSalCntMgrMapper">
+	<sql id="searchCondition">
+		<where>	
+			<if test="MEMB_NAME != null and MEMB_NAME != ''">
+			    (MEMB_NAME = #{MEMB_NAME} OR MEMB_NAME LIKE '%' || #{MEMB_NAME} || '%')
+			</if>	
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "SUPR_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND (SUPR_NAME LIKE '%' || #{schTxt} || '%' OR MEMB_NAME LIKE '%' || #{schTxt} || '%')
+					</if>	
+				</if>		
+				<if test='schGbn == "MEMB_ID"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND (MEMB_ID LIKE '%' || #{schTxt} || '%' OR MEMB_NAME LIKE '%' || #{schTxt} || '%')
+					</if>	
+				</if>			
+				<if test='schGbn == "MEMB_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND (MEMB_NAME LIKE '%' || #{schTxt} || '%' OR MEMB_NAME LIKE '%' || #{schTxt} || '%')
+					</if>	
+				</if>
+				<if test='schGbn == "COM_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND (COM_NAME LIKE '%' || #{schTxt} || '%' OR MEMB_NAME LIKE '%' || #{schTxt} || '%')
+					</if>	
+				</if>		
+			</if>
+			<if test="PAY_GUBN != null and PAY_GUBN != ''">
+				<if test='PAY_GUBN == "SC0010"'>
+					AND ( PAY_METD_01_TAX_GUBN_01_SUM IS NOT NULL OR PAY_METD_01_TAX_GUBN_02_SUM IS NOT NULL )					
+				</if>		
+				<if test='PAY_GUBN == "SC0040"'>
+					AND ( PAY_METD_02_TAX_GUBN_01_SUM IS NOT NULL OR PAY_METD_02_TAX_GUBN_02_SUM IS NOT NULL )
+				</if>	
+			</if>
+			<!-- 회원구분 및 계산서발행여부 조건 추가_20190423 -->
+			<if test="MEMB_GUBN != null and MEMB_GUBN != ''">
+				<if test='MEMB_GUBN == "MEMB_GUBN_01"'>
+					AND MEMB_GUBN = 'MEMB_GUBN_01'					
+				</if>		
+				<if test='MEMB_GUBN == "MEMB_GUBN_02"'>
+					AND MEMB_GUBN = 'MEMB_GUBN_02'	
+				</if>	
+			</if>
+			<if test="TAXCAL_YN != null and TAXCAL_YN != ''">
+				<if test='TAXCAL_YN == "Y"'>
+					AND TAXCAL_YN = 'Y'					
+				</if>		
+				<if test='TAXCAL_YN == "N"'>
+					AND TAXCAL_YN = 'N'				
+				</if>	
+			</if>
+		</where>  
+	</sql>
+	
+	<sql id="orderByCondition">
+		<if test="MEMB_ORD_GUBUN != null and MEMB_ORD_GUBUN != ''">
+			<if test='MEMB_ORD_GUBUN == "MEMB_NM_ORDER"'>
+				<if test='MEMB_NM_ORDER == "desc"'>
+					ORDER BY MEMB_NAME desc, MEMB_ID ASC
+				</if>	
+				<if test='MEMB_NM_ORDER == "asc"'>
+					ORDER BY MEMB_NAME asc, MEMB_ID ASC
+				</if>
+			</if>
+			<if test='MEMB_ORD_GUBUN == "COM_NM_ORDER"'>
+				<if test='COM_NM_ORDER == "desc"'>
+					ORDER BY COM_NAME desc, MEMB_ID ASC
+				</if>	
+				<if test='COM_NM_ORDER == "asc"'>
+					ORDER BY COM_NAME asc, MEMB_ID ASC
+				</if>
+			</if>				
+		</if>
+		<if test="MEMB_ORD_GUBUN == null or MEMB_ORD_GUBUN == ''">
+			ORDER BY MEMB_NAME
+		</if>
+	</sql>
+			
+	<!-- 회원 매출 집계 count -->
+	<select id="count" parameterType="mall.web.domain.TB_TOTINFOXM" resultType="int">
+		<!-- 회원-확정집계 -->
+		WITH HH AS (
+		    SELECT   MEMB_ID
+			            ,MEMB_GUBN
+			            ,MEMB_NAME
+			            ,MEMB_MAIL
+			            ,COM_NAME
+			            ,COM_BUNB
+			            ,COM_BADR
+			            ,COM_DADR
+			            ,TAXCAL_YN
+			            ,REG_DTM
+			            ,SUM(DLVY_AMT) AS ORDER_DLVY_SUM
+			            ,SUM(ORDER_AMT) AS ORDER_PROD_SUM
+			            ,SUM(DECODE (TAX_GUBN,'TAX_GUBN_01', ORDER_AMT, 0)) AS ORDER_TAX_GUBN_01_SUM
+			            ,SUM(DECODE (TAX_GUBN,'TAX_GUBN_02', ORDER_AMT, 0)) AS ORDER_TAX_GUBN_02_SUM                      
+			            ,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_01_SUM  
+			            ,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_02_SUM 
+			            ,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_01_SUM
+			            ,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_02_SUM
+		    FROM (
+		        SELECT   A.MEMB_ID
+			                ,A.MEMB_GUBN
+			                ,A.MEMB_NAME
+			                ,A.MEMB_MAIL
+			                ,A.COM_NAME
+			                ,A.COM_BUNB
+			                ,A.COM_BADR
+			                ,A.COM_DADR
+			                ,A.TAXCAL_YN
+			                ,A.REG_DTM
+			                ,B.ORDER_CON
+			                ,B.ORDER_NUM
+			                ,C.ORDER_DTNUM
+			                ,C.PD_CODE
+			                ,B.DLVY_AMT
+			                ,C.ORDER_AMT
+			                ,D.TAX_GUBN                      
+			                ,B.PAY_METD
+			                ,B.PAY_DTM
+		        FROM TB_MBINFOXM A
+		        INNER JOIN TB_ODINFOXM B
+		            ON A.MEMB_ID = B.MEMB_ID 
+		            AND B.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03','ORDER_CON_09','ORDER_CON_05','ORDER_CON_06','ORDER_CON_08')
+		            AND B.PAY_AMT IS NOT NULL
+					<if test="datepickerStr != null and datepickerStr != '' and datepickerEnd != null and datepickerEnd != ''">
+						AND B.PAY_DTM BETWEEN TRUNC(TO_DATE(#{datepickerStr}, 'YYYY-MM-DD')) AND TRUNC(TO_DATE(#{datepickerEnd}, 'YYYY-MM-DD')) 
+					</if>
+		            <if test="PAY_GUBN != null and PAY_GUBN != ''">
+						<if test='PAY_GUBN == "SC0010"'>
+							AND B.PAY_METD  = 'SC0010'
+						</if>		
+						<if test='PAY_GUBN == "SC0040"'>
+							AND B.PAY_METD  = 'SC0040'
+						</if>
+					</if>
+		        INNER JOIN TB_ODINFOXD C
+		            ON B.ORDER_NUM = C.ORDER_NUM
+		        INNER JOIN TB_PDINFOXM D
+		            ON C.PD_CODE = D.PD_CODE
+		        ORDER BY B.ORDER_NUM DESC, C.ORDER_DTNUM ASC
+		    )
+		    WHERE 1=1
+		    GROUP BY  MEMB_ID
+			             ,MEMB_GUBN
+			             ,MEMB_NAME
+			             ,MEMB_MAIL
+			             ,COM_NAME
+			             ,COM_BUNB
+			             ,COM_BADR
+			             ,COM_DADR
+			             ,TAXCAL_YN
+			             ,REG_DTM
+		),
+		<!-- 회원-반품집계 -->
+		SS AS (
+		    SELECT   MEMB_ID
+			            ,MEMB_GUBN
+			            ,MEMB_NAME
+			            ,MEMB_MAIL
+			            ,COM_NAME
+			            ,COM_BUNB
+			            ,COM_BADR
+			            ,COM_DADR
+			            ,TAXCAL_YN
+			            ,REG_DTM
+			            ,SUM(DLVY_AMT) AS RETURN_DLVY_SUM
+			            ,SUM(ORDER_AMT) AS RETURN_PROD_SUM
+			            ,SUM(DECODE (TAX_GUBN,'TAX_GUBN_01', ORDER_AMT, 0)) AS RETURN_TAX_GUBN_01_SUM
+			            ,SUM(DECODE (TAX_GUBN,'TAX_GUBN_02', ORDER_AMT, 0)) AS RETURN_TAX_GUBN_02_SUM                      
+			            ,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_01_SUM  
+			            ,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_02_SUM 
+			            ,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_01_SUM
+			            ,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_02_SUM
+		    FROM (
+		        SELECT   A.MEMB_ID
+			                ,A.MEMB_GUBN
+			                ,A.MEMB_NAME
+			                ,A.MEMB_MAIL
+			                ,A.COM_NAME
+			                ,A.COM_BUNB
+			                ,A.COM_BADR
+			                ,A.COM_DADR
+			                ,A.TAXCAL_YN
+			                ,A.REG_DTM
+			                ,B.ORDER_CON
+			                ,B.ORDER_NUM
+			                ,C.ORDER_DTNUM
+			                ,C.PD_CODE
+			                ,B.DLVY_AMT
+			                ,C.ORDER_AMT
+			                ,D.TAX_GUBN                      
+			                ,B.PAY_METD
+			                ,B.PAY_DTM
+		        FROM TB_MBINFOXM A
+		        INNER JOIN TB_ODINFOXM B
+		            ON A.MEMB_ID = B.MEMB_ID 
+		            AND B.ORDER_CON = 'ORDER_CON_07'
+		            AND B.PAY_AMT IS NOT NULL
+					<if test="datepickerStr != null and datepickerStr != '' and datepickerEnd != null and datepickerEnd != ''">
+						AND B.PAY_DTM BETWEEN TRUNC(TO_DATE(#{datepickerStr}, 'YYYY-MM-DD')) AND TRUNC(TO_DATE(#{datepickerEnd}, 'YYYY-MM-DD')) 
+					</if>
+		            <if test="PAY_GUBN != null and PAY_GUBN != ''">
+						<if test='PAY_GUBN == "SC0010"'>
+							AND B.PAY_METD  = 'SC0010'
+						</if>		
+						<if test='PAY_GUBN == "SC0040"'>
+							AND B.PAY_METD  = 'SC0040'
+						</if>
+					</if>
+		        INNER JOIN TB_ODINFOXD C
+		            ON B.ORDER_NUM = C.ORDER_NUM
+		        INNER JOIN TB_PDINFOXM D
+		            ON C.PD_CODE = D.PD_CODE
+		        ORDER BY B.ORDER_NUM DESC, C.ORDER_DTNUM ASC
+		    )
+		    WHERE 1=1
+		    GROUP BY  MEMB_ID
+			             ,MEMB_GUBN
+			             ,MEMB_NAME
+			             ,MEMB_MAIL
+			             ,COM_NAME
+			             ,COM_BUNB
+			             ,COM_BADR
+			             ,COM_DADR
+			             ,TAXCAL_YN
+			             ,REG_DTM
+		)
+		<!-- 회원-매출집계 -->
+		SELECT   COUNT(*)		        
+		FROM (
+		    SELECT   NVL (HH.MEMB_ID, SS.MEMB_ID) AS MEMB_ID
+			            ,NVL (HH.MEMB_GUBN, SS.MEMB_GUBN) AS MEMB_GUBN
+			            ,NVL (HH.MEMB_NAME, SS.MEMB_NAME) AS MEMB_NAME
+			            ,NVL (HH.MEMB_MAIL, SS.MEMB_MAIL) AS MEMB_MAIL
+			            ,NVL (HH.COM_NAME, SS.COM_NAME) AS COM_NAME
+			            ,NVL (HH.COM_BUNB, SS.COM_BUNB) AS COM_BUNB
+			            ,NVL (HH.COM_BADR, SS.COM_BADR) AS COM_BADR
+			            ,NVL (HH.COM_DADR, SS.COM_DADR) AS COM_DADR
+			            ,NVL (HH.TAXCAL_YN, SS.TAXCAL_YN) AS TAXCAL_YN
+			            ,NVL (HH.REG_DTM, SS.REG_DTM) AS REG_DTM
+			            
+			            ,NVL(SS.RETURN_PROD_SUM, 0) AS RETURN_PROD_SUM
+			            ,NVL(SS.RETURN_DLVY_SUM, 0) AS RETURN_DLVY_SUM            
+			            ,NVL(SS.RETURN_TAX_GUBN_01_SUM, 0) AS RETURN_TAX_GUBN_01_SUM
+			            ,NVL(SS.RETURN_TAX_GUBN_02_SUM, 0) AS RETURN_TAX_GUBN_02_SUM
+			            
+			            ,NVL(HH.ORDER_PROD_SUM, 0) AS ORDER_PROD_SUM
+			            ,NVL(HH.ORDER_DLVY_SUM, 0) AS ORDER_DLVY_SUM            
+			            ,NVL(HH.ORDER_TAX_GUBN_01_SUM, 0) AS ORDER_TAX_GUBN_01_SUM
+			            ,NVL(HH.ORDER_TAX_GUBN_02_SUM, 0) AS ORDER_TAX_GUBN_02_SUM
+			            
+			            ,NVL(HH.PAY_METD_01_TAX_GUBN_01_SUM, 0) AS PAY_METD_01_TAX_GUBN_01_SUM
+			            ,NVL(HH.PAY_METD_01_TAX_GUBN_02_SUM, 0) AS PAY_METD_01_TAX_GUBN_02_SUM
+			            ,NVL(HH.PAY_METD_02_TAX_GUBN_01_SUM, 0) AS PAY_METD_02_TAX_GUBN_01_SUM
+			            ,NVL(HH.PAY_METD_02_TAX_GUBN_02_SUM, 0) AS PAY_METD_02_TAX_GUBN_02_SUM
+		    FROM HH 
+		    FULL OUTER JOIN SS 
+		        ON HH.MEMB_ID = SS.MEMB_ID
+		)
+		<include refid="searchCondition"/>
+	</select>
+	
+	<select id="paginatedList" parameterType="mall.web.domain.TB_TOTINFOXM" resultType="mall.web.domain.TB_TOTINFOXM">
+		<include refid="default.pagerHeader"/>
+			<!-- 회원-확정집계 -->
+			WITH HH AS (
+				SELECT   MEMB_ID
+							,MEMB_GUBN
+							,MEMB_GUBN_NM
+							,MEMB_NAME
+							,MEMB_MAIL
+							,COM_NAME
+							,COM_BUNB
+							,COM_BADR
+							,COM_DADR
+							,TAXCAL_YN
+							,REG_DTM
+							,SUM(DLVY_AMT) AS ORDER_DLVY_SUM
+							,SUM(ORDER_AMT) AS ORDER_PROD_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_01', ORDER_AMT, 0)) AS ORDER_TAX_GUBN_01_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_02', ORDER_AMT, 0)) AS ORDER_TAX_GUBN_02_SUM                      
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_01_SUM  
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_02_SUM 
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_01_SUM
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_02_SUM
+				FROM (
+					SELECT   A.MEMB_ID
+								,A.MEMB_GUBN
+								,(SELECT FC_GET_COMCOD_NM (A.MEMB_GUBN) FROM DUAL) AS MEMB_GUBN_NM
+								,A.MEMB_NAME
+								,A.MEMB_MAIL
+								,A.COM_NAME
+								,A.COM_BUNB
+								,A.COM_BADR
+								,A.COM_DADR
+								,A.TAXCAL_YN
+								,A.REG_DTM
+								,B.ORDER_CON
+								,B.ORDER_NUM
+								,C.ORDER_DTNUM
+								,C.PD_CODE
+								,DECODE(C.ORDER_DTNUM, 1, B.DLVY_AMT, 0) AS DLVY_AMT
+								,C.ORDER_AMT
+								,D.TAX_GUBN                      
+								,B.PAY_METD
+								,B.PAY_DTM
+					FROM TB_MBINFOXM A
+					INNER JOIN TB_ODINFOXM B
+						ON A.MEMB_ID = B.MEMB_ID 
+						AND B.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03','ORDER_CON_09','ORDER_CON_05','ORDER_CON_06','ORDER_CON_08')
+						AND B.PAY_AMT IS NOT NULL
+						<if test="datepickerStr != null and datepickerStr != '' and datepickerEnd != null and datepickerEnd != ''">
+							AND B.PAY_DTM BETWEEN TRUNC(TO_DATE(#{datepickerStr}, 'YYYY-MM-DD')) AND TRUNC(TO_DATE(#{datepickerEnd}, 'YYYY-MM-DD')) 
+						</if>
+						<if test="PAY_GUBN != null and PAY_GUBN != ''">
+							<if test='PAY_GUBN == "SC0010"'>
+								AND B.PAY_METD  = 'SC0010'
+							</if>		
+							<if test='PAY_GUBN == "SC0040"'>
+								AND B.PAY_METD  = 'SC0040'
+							</if>
+						</if>
+					INNER JOIN TB_ODINFOXD C
+						ON B.ORDER_NUM = C.ORDER_NUM
+					INNER JOIN TB_PDINFOXM D
+						ON C.PD_CODE = D.PD_CODE
+					ORDER BY B.ORDER_NUM DESC, C.ORDER_DTNUM ASC
+				)
+				WHERE 1=1
+				GROUP BY  MEMB_ID
+							 ,MEMB_GUBN
+							 ,MEMB_GUBN_NM
+							 ,MEMB_NAME
+							 ,MEMB_MAIL
+							 ,COM_NAME
+							 ,COM_BUNB
+							 ,COM_BADR
+							 ,COM_DADR
+							 ,TAXCAL_YN
+							 ,REG_DTM
+			),
+			<!-- 회원-반품집계 -->
+			SS AS (
+				SELECT   MEMB_ID
+							,MEMB_GUBN
+							,MEMB_GUBN_NM
+							,MEMB_NAME
+							,MEMB_MAIL
+							,COM_NAME
+							,COM_BUNB
+							,COM_BADR
+							,COM_DADR
+							,TAXCAL_YN
+							,REG_DTM
+							,SUM(DLVY_AMT) AS RETURN_DLVY_SUM
+							,SUM(ORDER_AMT) AS RETURN_PROD_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_01', ORDER_AMT, 0)) AS RETURN_TAX_GUBN_01_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_02', ORDER_AMT, 0)) AS RETURN_TAX_GUBN_02_SUM                      
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_01_SUM  
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_02_SUM 
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_01_SUM
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_02_SUM
+				FROM (
+					SELECT   A.MEMB_ID
+								,A.MEMB_GUBN
+								,(SELECT FC_GET_COMCOD_NM (A.MEMB_GUBN) FROM DUAL) AS MEMB_GUBN_NM
+								,A.MEMB_NAME
+								,A.MEMB_MAIL
+								,A.COM_NAME
+								,A.COM_BUNB
+								,A.COM_BADR
+								,A.COM_DADR
+								,A.TAXCAL_YN
+								,A.REG_DTM
+								,B.ORDER_CON
+								,B.ORDER_NUM
+								,C.ORDER_DTNUM
+								,C.PD_CODE
+								,DECODE(C.ORDER_DTNUM, 1, B.DLVY_AMT, 0) AS DLVY_AMT
+								,C.ORDER_AMT
+								,D.TAX_GUBN                      
+								,B.PAY_METD
+								,B.PAY_DTM
+					FROM TB_MBINFOXM A
+					INNER JOIN TB_ODINFOXM B
+						ON A.MEMB_ID = B.MEMB_ID 
+						AND B.ORDER_CON  = 'ORDER_CON_07'
+						AND B.PAY_AMT IS NOT NULL
+						<if test="datepickerStr != null and datepickerStr != '' and datepickerEnd != null and datepickerEnd != ''">
+							AND B.PAY_DTM BETWEEN TRUNC(TO_DATE(#{datepickerStr}, 'YYYY-MM-DD')) AND TRUNC(TO_DATE(#{datepickerEnd}, 'YYYY-MM-DD')) 
+						</if>
+						<if test="PAY_GUBN != null and PAY_GUBN != ''">
+							<if test='PAY_GUBN == "SC0010"'>
+								AND B.PAY_METD  = 'SC0010'
+							</if>		
+							<if test='PAY_GUBN == "SC0040"'>
+								AND B.PAY_METD  = 'SC0040'
+							</if>
+						</if>
+					INNER JOIN TB_ODINFOXD C
+						ON B.ORDER_NUM = C.ORDER_NUM
+					INNER JOIN TB_PDINFOXM D
+						ON C.PD_CODE = D.PD_CODE
+					ORDER BY B.ORDER_NUM DESC, C.ORDER_DTNUM ASC
+				)
+				WHERE 1=1
+				GROUP BY  MEMB_ID
+							 ,MEMB_GUBN
+							 ,MEMB_GUBN_NM
+							 ,MEMB_NAME
+							 ,MEMB_MAIL
+							 ,COM_NAME
+							 ,COM_BUNB
+							 ,COM_BADR
+							 ,COM_DADR
+							 ,TAXCAL_YN
+							 ,REG_DTM
+			)
+			<!-- 회원-매출집계 -->
+			SELECT   MEMB_ID
+						,MEMB_GUBN
+						,MEMB_GUBN_NM
+						,MEMB_NAME
+						,MEMB_MAIL
+						,COM_NAME
+						,COM_BUNB
+						,COM_BADR
+						,COM_DADR
+						,TAXCAL_YN
+						,REG_DTM
+						,ORDER_PROD_SUM + RETURN_PROD_SUM AS TOTAL_PROD_SUM
+						,ORDER_DLVY_SUM + RETURN_DLVY_SUM AS TOTAL_DLVY_SUM
+						,ORDER_TAX_GUBN_01_SUM + RETURN_TAX_GUBN_01_SUM AS TOTAL_TAX_GUBN_01_SUM
+						,ORDER_TAX_GUBN_02_SUM + RETURN_TAX_GUBN_02_SUM AS TOTAL_TAX_GUBN_02_SUM
+						,RETURN_PROD_SUM + RETURN_DLVY_SUM AS RETURN_AMT_SUM
+						,RETURN_PROD_SUM
+						,RETURN_DLVY_SUM
+						,RETURN_TAX_GUBN_01_SUM
+						,RETURN_TAX_GUBN_02_SUM
+						,ORDER_PROD_SUM + ORDER_DLVY_SUM AS ORDER_AMT_SUM
+						,ORDER_PROD_SUM
+						,ORDER_DLVY_SUM
+						,ORDER_TAX_GUBN_01_SUM
+						,ORDER_TAX_GUBN_02_SUM
+						,PAY_METD_01_TAX_GUBN_01_SUM + RT_PAY_METD_01_TAX_GUBN_01_SUM AS PAY_METD_01_TAX_GUBN_01_SUM
+						,PAY_METD_01_TAX_GUBN_02_SUM + RT_PAY_METD_01_TAX_GUBN_02_SUM AS PAY_METD_01_TAX_GUBN_02_SUM
+						,PAY_METD_02_TAX_GUBN_01_SUM + RT_PAY_METD_02_TAX_GUBN_01_SUM AS PAY_METD_02_TAX_GUBN_01_SUM
+						,PAY_METD_02_TAX_GUBN_02_SUM + RT_PAY_METD_02_TAX_GUBN_02_SUM AS PAY_METD_02_TAX_GUBN_02_SUM
+					
+			FROM (
+				SELECT   NVL (HH.MEMB_ID, SS.MEMB_ID) AS MEMB_ID															/* 회원ID */
+							,NVL (HH.MEMB_GUBN, SS.MEMB_GUBN) AS MEMB_GUBN												/* 회원구분 */
+							,NVL (HH.MEMB_GUBN_NM, SS.MEMB_GUBN_NM) AS MEMB_GUBN_NM							/* 회원구분명 */
+							,NVL (HH.MEMB_NAME, SS.MEMB_NAME) AS MEMB_NAME												/* 회원명 */
+							,NVL (HH.MEMB_MAIL, SS.MEMB_MAIL) AS MEMB_MAIL													/* 회원 이메일 */
+							,NVL (HH.COM_NAME, SS.COM_NAME) AS COM_NAME													/* 상호 */
+							,NVL (HH.COM_BUNB, SS.COM_BUNB) AS COM_BUNB													/* 사업자번호 */
+							,NVL (HH.COM_BADR, SS.COM_BADR) AS COM_BADR													/* 회사주소 */
+							,NVL (HH.COM_DADR, SS.COM_DADR) AS COM_DADR													/* 회사상세주소 */
+							,NVL (HH.TAXCAL_YN, SS.TAXCAL_YN) AS TAXCAL_YN													/* 계산서발행구분 */
+							,NVL (HH.REG_DTM, SS.REG_DTM) AS REG_DTM															/* 등록일자 */
+							
+							,NVL(SS.RETURN_PROD_SUM, 0) AS RETURN_PROD_SUM												/* 반품 합계 */
+							,NVL(SS.RETURN_DLVY_SUM, 0) AS RETURN_DLVY_SUM												/* 반품 배송비 합계 */            
+							,NVL(SS.RETURN_TAX_GUBN_01_SUM, 0) AS RETURN_TAX_GUBN_01_SUM            			/* 반품 과세 합계 */
+							,NVL(SS.RETURN_TAX_GUBN_02_SUM, 0) AS RETURN_TAX_GUBN_02_SUM            			/* 반품 면세 합계 */
+							
+							,NVL(HH.ORDER_PROD_SUM, 0) AS ORDER_PROD_SUM													/* 주문 합계 */
+							,NVL(HH.ORDER_DLVY_SUM, 0) AS ORDER_DLVY_SUM                            						/* 주문 배송비 합계 */            
+							,NVL(HH.ORDER_TAX_GUBN_01_SUM, 0) AS ORDER_TAX_GUBN_01_SUM              			/* 주문 과세 합계 */
+							,NVL(HH.ORDER_TAX_GUBN_02_SUM, 0) AS ORDER_TAX_GUBN_02_SUM              			/* 주문 면세 합계 */
+							
+							,NVL(HH.PAY_METD_01_TAX_GUBN_01_SUM, 0) AS PAY_METD_01_TAX_GUBN_01_SUM		/* 주문 신용카드(과세) 합계 */
+							,NVL(HH.PAY_METD_01_TAX_GUBN_02_SUM, 0) AS PAY_METD_01_TAX_GUBN_02_SUM		/* 주문 신용카드(면세) 합계 */
+							,NVL(HH.PAY_METD_02_TAX_GUBN_01_SUM, 0) AS PAY_METD_02_TAX_GUBN_01_SUM		/* 주문 무통장(과세) 합계 */
+							,NVL(HH.PAY_METD_02_TAX_GUBN_02_SUM, 0) AS PAY_METD_02_TAX_GUBN_02_SUM		/* 주문 무통장(면세) 합계 */
+													
+							,NVL(SS.PAY_METD_01_TAX_GUBN_01_SUM, 0) AS RT_PAY_METD_01_TAX_GUBN_01_SUM		/* 반품 신용카드(과세) 합계 */
+							,NVL(SS.PAY_METD_01_TAX_GUBN_02_SUM, 0) AS RT_PAY_METD_01_TAX_GUBN_02_SUM		/* 반품 신용카드(면세) 합계 */
+							,NVL(SS.PAY_METD_02_TAX_GUBN_01_SUM, 0) AS RT_PAY_METD_02_TAX_GUBN_01_SUM		/* 반품 무통장(과세) 합계 */
+							,NVL(SS.PAY_METD_02_TAX_GUBN_02_SUM, 0) AS RT_PAY_METD_02_TAX_GUBN_02_SUM		/* 반품 무통장(면세) 합계 */
+				FROM HH 
+				FULL OUTER JOIN SS 
+					ON HH.MEMB_ID = SS.MEMB_ID
+			)
+			<include refid="searchCondition"/>
+			<include refid="orderByCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<select id="excelList" parameterType="mall.web.domain.TB_TOTINFOXM" resultType="HashMap">
+			<!-- 회원-확정집계 -->
+			WITH HH AS (
+				SELECT   MEMB_ID
+							,MEMB_GUBN
+							,MEMB_GUBN_NM
+							,MEMB_NAME
+							,MEMB_MAIL
+							,COM_NAME
+							,COM_BUNB
+							,COM_BADR
+							,COM_DADR
+							,TAXCAL_YN
+							,REG_DTM
+							,SUM(DLVY_AMT) AS ORDER_DLVY_SUM
+							,SUM(ORDER_AMT) AS ORDER_PROD_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_01', ORDER_AMT, 0)) AS ORDER_TAX_GUBN_01_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_02', ORDER_AMT, 0)) AS ORDER_TAX_GUBN_02_SUM                      
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_01_SUM  
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_02_SUM 
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_01_SUM
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_02_SUM
+				FROM (
+					SELECT   A.MEMB_ID
+								,A.MEMB_GUBN
+								,(SELECT FC_GET_COMCOD_NM (A.MEMB_GUBN) FROM DUAL) AS MEMB_GUBN_NM
+								,A.MEMB_NAME
+								,A.MEMB_MAIL
+								,A.COM_NAME
+								,A.COM_BUNB
+								,A.COM_BADR
+								,A.COM_DADR
+								,A.TAXCAL_YN
+								,A.REG_DTM
+								,B.ORDER_CON
+								,B.ORDER_NUM
+								,C.ORDER_DTNUM
+								,C.PD_CODE
+								,DECODE(C.ORDER_DTNUM, 1, B.DLVY_AMT, 0) AS DLVY_AMT
+								,C.ORDER_AMT
+								,D.TAX_GUBN                      
+								,B.PAY_METD
+								,B.PAY_DTM
+					FROM TB_MBINFOXM A
+					INNER JOIN TB_ODINFOXM B
+						ON A.MEMB_ID = B.MEMB_ID 
+						AND B.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03','ORDER_CON_09','ORDER_CON_05','ORDER_CON_06','ORDER_CON_08')
+						AND B.PAY_AMT IS NOT NULL
+						<if test="datepickerStr != null and datepickerStr != '' and datepickerEnd != null and datepickerEnd != ''">
+							AND B.PAY_DTM BETWEEN TRUNC(TO_DATE(#{datepickerStr}, 'YYYY-MM-DD')) AND TRUNC(TO_DATE(#{datepickerEnd}, 'YYYY-MM-DD')) 
+						</if>
+						<if test="PAY_GUBN != null and PAY_GUBN != ''">
+							<if test='PAY_GUBN == "SC0010"'>
+								AND B.PAY_METD  = 'SC0010'
+							</if>		
+							<if test='PAY_GUBN == "SC0040"'>
+								AND B.PAY_METD  = 'SC0040'
+							</if>
+						</if>
+					INNER JOIN TB_ODINFOXD C
+						ON B.ORDER_NUM = C.ORDER_NUM
+					INNER JOIN TB_PDINFOXM D
+						ON C.PD_CODE = D.PD_CODE
+					ORDER BY B.ORDER_NUM DESC, C.ORDER_DTNUM ASC
+				)
+				WHERE 1=1
+				GROUP BY  MEMB_ID
+							 ,MEMB_GUBN
+							 ,MEMB_GUBN_NM
+							 ,MEMB_NAME
+							 ,MEMB_MAIL
+							 ,COM_NAME
+							 ,COM_BUNB
+							 ,COM_BADR
+							 ,COM_DADR
+							 ,TAXCAL_YN
+							 ,REG_DTM
+			),
+			<!-- 회원-반품집계 -->
+			SS AS (
+				SELECT   MEMB_ID
+							,MEMB_GUBN
+							,MEMB_GUBN_NM
+							,MEMB_NAME
+							,MEMB_MAIL
+							,COM_NAME
+							,COM_BUNB
+							,COM_BADR
+							,COM_DADR
+							,TAXCAL_YN
+							,REG_DTM
+							,SUM(DLVY_AMT) AS RETURN_DLVY_SUM
+							,SUM(ORDER_AMT) AS RETURN_PROD_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_01', ORDER_AMT, 0)) AS RETURN_TAX_GUBN_01_SUM
+							,SUM(DECODE (TAX_GUBN,'TAX_GUBN_02', ORDER_AMT, 0)) AS RETURN_TAX_GUBN_02_SUM                      
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_01_SUM  
+							,SUM(DECODE (PAY_METD, 'SC0010', DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT))) AS PAY_METD_01_TAX_GUBN_02_SUM 
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_01', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_01_SUM
+							,SUM(CASE WHEN PAY_METD !='SC0010' THEN DECODE(TAX_GUBN, 'TAX_GUBN_02', ORDER_AMT) END) AS PAY_METD_02_TAX_GUBN_02_SUM
+				FROM (
+					SELECT   A.MEMB_ID
+								,A.MEMB_GUBN
+								,(SELECT FC_GET_COMCOD_NM (A.MEMB_GUBN) FROM DUAL) AS MEMB_GUBN_NM
+								,A.MEMB_NAME
+								,A.MEMB_MAIL
+								,A.COM_NAME
+								,A.COM_BUNB
+								,A.COM_BADR
+								,A.COM_DADR
+								,A.TAXCAL_YN
+								,A.REG_DTM
+								,B.ORDER_CON
+								,B.ORDER_NUM
+								,C.ORDER_DTNUM
+								,C.PD_CODE
+								,DECODE(C.ORDER_DTNUM, 1, B.DLVY_AMT, 0) AS DLVY_AMT
+								,C.ORDER_AMT
+								,D.TAX_GUBN                      
+								,B.PAY_METD
+								,B.PAY_DTM
+					FROM TB_MBINFOXM A
+					INNER JOIN TB_ODINFOXM B
+						ON A.MEMB_ID = B.MEMB_ID 
+						AND B.ORDER_CON  = 'ORDER_CON_07'
+						AND B.PAY_AMT IS NOT NULL
+						<if test="datepickerStr != null and datepickerStr != '' and datepickerEnd != null and datepickerEnd != ''">
+							AND B.PAY_DTM BETWEEN TRUNC(TO_DATE(#{datepickerStr}, 'YYYY-MM-DD')) AND TRUNC(TO_DATE(#{datepickerEnd}, 'YYYY-MM-DD')) 
+						</if>
+						<if test="PAY_GUBN != null and PAY_GUBN != ''">
+							<if test='PAY_GUBN == "SC0010"'>
+								AND B.PAY_METD  = 'SC0010'
+							</if>		
+							<if test='PAY_GUBN == "SC0040"'>
+								AND B.PAY_METD  = 'SC0040'
+							</if>
+						</if>
+					INNER JOIN TB_ODINFOXD C
+						ON B.ORDER_NUM = C.ORDER_NUM
+					INNER JOIN TB_PDINFOXM D
+						ON C.PD_CODE = D.PD_CODE
+					ORDER BY B.ORDER_NUM DESC, C.ORDER_DTNUM ASC
+				)
+				WHERE 1=1
+				GROUP BY  MEMB_ID
+							 ,MEMB_GUBN
+							 ,MEMB_GUBN_NM
+							 ,MEMB_NAME
+							 ,MEMB_MAIL
+							 ,COM_NAME
+							 ,COM_BUNB
+							 ,COM_BADR
+							 ,COM_DADR
+							 ,TAXCAL_YN
+							 ,REG_DTM
+			)
+			<!-- 회원-매출집계 -->
+			SELECT   MEMB_ID
+						,MEMB_GUBN
+						,MEMB_GUBN_NM
+						,MEMB_NAME
+						,MEMB_MAIL
+						,COM_NAME
+						,COM_BUNB
+						,COM_BADR
+						,COM_DADR
+						,TAXCAL_YN
+						,REG_DTM
+						,ORDER_PROD_SUM + RETURN_PROD_SUM AS TOTAL_PROD_SUM
+						,ORDER_DLVY_SUM + RETURN_DLVY_SUM AS TOTAL_DLVY_SUM
+						,ORDER_TAX_GUBN_01_SUM + RETURN_TAX_GUBN_01_SUM AS TOTAL_TAX_GUBN_01_SUM
+						,ORDER_TAX_GUBN_02_SUM + RETURN_TAX_GUBN_02_SUM AS TOTAL_TAX_GUBN_02_SUM
+						,RETURN_PROD_SUM + RETURN_DLVY_SUM AS RETURN_AMT_SUM
+						,RETURN_PROD_SUM
+						,RETURN_DLVY_SUM
+						,RETURN_TAX_GUBN_01_SUM
+						,RETURN_TAX_GUBN_02_SUM
+						,ORDER_PROD_SUM + ORDER_DLVY_SUM AS ORDER_AMT_SUM
+						,ORDER_PROD_SUM
+						,ORDER_DLVY_SUM
+						,ORDER_TAX_GUBN_01_SUM
+						,ORDER_TAX_GUBN_02_SUM									
+			            ,PAY_METD_01_TAX_GUBN_01_SUM + RT_PAY_METD_01_TAX_GUBN_01_SUM AS PAY_METD_01_TAX_GUBN_01_SUM
+			            ,PAY_METD_01_TAX_GUBN_02_SUM + RT_PAY_METD_01_TAX_GUBN_02_SUM AS PAY_METD_01_TAX_GUBN_02_SUM
+			            ,PAY_METD_02_TAX_GUBN_01_SUM + RT_PAY_METD_02_TAX_GUBN_01_SUM AS PAY_METD_02_TAX_GUBN_01_SUM
+			            ,PAY_METD_02_TAX_GUBN_02_SUM + RT_PAY_METD_02_TAX_GUBN_02_SUM AS PAY_METD_02_TAX_GUBN_02_SUM
+			            					
+			FROM (
+				SELECT   NVL (HH.MEMB_ID, SS.MEMB_ID) AS MEMB_ID															/* 회원ID */
+							,NVL (HH.MEMB_GUBN, SS.MEMB_GUBN) AS MEMB_GUBN												/* 회원구분 */
+							,NVL (HH.MEMB_GUBN_NM, SS.MEMB_GUBN_NM) AS MEMB_GUBN_NM							/* 회원구분명 */
+							,NVL (HH.MEMB_NAME, SS.MEMB_NAME) AS MEMB_NAME												/* 회원명 */
+							,NVL (HH.MEMB_MAIL, SS.MEMB_MAIL) AS MEMB_MAIL													/* 회원 이메일 */
+							,NVL (HH.COM_NAME, SS.COM_NAME) AS COM_NAME													/* 상호 */
+							,NVL (HH.COM_BUNB, SS.COM_BUNB) AS COM_BUNB													/* 사업자번호 */
+							,NVL (HH.COM_BADR, SS.COM_BADR) AS COM_BADR													/* 회사주소 */
+							,NVL (HH.COM_DADR, SS.COM_DADR) AS COM_DADR													/* 회사상세주소 */
+							,NVL (HH.TAXCAL_YN, SS.TAXCAL_YN) AS TAXCAL_YN													/* 계산서발행구분 */
+							,NVL (HH.REG_DTM, SS.REG_DTM) AS REG_DTM															/* 등록일자 */
+							
+							,NVL(SS.RETURN_PROD_SUM, 0) AS RETURN_PROD_SUM												/* 반품 주문 합계 */
+							,NVL(SS.RETURN_DLVY_SUM, 0) AS RETURN_DLVY_SUM												/* 반품 배송비 합계 */            
+							,NVL(SS.RETURN_TAX_GUBN_01_SUM, 0) AS RETURN_TAX_GUBN_01_SUM            			/* 반품 과세 합계 */
+							,NVL(SS.RETURN_TAX_GUBN_02_SUM, 0) AS RETURN_TAX_GUBN_02_SUM            			/* 반품 면세 합계 */
+							
+							,NVL(HH.ORDER_PROD_SUM, 0) AS ORDER_PROD_SUM													/* 주문 합계 */
+							,NVL(HH.ORDER_DLVY_SUM, 0) AS ORDER_DLVY_SUM                            						/* 주문 배송비 합계 */            
+							,NVL(HH.ORDER_TAX_GUBN_01_SUM, 0) AS ORDER_TAX_GUBN_01_SUM              			/* 주문 과세 합계 */
+							,NVL(HH.ORDER_TAX_GUBN_02_SUM, 0) AS ORDER_TAX_GUBN_02_SUM              			/* 주문 면세 합계 */
+							
+							,NVL(HH.PAY_METD_01_TAX_GUBN_01_SUM, 0) AS PAY_METD_01_TAX_GUBN_01_SUM		/* 주문 신용카드(과세) 합계 */
+							,NVL(HH.PAY_METD_01_TAX_GUBN_02_SUM, 0) AS PAY_METD_01_TAX_GUBN_02_SUM		/* 주문 신용카드(면세) 합계 */
+							,NVL(HH.PAY_METD_02_TAX_GUBN_01_SUM, 0) AS PAY_METD_02_TAX_GUBN_01_SUM		/* 주문 무통장(과세) 합계 */
+							,NVL(HH.PAY_METD_02_TAX_GUBN_02_SUM, 0) AS PAY_METD_02_TAX_GUBN_02_SUM		/* 주문 무통장(면세) 합계 */
+
+			                ,NVL(SS.PAY_METD_01_TAX_GUBN_01_SUM, 0) AS RT_PAY_METD_01_TAX_GUBN_01_SUM		/* 반품 신용카드(과세) 합계 */
+			                ,NVL(SS.PAY_METD_01_TAX_GUBN_02_SUM, 0) AS RT_PAY_METD_01_TAX_GUBN_02_SUM		/* 반품 신용카드(면세) 합계 */
+			                ,NVL(SS.PAY_METD_02_TAX_GUBN_01_SUM, 0) AS RT_PAY_METD_02_TAX_GUBN_01_SUM		/* 반품 무통장(과세) 합계 */
+			                ,NVL(SS.PAY_METD_02_TAX_GUBN_02_SUM, 0) AS RT_PAY_METD_02_TAX_GUBN_02_SUM		/* 반품 무통장(면세) 합계 */
+				FROM HH 
+				FULL OUTER JOIN SS 
+					ON HH.MEMB_ID = SS.MEMB_ID
+			)
+			<include refid="searchCondition"/>
+			ORDER BY MEMB_NAME
+	</select>
+</mapper>

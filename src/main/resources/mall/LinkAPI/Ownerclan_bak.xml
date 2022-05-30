@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+	** Memo ** 
+	1. GraphQL 단독 endpoint를 사용 
+	2. 
+	
+-->
+
+<GraphQL>
+
+	<!-- 
+		오너클랜 API 정보
+		Sandbox: https://api-sandbox.ownerclan.com/v1/graphql
+		Production: https://api.ownerclan.com/v1/graphql
+	 -->
+	<Ownerclan endpoint="https://api-sandbox.ownerclan.com/v1/graphql">
+		<!-- 인증 정보 -->
+		<!--
+			@parameter
+			service: "ownerclan"
+			userType: "seller"
+			username: "셀러ID" // 오너클랜 셀러 ID.
+			password: "셀러PW" // 셀러 비밀번호.
+			
+			@return
+			JWT TOKEN	// 토큰
+		 -->			
+		<auth id = "JWT_Token">
+			<url>
+				sandbox : https://auth-sandbox.ownerclan.xyz/auth
+				production : https://auth.ownerclan.xyz/auth				
+			</url>
+			
+		</auth>
+		
+		<!-- 조회 -->		
+		<!-- 상품리스트조회 -->
+		<read id="getItemList">
+			
+		</read>
+		
+		<test>
+		sandbox : https://auth-sandbox.ownerclan.xyz/auth
+		production : https://auth.ownerclan.xyz/auth		
+		</test>
+			
+	</Ownerclan> 
+
+</GraphQL>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.ComCodMgrMapper">
+
+	<!-- 공통코드 조회 -->
+	<select id="list" parameterType="mall.web.domain.TB_COMCODXD" resultType="mall.web.domain.TB_COMCODXD">
+		SELECT
+			COMM_CODE
+			, COMCOD_NAME
+			, USE_YN
+			, CODE_EXPN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_COMCODXM
+		ORDER BY COMCOD_NAME
+	</select>
+	
+	<!-- 공통코드 조회 -->
+	<select id="find" parameterType="mall.web.domain.TB_COMCODXD" resultType="mall.web.domain.TB_COMCODXD">
+		SELECT
+			COMM_CODE
+			, COMCOD_NAME
+			, USE_YN
+			, CODE_EXPN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_COMCODXM
+		WHERE COMM_CODE = #{COMM_CODE}
+	</select>
+	
+	<!-- 공통코드 명 조회 -->
+	<select id="selectComCodList" parameterType="mall.web.domain.TB_COMCODXD" resultType="mall.web.domain.TB_COMCODXD">
+		SELECT
+			COMM_CODE
+			, COMD_CODE
+			, COMDCD_NAME
+			, SORT_ORDR
+			, USE_YN
+			, CODE_EXPN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+		FROM
+			TB_COMCODXD
+		WHERE COMM_CODE = #{COMM_CODE}
+		ORDER BY
+			SORT_ORDR
+	</select>
+	
+	
+	<!-- 공통 마스터 저장 -->
+	<insert id="MatserInsert" parameterType="mall.web.domain.TB_COMCODXD">
+	
+		DECLARE
+		
+		BEGIN
+		
+		<if test = "CodFlag == 'CommUpdate'">
+			
+			UPDATE TB_COMCODXM 
+			   SET COMM_CODE = #{COMM_CODE}
+			     , COMCOD_NAME = #{COMCOD_NAME}
+			     , USE_YN = #{USE_YN}
+			     , CODE_EXPN = #{CODE_EXPN}
+			     , MODP_ID = #{MODP_ID}
+			     , MOD_DTM = SYSDATE
+			 WHERE COMM_CODE = #{COMM_CODE} 
+			       ;
+		</if>
+		
+		<if test = "CodFlag == 'CommInsert'">
+			
+			INSERT INTO TB_COMCODXM (
+			       COMM_CODE
+			     , COMCOD_NAME
+			     , USE_YN
+			     , CODE_EXPN
+			     , REGP_ID
+			     , REG_DTM
+			     , MODP_ID
+			     , MOD_DTM )
+			VALUES (
+				   #{COMM_CODE}
+				 , #{COMCOD_NAME}
+				 , #{USE_YN}
+				 , #{CODE_EXPN}
+				 , #{REGP_ID}
+				 , SYSDATE
+				 , #{MODP_ID}
+				 , SYSDATE 
+				 );
+			COMMIT;	 
+		</if>
+		
+		<if test = "CodFlag == 'CommDelete'">
+			
+			DELETE FROM TB_COMCODXD
+			 WHERE COMM_CODE = #{COMM_CODE}
+			 ;
+			 			
+			DELETE FROM TB_COMCODXM
+			 WHERE COMM_CODE = #{COMM_CODE}
+			 ;
+			
+		</if>
+		
+		
+		END;
+		
+	</insert>
+	
+	
+	<!-- 공통 디테일 저장 -->
+	<insert id="DtlInsert" parameterType="mall.web.domain.TB_COMCODXD">
+	
+		DECLARE
+		
+		BEGIN
+		
+		<if test = "CodFlag == 'Read'">
+			
+			UPDATE TB_COMCODXD 
+			   SET COMDCD_NAME = #{COMDCD_NAME}
+			     , SORT_ORDR = #{SORT_ORDR}
+			     , USE_YN = #{USE_YN}
+			     , MODP_ID = #{MODP_ID}
+			     , MOD_DTM = SYSDATE
+			 WHERE COMM_CODE = #{COMM_CODE}
+			   AND COMD_CODE = #{COMD_CODE}     
+			       ;
+		</if>
+		
+		<if test = "CodFlag == 'Insert'">
+		
+			INSERT INTO TB_COMCODXD (
+			       COMM_CODE
+			     , COMD_CODE
+			     , COMDCD_NAME
+			     , SORT_ORDR
+			     , USE_YN
+			     , CODE_EXPN
+			     , REGP_ID
+			     , REG_DTM
+			     , MODP_ID
+			     , MOD_DTM )
+		    VALUES ( 
+		           #{COMM_CODE}
+		    	 , #{COMD_CODE}
+		    	 , #{COMDCD_NAME}
+		    	 , #{SORT_ORDR}
+		    	 , #{USE_YN}
+		    	 , ''
+		    	 , #{REGP_ID}
+		    	 , SYSDATE
+		    	 , #{MODP_ID}
+		    	 , SYSDATE 
+			     );			
+		
+		</if>	
+		
+		<if test = "CodFlag == 'Delete'">
+		
+			DELETE FROM TB_COMCODXD		
+			 WHERE COMM_CODE = #{COMM_CODE}
+			   AND COMD_CODE = #{COMD_CODE}
+			   ; 
+		
+		</if>	
+		
+		END;
+		
+	</insert>
+	
+	<!-- 공통마스터 코드 중복검사 -->
+	<select id="codeSameCnt" parameterType="mall.web.domain.TB_COMCODXD" resultType="java.lang.Integer">
+		
+		SELECT COUNT(*) 
+		  FROM TB_COMCODXM 
+		 WHERE COMM_CODE = #{COMM_CODE}		
+	
+	</select>
+	
+	<!-- 상세 업데이트 진행 여부 체크 -->
+	<select id="ComdUpdateChk" parameterType="mall.web.domain.TB_COMCODXD" resultType="java.lang.Integer">
+		
+		SELECT COUNT(*) 
+		  FROM TB_COMCODXD 
+		 WHERE COMM_CODE = #{COMM_CODE}
+		   AND COMD_CODE = #{COMD_CODE}
+		   AND COMDCD_NAME = #{COMDCD_NAME}
+		   AND SORT_ORDR = #{SORT_ORDR}
+		   AND USE_YN = #{USE_YN}		
+	
+	</select>
+	
+</mapper>

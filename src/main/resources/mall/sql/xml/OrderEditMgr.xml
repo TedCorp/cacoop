@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.OrderEditMgrMapper">
+	
+	<!-- 공통 where 조건 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test='schGbn == "MEMB_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND MEMB_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "RECV_PERS"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND RECV_PERS LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test='schGbn == "COM_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND COM_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<!-- <if test="ORDER_CON != null and ORDER_CON != ''">
+			    AND ORDER_CON = #{ORDER_CON}
+			</if> -->			
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND TO_CHAR(TO_DATE(ORDER_DATE,'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD') <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				AND TO_CHAR(TO_DATE(ORDER_DATE,'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+			</if>
+			<if test="schNum != null and schNum != ''">
+				AND ORDER_NUM LIKE '%'||#{schNum}||'%'
+			</if>	
+		
+		</where>  
+	</sql>
+	
+	<!-- 배송정보 변경 (운송장번호) -->
+	<update id="updateTrackCon" parameterType="mall.web.domain.TB_ODINFOXD">
+		UPDATE
+			TB_ODINFOXM
+		SET
+			MOD_DTM = SYSDATE,
+			MODP_ID = #{MODP_ID},
+		<if test="SUPR_ID == LOGIN_SUPR_ID or SUPR_ID == 'C00001'">
+			DLVY_COM = #{DLVY_COM}
+		</if>
+	    WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	<!-- 배송정보 변경 (운송장번호) -->
+	<update id="updateTrackNum" parameterType="mall.web.domain.TB_ODINFOXD">
+		UPDATE
+			TB_ODINFOXD
+		SET
+			MOD_DTM = SYSDATE,
+			MODP_ID = #{MODP_ID}	   
+		<if test="SUPR_ID == LOGIN_SUPR_ID or SUPR_ID == 'C00001'">
+			, DLVY_TDN = #{DTL_DLVY_TDN}
+			, DLVY_COM = #{DLVY_COM}
+			, DLVY_TDN_MODP_DATE = 
+				CASE
+					WHEN DLVY_TDN = NULL AND #{DTL_DLVY_TDN} = NULL 
+						THEN DLVY_TDN_MODP_DATE 
+			        WHEN DLVY_TDN != #{DTL_DLVY_TDN}
+			        	THEN SYSDATE
+					WHEN DLVY_TDN = #{DTL_DLVY_TDN}
+		            	THEN DLVY_TDN_MODP_DATE
+					ELSE SYSDATE
+				END
+		</if>
+			   
+	    WHERE ORDER_NUM = #{ORDER_NUM}
+	      AND ORDER_DTNUM = #{ORDER_DTNUM}
+	      AND LINK_ORDER_KEY IS NULL 	<!-- 오너클랜 주문 진행중이지 않을 경우만 수정 가능 -->
+	</update>
+	
+	<!-- 주문상세 수량변경 -->
+	<update id="updateDatailQty" parameterType="mall.web.domain.TB_ODINFOXD">
+		UPDATE
+			TB_ODINFOXD
+		SET
+			ORDER_QTY = #{ORDER_QTY}		/*주문수량*/
+			,ORDER_AMT = CASE
+									WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN (PD_PRICE - PDDC_VAL) * #{ORDER_QTY}
+					                WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN (PD_PRICE - (PD_PRICE * (PDDC_VAL/100))) * #{ORDER_QTY}
+									ELSE PD_PRICE *#{ORDER_QTY} 
+								END
+			,MOD_DTM = SYSDATE
+			,MODP_ID = 'admin'
+						   
+	    WHERE ORDER_NUM = #{ORDER_NUM}
+			AND ORDER_DTNUM = #{ORDER_DTNUM}
+			AND LINK_ORDER_KEY IS NULL 	<!-- 오너클랜 주문 진행중이지 않을 경우만 수정 가능 -->
+	</update>
+	
+	<!-- 주문정보 수량/가격변경 -->
+	<update id="updateMasterQty" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE 
+			TB_ODINFOXM
+		SET
+			ORDER_AMT = (SELECT SUM(ORDER_AMT) FROM TB_ODINFOXD WHERE ORDER_NUM = #{ORDER_NUM}) + #{DLVY_AMT}
+		    ,PAY_AMT = CASE	
+		    					WHEN PAY_AMT IS NULL THEN NULL
+		    					ELSE (SELECT SUM(ORDER_AMT) FROM TB_ODINFOXD WHERE ORDER_NUM = #{ORDER_NUM}) + #{DLVY_AMT}
+		    				 END
+		    ,DLVY_AMT = #{DLVY_AMT}
+			,MOD_DTM = SYSDATE
+		WHERE
+			ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	<!-- 반품마스터 등록 -->
+	<insert id="rtOdInfoXmInsert" parameterType="mall.web.domain.TB_RTODINFOXM">
+		<selectKey keyProperty="RETURN_NUM" resultType="String" order="BEFORE">    
+			SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || LPAD(NVL(MAX(SUBSTR(RETURN_NUM, 10, 4)),0)+1, 4, 0) 
+			FROM TB_RTODINFOXM WHERE SUBSTR(RETURN_NUM, 0, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+		INSERT INTO 
+			TB_RTODINFOXM(
+				 RETURN_NUM
+				,RETURN_DATE
+				,MEMB_ID
+				,RETURN_AMT
+				,ORDER_CON
+				,ORDER_NUM
+				,DLVY_AMT
+				,REGP_ID
+				,REG_DTM
+				,MODP_ID
+				,MOD_DTM
+			) VALUES (
+				 #{RETURN_NUM}
+				,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') <!-- #{RETURN_DATE}-->
+				,#{MEMB_ID}
+				,#{RETURN_AMT}
+				,'ORDER_CON_07'
+				,#{ORDER_NUM}
+				,#{DLVY_AMT}
+				,#{REGP_ID}
+				,SYSDATE
+				,#{MODP_ID}
+				,SYSDATE
+			)
+	</insert>
+	
+	<!-- 반품상세 등록 -->
+	<insert id="rtOdInfoXdInsert" parameterType="mall.web.domain.TB_RTODINFOXD">
+		INSERT INTO 
+			TB_RTODINFOXD (
+				  RETURN_DTNUM
+                , RETURN_NUM
+                , PD_CODE
+                , PD_NAME
+                , PD_PRICE
+                , PDDC_GUBN
+                , PDDC_VAL
+                , RETURN_QTY
+                , RETURN_AMT
+                , RETURN_GBN
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+                , ORDER_DTNUM
+            ) VALUES (
+			     (SELECT NVL(MAX(RETURN_DTNUM),0)+1 FROM TB_RTODINFOXD WHERE RETURN_NUM = #{RETURN_NUM})
+				 , #{RETURN_NUM}
+                 , #{PD_CODE}
+                 , #{PD_NAME}
+                 , #{PD_PRICE}
+                 , #{PDDC_GUBN}
+                 , #{PDDC_VAL}
+                 , #{RETURN_QTY}
+			     , #{RETURN_AMT}
+			     , #{RETURN_GBN}
+                 , #{REGP_ID}
+                 , SYSDATE
+                 , #{MODP_ID}
+                 , SYSDATE
+                 , #{ORDER_DTNUM}
+			)
+	</insert>
+	
+	<!-- 반품 마스터정보 업데이트 -->
+	<update id="updateMaster" parameterType="mall.web.domain.TB_RTODINFOXM">
+		UPDATE
+			TB_RTODINFOXM
+		SET
+			RETURN_AMT = (SELECT SUM(RETURN_AMT) 
+									FROM TB_RTODINFOXD 
+									WHERE RETURN_NUM = #{RETURN_NUM}), 
+			DLVY_AMT = #{DLVY_AMT},
+			MODP_ID = #{MODP_ID},
+			MOD_DTM = SYSDATE
+		WHERE  RETURN_NUM = #{RETURN_NUM}
+	</update>
+	
+	<!-- 반품정보 체크 -->
+	<select id="getReturnInfo" parameterType="mall.web.domain.TB_ODINFOXM" resultType="int">
+		SELECT COUNT(*)
+		FROM
+			TB_RTODINFOXM A      /*주문정보 상세*/
+		WHERE
+			ORDER_NUM   = #{ORDER_NUM}
+	</select>
+	
+	<select id="getRtnMasterObject" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_RTODINFOXM">
+		SELECT	RETURN_NUM
+					, RETURN_DATE
+					, MEMB_ID
+					, RETURN_AMT
+                    , ORDER_CON
+                    , CNCL_CON
+                    , CNCL_REQDTM
+                    , ORDER_NUM
+                    , DLVY_AMT
+                    , REGP_ID
+                    , REG_DTM
+                    , MODP_ID
+                    , MOD_DTM
+		FROM
+			TB_RTODINFOXM A      /*주문정보 상세*/
+		WHERE
+			ORDER_NUM   = #{ORDER_NUM}
+	</select>
+	
+	<!-- 주문정보 상세   -->
+	<select id="getDetailsList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="int">
+		SELECT ORDER_DTNUM  /*주문상세번호*/
+		     , ORDER_NUM    /*주문번호*/
+		     , PD_CODE      /*제품코드*/
+		     , PD_NAME      /*제품명*/
+		     , ORDER_QTY    /*주문 수량*/
+		     , ORDER_AMT    /*주문금액*/
+		     , PDDC_VAL     /*제품할인 값*/
+		     , PD_PRICE     /*상품가격*/
+		     , PDDC_GUBN    /*상품할인구분*/
+		     , (SELECT CUT_UNIT FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE AND SEQ = PD_CUT_SEQ ) PD_CUT_SEQ
+		     , NVL ( (SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = A.OPTION_CODE ),
+                        (SELECT OPTDCD_NAME FROM TB_OPTCODXD M, TB_PDINFOXM N  WHERE M.OPTD_CODE = A.OPTION_CODE AND N.PD_CODE = A.PD_CODE AND M.OPTM_CODE = N.OPTION_GUBN) ) AS OPTION_CODE
+             , SUPR_ID
+             , DLVY_TDN
+             , DLVY_CON
+             , ORDER_CON
+             , LINK_ORDER_KEY
+             , NVL( (SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'DLVY_COM' AND COMD_CODE = A.DLVY_COM), A.DLVY_COM) AS DLVY_COM
+             , CASE
+					WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+					WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE* A.PDDC_VAL/100)
+					ELSE A.PD_PRICE
+				END REAL_PRICE		/*실제 제품값*/
+		  FROM TB_ODINFOXD A      /*주문정보 상세*/
+		 WHERE ORDER_NUM = #{ORDER_NUM} 
+		   AND ORDER_QTY > 0
+		 ORDER BY ORDER_DTNUM    
+	</select>
+	
+	<update id="update" parameterType="mall.web.domain.TB_RTODINFOXD">
+		UPDATE TB_RTODINFOXD
+		SET 
+			RETURN_QTY   = #{RETURN_QTY},
+			RETURN_GBN   = #{RETURN_GBN},
+			RETURN_AMT   = #{RETURN_AMT},
+			MODP_ID      = #{MODP_ID},
+			MOD_DTM      = SYSDATE
+		WHERE
+			RETURN_DTNUM = #{RETURN_DTNUM}
+			AND RETURN_NUM   = #{RETURN_NUM}
+	</update>
+</mapper>

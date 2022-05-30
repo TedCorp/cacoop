@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.CategoryMgrMapper">
+	<sql id="searchCondition">
+		<where>		
+			<if test="USE_YN != null and USE_YN != ''">
+			    AND USE_YN = #{USE_YN}
+			</if>		
+			<if test="CAGO_ID != null and CAGO_ID != ''">
+			    AND UPCAGO_ID = #{CAGO_ID}
+			</if>	
+		</where>  
+	</sql>
+
+	<select id="count" parameterType="mall.web.domain.TB_SPINFOXM" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			TB_PDCAGOXM
+		<include refid="searchCondition"/>
+	</select>
+	
+	<select id="list" parameterType="mall.web.domain.TB_PDCAGOXM" resultType="mall.web.domain.TB_PDCAGOXM">
+		SELECT *
+		  FROM (
+				SELECT LVL, CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR, USE_YN, CAGO_ID_PATH, CAGO_NM_PATH,
+				       REGP_ID, REG_DTM, MODP_ID, MOD_DTM
+				  FROM (
+							SELECT LEVEL LVL, CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR, USE_YN,
+							       SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+							       SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH,
+							       REGP_ID, REG_DTM, MODP_ID, MOD_DTM
+							FROM (SELECT * FROM TB_PDCAGOXM WHERE DEL_YN = 'N')
+							START WITH UPCAGO_ID IS NULL
+							CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+				        )
+		        )
+		<include refid="searchCondition"/>
+	</select>
+	
+	<select id="find" parameterType="mall.web.domain.TB_PDCAGOXM" resultType="mall.web.domain.TB_PDCAGOXM">
+        SELECT
+                B.CAGO_ID
+                , B.CAGO_NAME
+                , B.UPCAGO_ID
+                , (SELECT CAGO_NAME FROM TB_PDCAGOXM A WHERE A.CAGO_ID = B.UPCAGO_ID ) UPCAGO_NAME
+                , B.SORT_ORDR
+                , B.USE_YN
+                , B.REGP_ID
+                , B.REG_DTM
+                , B.MODP_ID
+                , B.MOD_DTM
+        FROM
+            TB_PDCAGOXM B
+		WHERE B.CAGO_ID = #{CAGO_ID}
+	    AND B.DEL_YN = 'N'
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_PDCAGOXM">
+		<selectKey keyProperty="CAGO_ID" resultType="string" order="BEFORE">
+			SELECT FC_GET_NEW_CAGO_ID(#{UPCAGO_ID}) FROM DUAL
+		</selectKey>
+		
+		INSERT INTO 
+			TB_PDCAGOXM (
+				CAGO_ID
+				, CAGO_NAME
+				, UPCAGO_ID
+				, SORT_ORDR
+				, USE_YN
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			) VALUES (
+				#{CAGO_ID}
+				, #{CAGO_NAME}
+				, #{UPCAGO_ID}
+				, #{SORT_ORDR}
+				, 'Y'
+				, #{REGP_ID}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+			)
+	</insert>
+	
+	<update id="update" parameterType="mall.web.domain.TB_PDCAGOXM">
+		UPDATE 
+			TB_PDCAGOXM
+		SET
+			MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+			, CAGO_NAME = #{CAGO_NAME}
+			, UPCAGO_ID = #{UPCAGO_ID}
+			, SORT_ORDR = #{SORT_ORDR}
+			, USE_YN = #{USE_YN}
+		WHERE
+			CAGO_ID = #{CAGO_ID}
+	</update>
+	
+	<update id="delete" parameterType="mall.web.domain.TB_PDCAGOXM">
+		DELETE 
+		  FROM TB_PDCAGOXM
+		 WHERE CAGO_ID = #{CAGO_ID}
+	</update>
+	
+</mapper>

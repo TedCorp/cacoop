@@ -1,0 +1,718 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.ReturnOrderMgrMapper">
+	
+	<!-- 신규전표 반품 주문M 등록 -->
+	<insert id="odInfoXmInsert" parameterType="mall.web.domain.TB_ODINFOXM">
+		<selectKey keyProperty="ORDER_NUM" resultType="String" order="BEFORE">
+			SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || LPAD(NVL(MAX(SUBSTR(ORDER_NUM, 10, 4)),0)+1, 4, 0)
+			FROM TB_ODINFOXM WHERE SUBSTR(ORDER_NUM, 0, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+		
+		INSERT INTO TB_ODINFOXM (
+			  ORDER_NUM
+			, ORDER_DATE
+			, MEMB_ID
+			, MEMB_YN
+			, ORDER_AMT
+			, DLVY_AMT
+			, DAP_YN
+			, ORDER_CON
+			, PAY_METD
+			, PAY_MDKY
+			, DLVY_CON
+			<if test="DLVY_COM != null and DLVY_COM != ''">
+			, DLVY_COM
+			</if>
+			, DLVY_TDN
+			, CNCL_CON
+			, CNCL_REQDTM
+			, RFND_CON
+			, RFND_REQDTM
+			<if test="RFND_MSG != null and RFND_MSG != ''">
+			, RFND_MSG
+			</if>
+			, ORIGIN_NUM
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+			, CNCL_MSG
+			, PAY_AMT
+			, PAY_DTM
+			, ORDER_DTM
+		) VALUES(
+			  #{ORDER_NUM}										<!-- 주문번호 -->
+			, #{ORDER_DATE}										<!-- 주문일시 (VAR2) -->
+			, #{MEMB_ID}										<!-- 주문자ID -->
+			, 'Y'												<!-- 회원주문여부 -->
+			, #{ORDER_AMT}										<!-- 주문금액 (배송비포함) -->
+			, #{DLVY_AMT}										<!-- 배송비 -->
+			, #{DAP_YN}											<!-- 배송비 결제여부 -->
+			, #{ORDER_CON}										<!-- 주문상태 (환불완료) -->
+			, #{PAY_METD}										<!-- 결제수단 (무통장-환불) -->
+			, ''												<!-- 결제모듈키 -->
+			, #{DLVY_CON}										<!-- 배송상태 (배송완료) -->
+			<if test="DLVY_COM != null and DLVY_COM != ''">
+			, #{DLVY_COM}										<!-- 배송업체 -->
+			</if>
+			, ''												<!-- 운송장번호 -->
+			, ''												<!-- 취소상태 -->
+			, NULL												<!-- 취소요청일시 -->
+			, #{RFND_CON}										<!-- 환불상태 (환불완료) -->
+			, TO_DATE(#{ORDER_DATE}, 'YYYYMMDDHH24MISS')		<!-- 환불요청일시 -->
+			<if test="RFND_MSG != null and RFND_MSG != ''">
+			, #{RFND_MSG}
+			</if>
+			, #{ORIGIN_NUM}
+			, #{REGP_ID}										<!-- 등록자ID -->
+			, SYSDATE											<!-- 등록일시 -->
+			, #{REGP_ID}										<!-- 수정자ID -->
+			, SYSDATE											<!-- 수정일시 -->
+			, #{CNCL_MSG}										<!-- 반품/취소사유 -->
+			, #{ORDER_AMT}										<!-- 결제금액 (배송비포함) -->
+			, TO_DATE(#{ORDER_DATE}, 'YYYYMMDDHH24MISS')		<!-- 결제일시 -->
+			, TO_DATE(#{ORDER_DATE}, 'YYYYMMDDHH24MISS')		<!-- 주문일시 (DATE) -->
+		)
+	</insert>
+
+	<!-- 신규전표 반품 주문D 등록 -->
+	<insert id="odInfoXdInsert" parameterType="mall.web.domain.TB_ODINFOXD">
+		<selectKey keyProperty="PD_NAME" resultType="String" order="BEFORE">
+			SELECT PD_NAME FROM TB_PDINFOXM WHERE PD_CODE = #{PD_CODE}
+		</selectKey>
+		INSERT INTO TB_ODINFOXD (
+			  ORDER_DTNUM
+			, ORDER_NUM
+			, PD_CODE
+			, PD_NAME
+			, PD_PRICE
+			, PDDC_GUBN
+			, PDDC_VAL
+			, ORDER_QTY
+			, ORDER_AMT
+			, DLVY_AMT
+			, USE_SVMN
+			, OCCUR_SVMN
+			, ORDER_CON
+			, PAY_METD
+			, PAY_MDKY
+			, DLVY_CON
+			<if test="DLVY_COM != null and DLVY_COM != ''">
+			, DLVY_COM
+			</if>
+			<if test="DLVY_TDN != null and DLVY_TDN != ''">
+			, DLVY_TDN
+			</if>
+			, CNCL_CON
+			, RFND_CON
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+			<if test="PD_CUT_SEQ != null and PD_CUT_SEQ != ''">
+				, PD_CUT_SEQ
+			</if>
+			<if test="OPTION_CODE != null and OPTION_CODE != ''">
+				, OPTION_CODE
+			</if>
+			<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+				, OPTION1_NAME
+			</if>
+			<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+				, OPTION1_VALUE
+			</if>
+			<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+				, OPTION2_NAME
+			</if>
+			<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+				, OPTION2_VALUE
+			</if>
+			<!-- 주문 연동 : 주문디테일 업체코드 추가 2020-02-25 -->
+			, SUPR_ID
+			<if test="BOX_PDDC_GUBN != null and BOX_PDDC_GUBN != ''">
+				, BOX_PDDC_GUBN
+			</if>
+			<if test="BOX_PDDC_VAL != null and BOX_PDDC_VAL != ''">
+				, BOX_PDDC_VAL
+			</if>
+			<if test="INPUT_CNT != null and INPUT_CNT != ''">
+				, INPUT_CNT
+			</if>
+		) VALUES (
+			  (SELECT NVL(MAX(ORDER_DTNUM),0)+1 FROM TB_ODINFOXD WHERE ORDER_NUM = #{ORDER_NUM})
+			, #{ORDER_NUM}
+			, #{PD_CODE}
+			, #{PD_NAME}
+			, #{PD_PRICE}
+			, #{PDDC_GUBN}
+			, #{PDDC_VAL}
+			, #{ORDER_QTY}
+			, #{ORDER_AMT}
+			, 0
+			, 0
+			, 0
+			, #{ORDER_CON}	
+			, #{PAY_METD}
+			, ''
+			, #{DLVY_CON}
+			<if test="DLVY_COM != null and DLVY_COM != ''">
+			, #{DLVY_COM}
+			</if>
+			<if test="DLVY_TDN != null and DLVY_TDN != ''">
+			, #{DLVY_TDN}
+			</if>
+			, ''
+			, #{RFND_CON}
+			, #{REGP_ID}
+			, SYSDATE
+			, #{REGP_ID}
+			, SYSDATE
+			<if test="PD_CUT_SEQ != null and PD_CUT_SEQ != ''">
+				, #{PD_CUT_SEQ}
+			</if>
+			<if test="OPTION_CODE != null and OPTION_CODE != ''">
+				, #{OPTION_CODE}
+			</if>
+			<if test="OPTION1_NAME != null and OPTION1_NAME != ''">
+				, #{OPTION1_NAME}
+			</if>
+			<if test="OPTION1_VALUE != null and OPTION1_VALUE != ''">
+				, #{OPTION1_VALUE}
+			</if>
+			<if test="OPTION2_NAME != null and OPTION2_NAME != ''">
+				, #{OPTION2_NAME}
+			</if>
+			<if test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
+				, #{OPTION2_VALUE}
+			</if>
+			<!-- 주문 연동 : 주문디테일 업체코드 추가 2020-02-25 -->
+			, (SELECT SUPR_ID FROM TB_PDINFOXM WHERE PD_CODE = #{PD_CODE})
+			<if test="BOX_PDDC_GUBN != null and BOX_PDDC_GUBN != ''">
+				, #{BOX_PDDC_GUBN}
+			</if>
+			<if test="BOX_PDDC_VAL != null and BOX_PDDC_VAL != ''">
+				, #{BOX_PDDC_VAL}
+			</if>
+			<if test="INPUT_CNT != null and INPUT_CNT != ''">
+				, #{INPUT_CNT}
+			</if>
+		)
+	</insert>
+	
+	<!-- 원 주문 상품 상세정보   -->
+	<select id="find" parameterType="mall.web.domain.TB_ODINFOXD" resultType="mall.web.domain.TB_ODINFOXD">
+		SELECT ORDER_DTNUM				/*주문상세번호*/
+				, ORDER_NUM					/*주문번호*/
+				, PD_CODE						/*제품코드*/
+				, PD_NAME						/*제품명*/
+				, ORDER_QTY						/*주문 수량*/
+				, ORDER_AMT						/*주문금액*/
+				, PDDC_VAL						/*제품할인 값*/
+				, PD_PRICE						/*상품가격*/
+				, PDDC_GUBN 					/*상품할인구분*/
+				, (SELECT CUT_UNIT FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE AND SEQ = PD_CUT_SEQ ) AS PD_CUT_SEQ
+				, NVL (
+					(SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = A.OPTION_CODE ),
+					(SELECT OPTDCD_NAME FROM TB_OPTCODXD M, TB_PDINFOXM N  WHERE M.OPTD_CODE = A.OPTION_CODE AND N.PD_CODE = A.PD_CODE AND M.OPTM_CODE = N.OPTION_GUBN)
+				  ) AS OPTION_CODE
+				, SUPR_ID
+				, DLVY_TDN
+				, DLVY_CON
+				, ORDER_CON
+				, LINK_ORDER_KEY
+				, NVL( (SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'DLVY_COM' AND COMD_CODE = A.DLVY_COM), A.DLVY_COM) AS DLVY_COM
+				, CASE
+					WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+					WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE * (A.PDDC_VAL/100))
+					ELSE A.PD_PRICE
+				  END REAL_PRICE		/*실제 제품값*/
+			FROM TB_ODINFOXD A      /*주문정보 상세*/
+			WHERE 1=1
+				AND ORDER_NUM = #{ORDER_NUM}
+			 	AND ORDER_DTNUM = #{ORDER_DTNUM}
+	</select>
+	
+	<!-- 주문정보 수량/가격변경 -->
+	<update id="updateMasterQty" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE 
+			TB_ODINFOXM
+		SET
+			ORDER_AMT = (	SELECT SUM(ORDER_AMT)
+									FROM TB_ODINFOXD 
+									WHERE ORDER_NUM = #{ORDER_NUM} ) + DLVY_AMT,
+		    PAY_AMT = CASE 
+		    					WHEN PAY_AMT IS NULL THEN NULL
+		    					ELSE (SELECT SUM(ORDER_AMT) FROM TB_ODINFOXD WHERE ORDER_NUM = #{ORDER_NUM}) + DLVY_AMT 
+		    				END,
+			MOD_DTM = SYSDATE
+		WHERE ORDER_NUM = #{ORDER_NUM}
+		   <!-- AND ORDER_CON = 'ORDER_CON_01' -->
+	</update>
+	
+	<!-- 공통 where 조건 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test='schGbn == "MEMB_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND MEMB_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "RECV_PERS"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND RECV_PERS LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test='schGbn == "COM_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND COM_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<!-- <if test="ORDER_CON != null and ORDER_CON != ''">
+			    AND ORDER_CON = #{ORDER_CON}
+			</if> -->			
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND TO_CHAR(TO_DATE(ORDER_DATE,'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD') <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				AND TO_CHAR(TO_DATE(ORDER_DATE,'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+			</if>
+		<!-- 	<if test="schNum != null and schNum != ''">
+				AND ORDER_NUM LIKE '%'||#{schNum}||'%'
+			</if> -->			
+		</where>  
+	</sql>
+	
+	<sql id="orderByCondition">
+		<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+			<if test='ORDER_GUBUN == "DATE_ORDER"'>
+				<if test='DATE_ORDER == "desc"'>
+					ORDER BY ORDER_DATE desc
+				</if>	
+				<if test='DATE_ORDER == "asc"'>
+					ORDER BY ORDER_DATE asc
+				</if>	
+			</if>
+			<if test='ORDER_GUBUN == "MEMB_NM_ORDER"'>
+				<if test='MEMB_NM_ORDER == "desc"'>
+					ORDER BY MEMB_NM desc
+				</if>	
+				<if test='MEMB_NM_ORDER == "asc"'>
+					ORDER BY MEMB_NM asc
+				</if>
+			</if>
+			<if test='ORDER_GUBUN == "RFND_REQDTM"'>
+				<if test='RFND_REQDTM == "desc"'>
+					ORDER BY RFND_REQDTM desc
+				</if>	
+				<if test='RFND_REQDTM == "asc"'>
+					ORDER BY RFND_REQDTM asc
+				</if>
+			</if>
+		</if>
+		<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+			ORDER BY ORDER_DATE desc
+		</if>
+	</sql>
+	
+	<!-- 반품 목록 카운트 -->
+	<select id="count" parameterType="mall.web.domain.TB_ODINFOXM" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT A.ORDER_NUM
+				  ,A.ORDER_DATE
+				  ,A.ORDER_DTM
+				  ,A.ORIGIN_NUM
+				  ,A.RFND_CON
+				  ,A.PAY_METD
+				  ,A.MEMB_ID
+				  ,(SELECT FC_GET_MEMBID_NM(A.MEMB_ID) FROM DUAL) AS MEMB_NM
+			FROM TB_ODINFOXM A
+			WHERE
+			<choose>
+				<when test='MEMB_GUBN == "MEMB_GUBN_03" '>
+					FC_GET_REFUND_YN(A.ORDER_NUM,#{MEMB_ID}, 'RFND_CON_03') = 'Y'
+				</when>
+				<otherwise>
+					FC_GET_REFUND_YN(A.ORDER_NUM,#{MEMB_ID}, 'SUPR_RFND_CON_03') = 'Y'
+				</otherwise>
+			</choose>
+		)
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 반품 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		<include refid="default.pagerHeader"/>	
+		SELECT *
+		FROM (
+			SELECT A.ORDER_NUM
+				  ,TO_CHAR( TO_DATE( ORDER_DATE, DECODE(LENGTH(ORDER_DATE), 8, 'YYYYMMDD', 'YYYYMMDDHH24MISS')),  DECODE(LENGTH(ORDER_DATE), 8, 'yyyy-MM-dd', 'yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE
+				  ,A.ORDER_DTM
+				  ,A.MEMB_ID
+				  ,(SELECT FC_GET_MEMBID_NM(A.MEMB_ID) FROM DUAL) AS MEMB_NM
+				<choose>
+					<when test='MEMB_GUBN != "MEMB_GUBN_03" '>
+						,(SELECT SUM(RFND_AMT) FROM TB_ODINFOXD WHERE ORDER_NUM=A.ORDER_NUM AND ORDER_CON='ORDER_CON_07' AND SUPR_ID=#{LOGIN_SUPR_ID}) AS ORDER_AMT
+					</when>
+					<otherwise>
+						 ,(SELECT SUM(RFND_AMT) FROM TB_ODINFOXD WHERE ORDER_NUM=A.ORDER_NUM AND ORDER_CON='ORDER_CON_07') AS ORDER_AMT
+					</otherwise>
+				</choose>
+				  ,A.DLVY_AMT
+				  ,A.ORDER_CON
+				  ,(SELECT FC_GET_COMCOD_NM(A.ORDER_CON) FROM DUAL) AS ORDER_CON_NM
+				  ,A.PAY_METD
+				  ,(SELECT FC_GET_COMCOD_NM(A.PAY_METD) FROM DUAL) AS PAY_METD_NM
+				  ,A.RFND_REQDTM
+				  ,A.RFND_CON
+				  ,(SELECT FC_GET_COMCOD_NM(A.RFND_CON) FROM DUAL) AS RFND_CON_NM
+				  ,A.RFND_MSG
+         		  ,(SELECT FC_GET_COMCOD_NM (A.RFND_MSG) FROM DUAL) AS RFND_MSG_NM
+				  ,A.CNCL_MSG
+				  ,A.DLVY_TDN
+				  ,FC_GET_REFUND_PRODUCT_OK(A.ORDER_NUM, #{MEMB_ID}) AS PD_NAME
+				  ,(SELECT COUNT(*)-1 FROM TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM) AS count
+				  ,A.REGP_ID
+				  ,A.REG_DTM
+				  ,A.MODP_ID
+				  ,A.MOD_DTM
+			FROM TB_ODINFOXM A
+			WHERE 
+			<choose>
+				<when test='MEMB_GUBN != "MEMB_GUBN_03" '>
+					FC_GET_REFUND_YN(A.ORDER_NUM, #{MEMB_ID}, 'SUPR_RFND_CON_03') = 'Y'
+				</when>
+				<otherwise>
+					FC_GET_REFUND_YN(A.ORDER_NUM, #{MEMB_ID}, 'RFND_CON_03') = 'Y'
+				</otherwise>
+			</choose>
+		)
+		<include refid="searchCondition"/>
+		<include refid="orderByCondition"/>
+	<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 주문정보 마스터 정보 - 상세화면 -->
+	<select id="getMasterInfo" parameterType="mall.web.domain.TB_RTODINFOXM" resultType="mall.web.domain.TB_RTODINFOXM">
+		SELECT *
+		FROM (
+			SELECT	RETURN_NUM																			/*반품번호*/
+						, TO_CHAR( TO_DATE( RETURN_DATE
+											, DECODE(LENGTH(RETURN_DATE), 8, 'YYYYMMDD', 'YYYYMMDDHH24MISS'))
+											,DECODE(LENGTH(RETURN_DATE), 8, 'yyyy-MM-dd', 'yyyy-MM-dd HH24:mi:SS')
+						) AS RETURN_DATE																	/*주문일자*/
+						, A.MEMB_ID																			/*회원ID (주문자)*/
+						, FC_GET_MEMBID_NM(A.MEMB_ID) AS MEMB_NM							/*회원ID명(주문자)*/
+						, A.RETURN_AMT																		/*반품금액*/
+						, A.ORDER_NUM																		/*주문번호*/
+						, A.ORDER_CON																		/*주문상태*/
+						, A.CNCL_CON																			/*취소상태*/
+						, A.CNCL_REQDTM																	
+						, A.DLVY_AMT																			/*배송비*/
+						, A.REGP_ID
+						, A.REG_DTM
+						, A.MODP_ID
+						, A.MOD_DTM
+						, B.PAY_METD
+						, (SELECT FC_GET_COMCOD_NM(A.ORDER_CON) FROM DUAL) AS ORDER_CON_NM			/*주문상태 명*/
+						, (SELECT FC_GET_COMCOD_NM(B.PAY_METD) FROM DUAL) AS PAY_METD_NM
+			FROM TB_RTODINFOXM A
+			INNER JOIN TB_ODINFOXM B
+				ON A.ORDER_NUM = B.ORDER_NUM
+		)
+		WHERE RETURN_NUM = #{RETURN_NUM}
+	</select>
+	
+	<!-- 환불완료 업체 리스트 불러오기 2020-02-25 -->
+	<select id="getPdSuprList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap">		
+		SELECT	  A.SUPR_ID
+		     	, NVL( (SELECT SUPR_NAME FROM TB_SPINFOXM WHERE SUPR_ID = A.SUPR_ID) , '미등록업체') AS SUPR_NAME
+		FROM TB_ODINFOXD A
+		WHERE ORDER_NUM = #{ORDER_NUM}
+		  AND (ORDER_CON ='ORDER_CON_07' OR RFND_CON='RFND_CON_03')
+		<if test='MEMB_GUBN != "MEMB_GUBN_03" '>
+		   	AND SUPR_ID=#{LOGIN_SUPR_ID}
+		 </if> 
+		 GROUP BY SUPR_ID
+		 ORDER BY SUPR_ID ASC		
+	</select>
+	
+	<!-- 주문정보 상세 - 상세화면   -->
+	<select id="getDetailsList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT ORDER_DTNUM
+		     , ORDER_NUM
+		     , PD_CODE
+		     , FC_GET_ORDER_PD_NM(ORDER_NUM,PD_CODE,ORDER_DTNUM)  AS PD_NAME 
+			 , OPTION1_VALUE
+			 , OPTION2_VALUE
+			 , OPTION3_VALUE  
+		     , PDDC_GUBN
+		     , PDDC_VAL
+		     , PD_PRICE
+		     , ORDER_QTY
+		     , ORDER_AMT
+			 , FC_GET_DLVPRICE_SUPR(A.ORDER_NUM, SUPR_ID) AS DLVY_AMT   
+             , SUPR_ID
+             , ORDER_CON
+             , DLVY_CON
+             , DLVY_TDN
+			 , RFND_CON
+			 , RFND_AMT
+			 , RFND_DLVY_AMT
+			 , RFND_DLVY_TDN
+			 , CNCL_MSG
+             , (SELECT PS_COM FROM TB_SPINFOXM WHERE A.SUPR_ID=SUPR_ID) AS DLVY_COM
+             , (SELECT FC_GET_COMCOD_NM(PS_COM) FROM TB_SPINFOXM WHERE A.SUPR_ID=SUPR_ID) AS DLVY_COM_NAME
+             , LINK_ORDER_KEY
+			FROM TB_ODINFOXD A
+			WHERE ORDER_NUM =  #{ORDER_NUM}
+				 AND FC_GET_ORDER_SUPRID(ORDER_NUM,  #{MEMB_ID}) = 'Y'
+				 AND (A.RFND_CON ='RFND_CON_03' OR A.ORDER_CON ='ORDER_CON_07')
+				<if test='MEMB_GUBN != "MEMB_GUBN_03" '>
+		   			AND A.SUPR_ID = #{LOGIN_SUPR_ID}
+		 		</if> 
+		 		ORDER BY ORDER_DTNUM DESC
+	</select>
+	
+	<!-- 환불 운송장번호 수정  -->
+	<update id="getDetailsUpdate" parameterType="mall.web.domain.TB_ODINFOXD">
+		UPDATE
+			TB_ODINFOXD
+		SET  
+			 RFND_DLVY_TDN = #{RFND_DLVY_TDN}
+			,MODP_ID = #{MODP_ID}
+		    ,MOD_DTM = SYSDATE
+		WHERE ORDER_NUM = #{ORDER_NUM}
+		 AND PD_CODE = #{PD_CODE}
+		 <if test=" OPTION1_VALUE !=  '' and OPTION1_VALUE != null ">
+			AND OPTION1_VALUE = #{OPTION1_VALUE}
+		</if>
+		<if test=' OPTION2_VALUE != "" and OPTION2_VALUE != null '>
+			AND OPTION2_VALUE = #{OPTION2_VALUE}
+		</if>
+		<if test=' OPTION3_VALUE != "" and OPTION3_VALUE != null '>
+			AND OPTION3_VALUE = #{OPTION3_VALUE}
+		</if>
+		<if test='MEMB_GUBN != "MEMB_GUBN_03" '>
+		   	AND SUPR_ID=#{LOGIN_SUPR_ID}
+		 </if> 
+	</update>
+	
+	
+	<insert id="rtOdInfoXmInsert" parameterType="mall.web.domain.TB_RTODINFOXM">
+		<selectKey keyProperty="RETURN_NUM" resultType="String" order="BEFORE">    
+			SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || LPAD(NVL(MAX(SUBSTR(RETURN_NUM, 10, 4)),0)+1, 4, 0) 
+			FROM TB_RTODINFOXM WHERE SUBSTR(RETURN_NUM, 0, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+		INSERT INTO 
+			TB_RTODINFOXM(
+				RETURN_NUM
+				,RETURN_DATE
+				,MEMB_ID
+				,RETURN_AMT
+				,ORDER_CON
+				<!-- ,CNCL_CON
+				,CNCL_REQDTM -->
+				,ORDER_NUM
+				,DLVY_AMT
+				,REGP_ID
+				,REG_DTM
+				,MODP_ID
+				,MOD_DTM
+			) VALUES (
+				#{RETURN_NUM}
+				,#{RETURN_DATE} <!-- TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') -->
+				,#{MEMB_ID}
+				,#{RETURN_AMT}
+				,'ORDER_CON_10'
+				<!-- ,#{CNCL_CON}
+				,#{CNCL_REQDTM} -->
+				,#{ORDER_NUM}
+				,#{DLVY_AMT}
+				,#{REGP_ID}
+				,SYSDATE
+				,#{MODP_ID}
+				,SYSDATE
+			)
+	</insert>
+	<!--사용안함  -->
+	<insert id="rtOdInfoXdInsert" parameterType="mall.web.domain.TB_RTODINFOXD">
+		INSERT INTO 
+			TB_RTODINFOXD (
+				RETURN_DTNUM
+                , RETURN_NUM
+                , PD_CODE
+                , PD_NAME
+                , PD_PRICE
+                , PDDC_GUBN
+                , PDDC_VAL
+                , RETURN_QTY
+                , RETURN_AMT
+                , RETURN_GBN
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+                , ORDER_DTNUM
+            ) VALUES (
+			     (SELECT NVL(MAX(RETURN_DTNUM),0)+1 FROM TB_RTODINFOXD WHERE RETURN_NUM = #{RETURN_NUM})
+				 , #{RETURN_NUM}
+                 , #{PD_CODE}
+                 , #{PD_NAME}
+                 , #{PD_PRICE}
+                 , #{PDDC_GUBN}
+                 , #{PDDC_VAL}
+                 , #{RETURN_QTY}
+			     , #{RETURN_AMT}
+			     , #{RETURN_GBN}
+                 , #{REGP_ID}
+                 , SYSDATE
+                 , #{MODP_ID}
+                 , SYSDATE
+                 , #{ORDER_DTNUM}
+			)
+	</insert>
+	<!-- 사용안함 -->
+	<update id="update" parameterType="mall.web.domain.TB_RTODINFOXD">
+		UPDATE TB_RTODINFOXD
+		   SET 
+		       RETURN_QTY   = #{RETURN_QTY},
+		       RETURN_GBN   = #{RETURN_GBN},
+		       RETURN_AMT   = #{RETURN_AMT},
+		       MODP_ID      = #{MODP_ID},
+		       MOD_DTM      = SYSDATE
+		WHERE  RETURN_DTNUM = #{RETURN_DTNUM}
+		AND    RETURN_NUM   = #{RETURN_NUM}
+	</update>
+		<!-- 사용안함 -->
+	<update id="updateMaster" parameterType="mall.web.domain.TB_RTODINFOXM">
+		UPDATE TB_RTODINFOXM
+		   SET 
+		       DLVY_AMT   = #{DLVY_AMT},
+		       MODP_ID      = #{MODP_ID},
+		       MOD_DTM      = SYSDATE
+		WHERE  RETURN_NUM   = #{RETURN_NUM}
+	</update>
+	
+	
+	<!-- 주문번호에 해당하는 반품내역 카운트 -->
+	<select id="rtnCheck" parameterType="mall.web.domain.TB_ODINFOXM" resultType="int">
+		SELECT count(*)
+		FROM TB_ODINFOXM					
+		WHERE 1=1
+		    AND ORIGIN_NUM = #{ORDER_NUM}
+		    AND ORDER_CON = 'ORDER_CON_07'
+		    <!-- AND MEMB_ID = #{MEMB_ID} -->
+	</select>
+	<select id="rtnOrderInfo" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT *
+		FROM TB_ODINFOXM					
+		WHERE 1=1
+		  AND ORIGIN_NUM = #{ORDER_NUM}
+		  AND ORDER_CON IN ('ORDER_CON_07', 'ORDER_CON_11')
+		  AND RFND_CON IN ('RFND_CON_01', 'RFND_CON_03')
+	</select>
+	<select id="rtnDetailList" parameterType="mall.web.domain.TB_ODINFOXD" resultType="mall.web.domain.TB_ODINFOXD">
+		SELECT   A.ORDER_NUM
+				,B.ORDER_DTNUM
+		        ,A.DLVY_AMT
+		        ,A.MEMB_ID
+		        ,B.PD_CODE
+		        ,CASE
+		            WHEN B.OPTION2_NAME IS NOT NULL THEN B.PD_NAME || ' (' || B.OPTION1_NAME || ':' || B.OPTION1_VALUE || ' ' || B.OPTION2_NAME || ':' || B.OPTION2_VALUE || ')'
+		            WHEN B.OPTION1_NAME IS NOT NULL THEN B.PD_NAME || ' (' || B.OPTION1_NAME || ':' || B.OPTION1_VALUE || ')'
+		            ELSE B.PD_NAME
+		         END PD_NAME
+		        ,B.PD_PRICE
+		        ,B.PDDC_GUBN
+		        ,B.PDDC_VAL
+		        ,B.BOX_PDDC_GUBN
+		        ,B.BOX_PDDC_VAL
+		        ,(SELECT CUT_UNIT FROM TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) AS PD_CUT_SEQ_UNIT
+		        ,B.PD_CUT_SEQ
+		        ,NVL(
+		            (SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = B.OPTION_CODE ),
+		            (SELECT OPTDCD_NAME FROM TB_OPTCODXD M, TB_PDINFOXM N WHERE M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE AND M.OPTM_CODE = N.OPTION_GUBN)
+		         ) AS OPTION_NAME
+		        ,B.OPTION_CODE
+		        ,CASE
+		            WHEN B.PDDC_GUBN = 'PDDC_GUBN_02' THEN B.PD_PRICE - B.PDDC_VAL
+		            WHEN B.PDDC_GUBN = 'PDDC_GUBN_03' THEN B.PD_PRICE - (B.PD_PRICE * (B.PDDC_VAL/100))
+		            ELSE B.PD_PRICE
+		         END REAL_PRICE
+		        ,B.BOX_PDDC_GUBN
+		        ,B.BOX_PDDC_VAL
+		        ,C.INPUT_CNT
+		        ,OPTION1_NAME
+		        ,OPTION1_VALUE
+		        ,OPTION2_NAME
+		        ,OPTION2_VALUE
+		        ,C.BUNDLE_CNT
+		        ,C.INPUT_CNT
+		        ,NVL(B.ORDER_QTY, 0) + NVL(R.ORDER_QTY, 0) AS ORDER_QTY
+		        ,NVL(B.ORDER_AMT, 0) + NVL(R.ORDER_AMT, 0) AS ORDER_AMT
+		FROM TB_ODINFOXM A
+		INNER JOIN TB_ODINFOXD B
+		    ON A.ORDER_NUM = B.ORDER_NUM
+		INNER JOIN TB_PDINFOXM C
+		    ON B.PD_CODE = C.PD_CODE
+		INNER JOIN TB_MBINFOXM M
+		    ON A.MEMB_ID = M.MEMB_ID
+		LEFT OUTER JOIN 
+		(
+		    SELECT   O.CNCL_MSG AS ORDER_NUM
+		            ,O.ORDER_NUM AS ORIGIN_NUM
+		            ,R.PD_CODE
+		            ,R.PD_NAME
+		            ,R.PD_PRICE
+		            ,R.ORDER_QTY
+		            ,R.ORDER_AMT
+		    FROM TB_ODINFOXM O
+		    INNER JOIN TB_ODINFOXD R
+		        ON O.ORDER_NUM = R.ORDER_NUM
+		        AND O.ORDER_CON = 'ORDER_CON_07'
+		    WHERE 1=1
+		        AND O.CNCL_MSG = #{ORDER_NUM}
+		) R
+		ON A.ORDER_NUM = R.ORDER_NUM
+		AND B.PD_CODE = R.PD_CODE 
+		WHERE 1=1
+		    AND A.ORDER_NUM = #{ORDER_NUM}
+	</select>
+	<!-- 사용안함 -->
+	<select id="ordCheck" parameterType="mall.web.domain.TB_RTODINFOXM" resultType="int">
+		SELECT count(*)
+		FROM (
+					SELECT	 INFO.*      			   	     
+								,ODINFO.ORDER_DATE
+					FROM (
+								SELECT 	  RETURN_NUM
+											, RETURN_DATE
+                             				, MEMB_ID
+                             				, FC_GET_MEMBID_NM(MEMB_ID) AS MEMB_NM     /*회원ID명(주문자)*/
+                             				, RETURN_AMT
+											, ORDER_CON
+											, CNCL_CON
+											, CNCL_REQDTM
+											, ORDER_NUM
+											, DLVY_AMT
+											, REGP_ID
+											, REG_DTM
+											, MODP_ID
+											, MOD_DTM
+											, (SELECT COUNT(*)-1 FROM TB_RTODINFOXD WHERE RETURN_NUM = RTOD.RETURN_NUM) AS count /*주문 제품 갯수*/
+											, (SELECT PD_NAME FROM TB_RTODINFOXD WHERE RETURN_NUM = RTOD.RETURN_NUM AND ROWNUM = 1) AS PD_NAME
+								FROM TB_RTODINFOXM RTOD
+							) INFO
+	              LEFT OUTER JOIN TB_ODINFOXM ODINFO
+                    ON INFO.ORDER_NUM = ODINFO.ORDER_NUM
+		       )
+		WHERE 1=1
+		    AND ORDER_NUM = #{ORDER_NUM}
+		    <!-- AND MEMB_ID = #{MEMB_ID} -->
+		<include refid="searchCondition"/>
+	</select>
+	
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration monitorInterval="30" strict="true">
+
+	<properties>
+		<property name="filename">/usr/local/tomcat/logs/application</property>
+		<!-- property name="pattern">[%d{ISO8601}] [%t] %-5level %logger{6} - %msg%n</property -->
+		<property name="patternTime">%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5.5p | %-10.10t | %-20.20C:%-5.5L | %msg%n</property>
+		<property name="patternNoTime">%-5.5p | %-10.10t | %-20.20C:%-5.5L | %msg%n</property>
+	</properties>
+	
+	<appenders>
+		<!-- Console -->
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="${patternTime}" />
+		</Console>
+		
+		<!-- Rolling File -->
+		<RollingFile name="RollingFile" fileName="${filename}.log" filePattern="${filename}-%d{yyyy-MM-dd}-%i.log.gz">
+			<PatternLayout pattern="${patternTime}" />
+			<Policies>
+				<TimeBasedTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="100 MB" />
+			</Policies>
+		</RollingFile>
+	</appenders>
+	
+	<loggers>
+		<logger name="org.mybatis.spring" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="org.apache.tiles" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="org.apache.ibatis" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.com.ibatis" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.com.ibatis.common.jdbc.SimpleDataSource" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.com.ibatis.common.jdbc.ScriptRunner" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.com.ibatis.sqlmap.engine.impl.SqlMapClientDelegate" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.org.mybatis" level="INFO" additivity="false">
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.java.sqltiming" level="DEBUG" additivity="false">
+			<appender-ref ref="Console" />
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.java.sql" level="DEBUG" additivity="false">
+			<appender-ref ref="Console" />
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.java.sql.Connection" level="DEBUG" additivity="false">
+			<appender-ref ref="Console" />
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.java.sql.Statement" level="DEBUG" additivity="false">
+			<appender-ref ref="Console" />
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.java.sql.PreparedStatement" level="DEBUG" additivity="false">
+			<appender-ref ref="Console" />
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<logger name="log4j.logger.java.sql.ResultSet" level="DEBUG" additivity="false">
+			<appender-ref ref="Console" />
+			<appender-ref ref="RollingFile" />
+		</logger>
+		<root level="DEBUG">
+			<appender-ref ref="Console" level="DEBUG" />
+			<appender-ref ref="RollingFile" level="DEBUG" />
+		</root>
+	</loggers>
+	
+</configuration>

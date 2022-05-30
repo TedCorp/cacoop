@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.DeliveryAddrMgrMapper">
+	<!-- 주소록 카운트 -->
+	<select id="count" parameterType="mall.web.domain.TB_DELIVERY_ADDR" resultType="int">
+		SELECT count(*)
+	      FROM (
+	        	SELECT 
+					  SUPR_ID
+					, ADDR_GUBN
+					, COM_PN
+					, COM_BADR
+					, COM_DADR
+					, COM_FAX
+					, COM_TELN
+					, COM_MOBILE
+					, USE_YN
+					, REGP_ID
+					, REG_DTM
+					, MODP_ID
+					, MOD_DTM
+				FROM TB_DELIVERY_ADDR 
+				WHERE SUPR_ID = #{SUPR_ID}
+	  	    )
+	</select>
+	
+	<!-- 주소록 리스트 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_DELIVERY_ADDR" resultType="mall.web.domain.TB_DELIVERY_ADDR">
+		SELECT A.ADD_NUM 
+			, A.SUPR_ID
+			, B.SUPR_NAME 
+			, A.ADDR_GUBN
+			, A.COM_PN
+			, A.COM_BADR
+			, A.COM_DADR
+			, A.COM_FAX
+			, A.COM_TELN
+			, A.COM_MOBILE
+			, A.USE_YN
+			, A.REGP_ID
+			, A.REG_DTM
+			, A.MODP_ID
+			, A.MOD_DTM
+		FROM TB_DELIVERY_ADDR A, TB_SPINFOXM B 
+		WHERE  A.SUPR_ID =B.SUPR_ID	
+		AND A.SUPR_ID =#{SUPR_ID}
+	</select>
+	
+	<!-- 주소록 디테일 -->
+	<select id="find" parameterType="mall.web.domain.TB_DELIVERY_ADDR" resultType="mall.web.domain.TB_DELIVERY_ADDR">
+		SELECT A.ADD_NUM 
+		  	, A.SUPR_ID
+			, B.SUPR_NAME 
+			, A.ADDR_GUBN
+			, A.COM_PN
+			, A.COM_BADR
+			, A.COM_DADR
+			, A.COM_FAX
+			, A.COM_TELN
+			, A.COM_MOBILE
+			, A.USE_YN
+			, A.REGP_ID
+			, A.REG_DTM
+			, A.MODP_ID
+			, A.MOD_DTM
+		FROM TB_DELIVERY_ADDR A, TB_SPINFOXM B 
+		WHERE  A.SUPR_ID =B.SUPR_ID	
+		AND A.SUPR_ID =#{SUPR_ID}	
+		AND A.ADD_NUM =#{ADD_NUM}
+	</select>
+	
+	<!-- 주소록 insert -->
+	<insert id="insert" parameterType="mall.web.domain.TB_DELIVERY_ADDR" >
+	<selectKey keyProperty="ADD_NUM" resultType="string" order="BEFORE">
+		SELECT LPAD(SEQ_TB_DELIVERY_ADDR.NEXTVAL,13,0) FROM DUAL
+	</selectKey>
+	INSERT INTO 
+		TB_DELIVERY_ADDR (
+			  ADD_NUM
+			, SUPR_ID
+			, ADDR_GUBN
+			, COM_PN
+			, COM_BADR
+			, COM_DADR
+			, COM_FAX
+			, COM_TELN
+			, COM_MOBILE
+			, USE_YN
+			, REGP_ID
+			, REG_DTM
+			) VALUES (
+			  #{ADD_NUM}
+			, #{SUPR_ID}
+			, #{ADDR_GUBN}
+			, #{COM_PN}
+			, #{COM_BADR}
+			, #{COM_DADR}
+			<choose>
+				<when test="COM_FAX == null and COM_FAX==''">
+					,NULL
+				</when>
+				<otherwise>
+					,#{COM_FAX}
+				</otherwise>
+			</choose> 
+			, #{COM_TELN}
+			<choose>
+				<when test="COM_MOBILE == null and COM_MOBILE == '' ">
+					,NULL
+				</when>
+				<otherwise>
+					,#{COM_MOBILE}
+				</otherwise>
+			</choose> 
+			, 'Y'
+			, #{REGP_ID}
+			, SYSDATE
+			)
+	</insert>
+	
+	<!-- 주소록 업데이트 -->
+	<update id="update" parameterType="mall.web.domain.TB_DELIVERY_ADDR">
+		UPDATE 
+			TB_DELIVERY_ADDR
+		SET
+			 ADDR_GUBN = #{ADDR_GUBN}
+			, COM_PN = #{COM_PN}
+			, COM_BADR = #{COM_BADR}
+			, COM_DADR = #{COM_DADR}
+			, COM_FAX = #{COM_FAX}
+			, COM_TELN = #{COM_TELN}
+			, COM_MOBILE = #{COM_MOBILE}
+			, USE_YN = 'Y'
+			, MODP_ID = #{MODP_ID}
+			, MOD_DTM = SYSDATE
+		WHERE SUPR_ID = #{SUPR_ID}
+		AND ADD_NUM =#{ADD_NUM}
+	</update>
+	<select id="useCount" parameterType="mall.web.domain.TB_DELIVERY_ADDR" resultType="int">
+		SELECT 
+			COUNT(ADD_NUM) 
+		FROM TB_PDINFOXM 
+		WHERE ADD_NUM=#{ADD_NUM} 
+	</select>
+
+	<!-- 주소록 삭제 -->	
+	<update id="delete" parameterType="mall.web.domain.TB_DELIVERY_ADDR" >
+		DELETE 
+		FROM TB_DELIVERY_ADDR		
+		WHERE ADD_NUM = #{ADD_NUM}
+	</update>
+	
+	<!-- 주소록종류갯수구하기 -->
+	<select id="addrCount" resultType="int">
+		SELECT COUNT(COMM_CODE) 
+		FROM TB_COMCODXD 
+		WHERE COMM_CODE ='ADDR_GUBN'
+	</select>
+	
+</mapper>

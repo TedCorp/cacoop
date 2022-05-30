@@ -1,0 +1,646 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+	** Memo ** 
+	1. GraphQL 단독 endpoint를 사용 
+	2. 
+	
+-->
+
+<API>
+	<!-- 
+		오너클랜 API 정보
+		* endpoint
+		Sandbox: https://api-sandbox.ownerclan.com/v1/graphql
+		Production: https://api.ownerclan.com/v1/graphql
+		
+		* auth (JWTTOKEN)
+		Sandbox(test) : https://auth-sandbox.ownerclan.xyz/auth 
+		production(운영) : https://auth.ownerclan.xyz/auth
+		
+		@parameter
+		service: "ownerclan"
+		userType: "seller"
+		username: "셀러ID" // 오너클랜 셀러 ID.
+		password: "셀러PW" // 셀러 비밀번호.
+		
+	 -->
+	<ownerclan>		
+		<auth>
+			https://auth-sandbox.ownerclan.xyz/auth
+		</auth>
+		
+		<!-- 조회 -->		
+		<!-- 상품리스트조회 -->
+		<query id="getItemList" endpoint="http://api-sandbox.ownerclan.com/v1/graphql?query=">
+			query {
+		        allItems(dateFrom: 0, category: "${category}", first: ${first}, status: available) {
+		            pageInfo {
+		                hasNextPage
+		                hasPreviousPage
+		                startCursor
+		                endCursor
+		            }
+		            edges {
+		                cursor,
+		                node {
+		                    createdAt
+							updatedAt
+							key
+							name
+							model
+							production
+							origin
+							id
+							price
+							pricePolicy
+							fixedPrice
+							searchKeywords
+							category {
+								key
+								name
+								fullName
+							}
+							content
+							shippingFee
+							shippingType
+							images(size: large)
+							status
+							options {
+								optionAttributes {
+									name
+									value
+								}
+								price
+								quantity
+							}
+							taxFree
+							adultOnly
+							returnable
+							noReturnReason
+							guaranteedShippingPeriod
+							openmarketSellable
+							boxQuantity
+							attributes
+							closingTime
+							returnCriteria
+							metadata														
+		                }
+		            }
+		        }
+		    }
+		</query>
+		
+		<!-- 상품리스트 타겟조회 테스트 -->
+		<query id="getItemList2" endpoint="http://api-sandbox.ownerclan.com/v1/graphql?query=">
+			query {
+		        allItems(dateFrom: 0, first: 50, status: available, search : "W68A6CA") {
+		            pageInfo {
+		                hasNextPage
+		                hasPreviousPage
+		                startCursor
+		                endCursor
+		            }
+		            edges {
+		                cursor,
+		                node {
+		                    createdAt
+							updatedAt
+							key
+							name
+							model
+							production
+							origin
+							id
+							price
+							pricePolicy
+							fixedPrice
+							searchKeywords
+							category {
+								key
+								name
+								fullName
+							}
+							content
+							shippingFee
+							shippingType
+							images(size: large)
+							status
+							options {
+								optionAttributes {
+									name
+									value
+								}
+								price
+								quantity
+							}
+							taxFree
+							adultOnly
+							returnable
+							noReturnReason
+							guaranteedShippingPeriod
+							openmarketSellable
+							boxQuantity
+							attributes
+							closingTime
+							returnCriteria
+							metadata														
+		                }
+		            }
+		        }
+		    }
+		</query>
+		
+		<query id="getItem" endpoint="http://api-sandbox.ownerclan.com/v1/graphql?query=">
+			query testQuery {
+				item(key: "${key}") {
+					createdAt
+					updatedAt
+					key
+					name
+					model
+					production
+					origin
+					id
+					price
+					pricePolicy
+					fixedPrice
+					searchKeywords
+					category {
+						key
+						name
+						fullName
+					}
+					content
+					shippingFee
+					shippingType
+					images(size: large)
+					status
+					options {
+						optionAttributes {
+							name
+							value
+						}
+						price
+						quantity
+					}
+					taxFree
+					adultOnly
+					returnable
+					noReturnReason
+					guaranteedShippingPeriod
+					openmarketSellable
+					boxQuantity
+					attributes
+					closingTime
+					returnCriteria
+					metadata
+				}
+			}
+		</query>
+		
+		<query id="SimulateCreateOrder" endpoint="http://api-sandbox.ownerclan.com/v1/graphql">
+					
+			mutation SimulateCreateOrder($input: OrderInput!) {
+				simulateCreateOrder(input: $input) {
+					itemAmounts {
+						amount
+						itemKey
+					}
+					shippingAmount
+					extraShippingFeeExists
+				}
+			}
+			
+		</query>
+		
+		<query id="CreateOrder" endpoint="http://api-sandbox.ownerclan.com/v1/graphql">
+					
+			mutation CreateOrder($input: OrderInput!, $simulationResult: [CreateOrderSimulationResultInput!]) {
+		    	createOrder(input: $input, simulationResult: $simulationResult) {
+					key
+					id
+					products {
+						quantity
+						price
+						shippingType
+						itemKey
+						productName
+						itemOptionInfo {
+							optionAttributes {
+								name
+								value
+							}
+							price
+						}
+						trackingNumber
+						shippingCompanyCode
+						shippingCompanyName
+						shippedDate
+						additionalAttributes {
+							key
+							value
+						}
+						taxFree
+					}
+					status
+					shippingInfo {
+						sender {
+							name
+							phoneNumber
+							email
+						}
+						recipient {
+							name
+							phoneNumber
+							destinationAddress {
+								addr1
+								addr2
+								postalCode
+							}
+						}
+						shippingFee
+					}
+					createdAt
+					updatedAt
+					note
+					ordererNote
+					sellerNote
+					isBeingMediated
+					adjustments {
+						reason
+						price
+						taxFree
+					}
+					transactions {
+						key
+						id
+						kind
+						status
+						amount {
+							currency
+							value
+						}
+						createdAt
+						updatedAt
+						closedAt
+						note
+					}
+				}
+			}
+		</query>
+		
+		
+		<query id="CancelOrder" endpoint="http://api-sandbox.ownerclan.com/v1/graphql">					
+			mutation CancelOrder($key: ID!) {
+				cancelOrder(key: $key) {
+					key
+					id
+					products {
+						quantity
+						price
+						shippingType
+						itemKey
+						productName
+						itemOptionInfo {
+							optionAttributes {
+								name
+								value
+							}
+							price
+						}
+						trackingNumber
+						shippingCompanyCode
+						shippingCompanyName
+						shippedDate
+						additionalAttributes {
+							key
+							value
+						}
+						taxFree
+						sellerNote
+					}
+					status
+					shippingInfo {
+						sender {
+							name
+							phoneNumber
+							email
+						}
+						recipient {
+							name
+							phoneNumber
+							destinationAddress {
+								addr1
+								addr2
+								postalCode
+							}
+						}
+						shippingFee
+					}
+					createdAt
+					updatedAt
+					note
+					ordererNote
+					sellerNote
+					isBeingMediated
+					adjustments {
+						reason
+						price
+						taxFree
+					}
+					transactions {
+						key
+						id
+						kind
+						status
+						amount {
+							currency
+							value
+						}
+						createdAt
+						updatedAt
+						closedAt
+						note
+					}
+				}
+			}
+		</query>
+		
+		<query id="inputOrder_bakup" endpoint="http://api-sandbox.ownerclan.com/v1/graphql">
+		
+			operationName: "SimulateCreateOrder",
+			query:
+			mutation SimulateCreateOrder($input: OrderInput!) {
+				simulateCreateOrder(input: $input) {
+					itemAmounts {
+						amount
+						itemKey
+					}
+					shippingAmount
+					extraShippingFeeExists
+				}
+			},
+			variables:
+			{
+				"input": {
+					"sender": {
+						"name": "보내는이",
+						"phoneNumber": "010-1234-5678",
+						"email": "your_id@email.com"
+					},
+					"recipient": {
+						"name": "받는이",
+						"phoneNumber": "010-8765-4321",
+						"destinationAddress": {
+							"addr1": "서울 금천구 가산디지털1로 128",
+							"addr2": "808호",
+							"postalCode": "08507"
+						}
+					},
+					"products": [
+						{
+							"quantity": 4,
+							"itemKey": "W630A6C",
+							"optionAttributes": [
+								"Q",
+								"블루"
+							]
+						},				
+						{
+							"quantity": 5,
+							"itemKey": "W64C2AC",
+							"optionAttributes": [
+								"1번침대",
+								"120*200"
+							]
+						}
+					],
+					"note": "1123123",
+					"sellerNote": "1123123",
+					"ordererNote": "배송시 요청사항",
+					"customsClearanceCode": "123"
+				}
+			}	
+			
+		</query>
+		
+		
+		<query id="inputOrder_bakup_참고용" endpoint="http://api-sandbox.ownerclan.com/v1/graphql?query=">
+		
+			mutation SimulateCreateOrder($input: OrderInput!) {
+				simulateCreateOrder(input: $input) {
+					itemAmounts {
+						amount
+						itemKey
+					}
+					shippingAmount
+					extraShippingFeeExists
+				}
+			}
+			{
+				"input": {
+					"sender": {
+						"name": "보내는이",
+						"phoneNumber": "010-1234-5678",
+						"email": "your_id@email.com"
+					},
+					"recipient": {
+						"name": "받는이",
+						"phoneNumber": "010-8765-4321",
+						"destinationAddress": {
+							"addr1": "서울 금천구 가산디지털1로 128",
+							"addr2": "808호",
+							"postalCode": "08507"
+						}
+					},
+					"products": [
+						{
+							"quantity": 4,
+							"itemKey": "W999999",
+						"optionAttributes": [
+							"블랙"
+							]
+						},				
+						{
+							"quantity": 5,
+							"itemKey": "W999997",
+							"optionAttributes": [
+								"화이트",
+								"토끼당근"
+							]
+						}
+					],
+					"note": "원장주문코드",
+					"sellerNote": "주문관리코드",
+					"ordererNote": "배송시 요청사항",
+					"customsClearanceCode": "통관고유번호"
+				}
+			}	
+		</query>
+		
+		
+		
+		<!-- 상품리스트조회 -->
+		<query id="getItemList22" endpoint="https://api-sandbox.ownerclan.com/v1/graphql?query=">
+			query {
+		        allItems(dateFrom: 0, category: "${category}", first: ${first}, after: "${after}", status: available) {
+		            pageInfo {
+		                hasNextPage
+		                hasPreviousPage
+		                startCursor
+		                endCursor
+		            }
+		            edges {
+		                cursor,
+		                node {
+		                    key
+		                    name
+		                    price
+		                    pricePolicy
+		                    fixedPrice
+		                    status
+		                }
+		            }
+		        }
+		    }
+		</query>
+		
+		
+		<query id="getItemList3" endpoint="https://api-sandbox.ownerclan.com/v1/graphql">
+			query {
+				allItems(minPrice: 10000, maxPrice: 50000, category: "50000108"
+				, first: 50) {
+				pageInfo {
+			    hasNextPage
+				hasPreviousPage
+				startCursor
+				endCursor
+				}
+				edges {
+				cursor
+				node {
+				createdAt
+				updatedAt
+				key
+				name
+				model
+				production
+				origin
+				id
+				price
+				pricePolicy
+				fixedPrice
+				searchKeywords
+				category {
+				key
+				name
+				fullName
+				}
+				content
+				shippingFee
+				shippingType
+				images(size: large) # size는 필수 파라미터입니다.
+				status
+				options {
+				optionAttributes {
+				name
+				value
+				}
+				price
+				quantity
+				}
+				taxFree
+				adultOnly
+				returnable
+				noReturnReason
+				guaranteedShippingPeriod
+				openmarketSellable
+				boxQuantity
+				attributes
+				closingTime
+				returnCriteria
+				metadata
+				}
+				}
+				}
+				}
+		</query>
+				
+		<query id="orderInfo" endpoint="http://api-sandbox.ownerclan.com/v1/graphql?query=">
+			query {
+				order(key: "${key}") {
+				key
+				id
+				products {
+				quantity
+				price
+				shippingType
+				itemKey
+				itemOptionInfo {
+				optionAttributes {
+				name
+				value
+				}
+				price
+				}
+				trackingNumber
+				shippingCompanyName
+				shippedDate
+				additionalAttributes {
+				key
+				value
+				}
+				taxFree
+				}
+				status
+				shippingInfo {
+				sender {
+				name
+				phoneNumber
+				email
+				}
+				recipient {
+				name
+				phoneNumber
+				destinationAddress {
+				addr1
+				addr2
+				postalCode
+				}
+				}
+				shippingFee
+				}
+				createdAt
+				updatedAt
+				note
+				ordererNote
+				sellerNote
+				isBeingMediated
+				adjustments {
+				reason
+				price
+				taxFree
+				}
+				transactions {
+				key
+				id
+				kind
+				status
+				amount {
+				currency
+				value
+				}
+				createdAt
+				updatedAt
+				closedAt
+				note
+				}
+				}
+				}
+		</query>		
+		
+			
+	</ownerclan> 
+
+</API>

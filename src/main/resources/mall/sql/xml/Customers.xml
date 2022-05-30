@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.CustomersMapper">
+
+	<select id="selectCustomersList" parameterType="mall.web.domain.Customers" resultType="mall.web.domain.Customers">
+		SELECT
+			CUSTOMERNUMBER
+			, CUSTOMERNAME
+			, CONTACTLASTNAME
+			, CONTACTFIRSTNAME
+			, PHONE
+			, ADDRESSLINE1
+			, ADDRESSLINE2
+			, CITY
+			, STATE
+			, POSTALCODE
+			, COUNTRY
+			, SALESREPEMPLOYEENUMBER
+			, CREDITLIMIT
+		FROM
+			CUSTOMERS
+		ORDER BY
+			CUSTOMERNUMBER DESC
+		LIMIT 0, 10
+	</select>
+	
+	<select id="selectCustomers" parameterType="mall.web.domain.Customers" resultType="mall.web.domain.Customers">
+		SELECT
+			CUSTOMERNUMBER
+			, CUSTOMERNAME
+			, CONTACTLASTNAME
+			, CONTACTFIRSTNAME
+			, PHONE
+			, ADDRESSLINE1
+			, ADDRESSLINE2
+			, CITY
+			, STATE
+			, POSTALCODE
+			, COUNTRY
+			, SALESREPEMPLOYEENUMBER
+			, CREDITLIMIT
+		FROM
+			CUSTOMERS
+		WHERE
+			CUSTOMERNUMBER = #{CUSTOMERNUMBER}
+	</select>
+	
+	<insert id="insertCustomers" parameterType="mall.web.domain.Customers">
+		<selectKey keyProperty="CUSTOMERNUMBER" resultType="int" order="BEFORE">
+			SELECT
+				IFNULL(MAX(CUSTOMERNUMBER), 0) + 1
+			FROM
+				CUSTOMERS
+		</selectKey>
+		INSERT INTO 
+			CUSTOMERS (
+				CUSTOMERNUMBER
+				, CUSTOMERNAME
+				, CONTACTLASTNAME
+				, CONTACTFIRSTNAME
+				, PHONE
+				, ADDRESSLINE1
+				, ADDRESSLINE2
+				, CITY
+				, STATE
+				, POSTALCODE
+				, COUNTRY
+				, SALESREPEMPLOYEENUMBER
+				, CREDITLIMIT
+			) VALUES (
+				#{CUSTOMERNUMBER}
+				, #{CUSTOMERNAME}
+				, #{CONTACTLASTNAME}
+				, #{CONTACTFIRSTNAME}
+				, #{PHONE}
+				, #{ADDRESSLINE1}
+				, #{ADDRESSLINE2}
+				, #{CITY}
+				, #{STATE}
+				, #{POSTALCODE}
+				, #{COUNTRY}
+				, #{SALESREPEMPLOYEENUMBER}
+				, #{CREDITLIMIT}
+			)
+	</insert>
+	
+	<update id="updateCustomers" parameterType="mall.web.domain.Customers">
+		UPDATE 
+			CUSTOMERS
+		SET
+			CUSTOMERNAME = #{CUSTOMERNAME}
+			, CONTACTLASTNAME = #{CONTACTLASTNAME}
+			, CONTACTFIRSTNAME = #{CONTACTFIRSTNAME}
+			, PHONE = #{PHONE}
+			, ADDRESSLINE1 = #{ADDRESSLINE1}
+			, ADDRESSLINE2 = #{ADDRESSLINE2}
+			, CITY = #{CITY}
+			, STATE = #{STATE}
+			, POSTALCODE = #{POSTALCODE}
+			, COUNTRY = #{COUNTRY}
+			, SALESREPEMPLOYEENUMBER = #{SALESREPEMPLOYEENUMBER}
+			, CREDITLIMIT = #{CREDITLIMIT}
+		WHERE
+			CUSTOMERNUMBER = #{CUSTOMERNUMBER}
+	</update>
+	
+	<delete id="deleteCustomers" parameterType="mall.web.domain.Customers">
+		DELETE FROM 
+			CUSTOMERS
+		WHERE
+			CUSTOMERNUMBER = #{CUSTOMERNUMBER}
+	</delete>
+	
+</mapper>

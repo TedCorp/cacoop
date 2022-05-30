@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- <if test="@org.apache.commons.lang.StringUtils@isNotBlank(PD_NAME)"> -->
+
+<mapper namespace="mall.web.mapper.admin.EventMgrMapper">
+	<sql id="searchCondition">
+		<where>	
+			<if test="SUPR_ID != null and SUPR_ID != ''">
+			    AND SUPR_ID = #{SUPR_ID}
+			</if>
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "PD_NAME"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_bef" item="item" index="index" separator="" open="" close="">
+					            AND PD_NAME LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if>	
+				<if test='schGbn == "PD_CODE"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+					            AND PD_CODE LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if>
+				<if test='schGbn == "PD_BARCD"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+					            AND PD_BARCD LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if>
+			</if>
+			<if test="ONDY_GUBN!= null and ONDY_GUBN!= ''">
+				AND ONDY_GUBN = #{ONDY_GUBN}
+			</if>
+			<if test="SALE_CON!= null and SALE_CON!= ''">
+				AND SALE_CON = #{SALE_CON}
+			</if>
+		</where>  
+	</sql>
+	
+	<!-- 기획전리스트 -->
+	<select id="list" parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="mall.web.domain.TB_EVENT_MAIN">
+	    SELECT    A.GRP_CD
+				, A.GRP_NM
+				, A.USE_YN
+				, A.REG_DTM
+				, A.REGP_ID
+				, A.MOD_DTM
+				, A.MODP_ID
+				, A.ATFL_ID 
+				, A.START_DT
+				, A.END_DT
+				, A.RPIMG_SEQ 
+				, A.ATFL_ID_D
+				, A.D_USE_YN	
+			 	, B.STFL_PATH
+                , B.STFL_NAME
+                , B.FILEPATH_FLAG  
+		  FROM TB_EVENT_MAIN A
+		  LEFT JOIN TB_COATFLXD B 
+			ON A.ATFL_ID =B.ATFL_ID
+			AND A.RPIMG_SEQ = B.ATFL_SEQ 
+	    ORDER BY A.START_DT DESC
+	</select>	
+	
+	
+
+	
+	<!-- 기획전상세정보 -->
+	<select id="find" parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="mall.web.domain.TB_EVENT_MAIN">
+			 SELECT	A.GRP_CD
+				, A.GRP_NM
+				, A.USE_YN
+				, A.REG_DTM
+				, A.REGP_ID
+				, A.MOD_DTM
+				, A.MODP_ID
+				, A.START_DT
+				, A.END_DT
+				, A.RPIMG_SEQ 
+				, A.ATFL_ID 
+				, A.ATFL_ID_D 
+				, B.STFL_PATH
+				, B.STFL_NAME
+				, B.FILEPATH_FLAG
+				, B.DEL_YN 
+		  FROM TB_EVENT_MAIN A
+		  LEFT JOIN TB_COATFLXD B
+		  	ON A.ATFL_ID = B.ATFL_ID AND A.RPIMG_SEQ = B.ATFL_SEQ
+		  WHERE A.GRP_CD = #{GRP_CD}
+	</select>
+	
+	<!-- 기획전등록 -->
+	<insert id="insert" parameterType="mall.web.domain.TB_EVENT_MAIN">
+		INSERT INTO 
+			TB_EVENT_MAIN (
+				  GRP_CD
+				, GRP_NM
+				, USE_YN
+				, REG_DTM
+				, REGP_ID
+				, MOD_DTM
+				, MODP_ID
+				, ATFL_ID
+				, START_DT
+				, END_DT
+				, RPIMG_SEQ 
+				, ATFL_ID_D
+				, D_USE_YN
+			) VALUES (
+				 #{GRP_CD}
+				, #{GRP_NM}
+				, #{USE_YN}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+				, #{MODP_ID}
+				, #{ATFL_ID}
+				, #{START_DT}
+				, #{END_DT}
+				, 1
+				, #{ATFL_ID_D}
+				, #{D_USE_YN}
+			)
+	</insert>
+	
+	<!-- 기획전수정 -->
+	<update id="update" parameterType="mall.web.domain.TB_EVENT_MAIN">
+		UPDATE 
+			TB_EVENT_MAIN
+		SET
+			  MODP_ID = #{MODP_ID}
+			, MOD_DTM = SYSDATE
+			, GRP_NM = #{GRP_NM}        
+			, USE_YN = #{USE_YN}   
+			, ATFL_ID = #{ATFL_ID}   
+			, START_DT = #{START_DT}
+			, END_DT =#{START_DT}
+			, RPIMG_SEQ = #{RPIMG_SEQ}   
+			, ATFL_ID_D = #{ATFL_ID_D} 
+			, D_USE_YN  = #{D_USE_YN}
+		WHERE
+			GRP_CD = #{GRP_CD}
+	</update>
+	
+	
+	<!-- 기획전삭제 -->
+	<update id="delete" parameterType="mall.web.domain.TB_EVENT_MAIN">
+		DELETE
+		FROM TB_EVENT_MAIN
+		WHERE GRP_CD = #{GRP_CD}
+	</update>
+	
+	<!-- 기획전[상품]등록 -->
+	<insert id="updateProduct" parameterType="mall.web.domain.TB_EVENT_MAIN">
+		INSERT INTO 
+			TB_EVENT_MAIN_D (
+				GRP_CD
+				, PD_CODE
+				, REG_DTM
+				, REGP_ID
+			) VALUES (
+				#{GRP_CD}
+				, #{PD_CODE}
+				, SYSDATE
+				, #{REGP_ID}
+			)
+	</insert>
+	
+	<!-- 기획전[상품]리스트 -->
+	<select id="listProduct" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		   SELECT B.PD_CODE, B.PD_NAME, B.PD_BARCD
+			  FROM TB_EVENT_MAIN_D A, TB_PDINFOXM B
+			 WHERE A.PD_CODE = B.PD_CODE
+		 	  AND A.GRP_CD = #{GRP_CD}
+			 ORDER BY A.PD_CODE
+	</select>
+	
+	<!-- 기획전[상품]삭제 -->
+	<delete id="deleteProduct" parameterType="mall.web.domain.TB_EVENT_MAIN">
+		 DELETE FROM TB_EVENT_MAIN_D
+		 WHERE GRP_CD = #{GRP_CD}
+	</delete>
+	
+	
+	
+	<!-- 기획전[상품]중복확인 START  -->
+	<select id="ordrSameCnt" parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="int">
+		SELECT COUNT(*)
+		  FROM TB_EVENT_MAIN
+		  WHERE GRP_CD=#{GRP_CD}
+		   AND TB_EVENT_MAIN = 'N'
+	</select>
+	
+	<select id="grpPdCnt" parameterType="mall.web.domain.TB_PDINFOXM" resultType="int">
+		SELECT COUNT(*)
+		  FROM TB_EVENT_MAIN_D
+		 WHERE PD_CODE = #{PD_CODE}
+	</select>
+	<!-- 기획전[상품]중복확인 ENT -->
+	
+	
+	
+	<!-- 선택기획전상품리스트 -->
+	<select id="selectProduct"  parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="mall.web.domain.TB_PDINFOXM">
+		
+			SELECT A.PD_CODE
+				, A.SUPR_ID
+				, A.PD_NAME
+				, A.CAGO_ID
+				, A.PD_PRICE
+				, A.MEMBER_PRICE
+				, A.SVMN_GUBN
+				, A.SVMN_VAL
+				, A.INVEN_QTY
+				, A.POS_NAME
+				, A.PD_BARCD
+				, A.STORE_CTR
+				, A.PD_STD
+				, A.DTB_DLINE
+				, A.MAKE_COM
+				, A.ORG_CT
+				, A.SALE_CON
+				, A.PD_DINFO
+				, A.DLVREF_GUIDE
+				, A.ATFL_ID
+				, A.RPIMG_SEQ
+				, A.ADC1_NAME
+				, A.ADC2_NAME
+				, A.ADC3_NAME
+				, A.ADC4_NAME
+				, A.ADC5_NAME
+				, A.ADC1_VAL
+				, A.ADC2_VAL
+				, A.ADC3_VAL
+				, A.ADC4_VAL
+				, A.ADC5_VAL
+				, A.PD_ICON
+				, A.STD_UNIT
+				, A.REGP_ID
+				, A.REG_DTM
+				, A.MODP_ID
+				, A.MOD_DTM
+				, A.TAX_GUBN
+				, A.DEL_YN
+				, A.PD_MSTCD
+				, A.OBTM
+				, A.DTL_ATFL_ID
+				, A.DTL_USE_YN
+				, A.LINK_YN
+				, A.BUNDLE_CNT
+				, A.DLVR_INDI_YN
+				, A.KEEP_GUBN
+				, A.PACKING_GUBN
+				, A.KEEP_LOCATION
+				, A.LIMIT_QTY
+				, A.INPUT_CNT
+				, A.RETAIL_GUBN
+				, A.QNT_LIMT_USE
+				, A.ONDY_GUBN
+				, A.RETAIL_YN
+				, A.OPTION_GUBN
+				, A.BOX_PDDC_GUBN
+				, A.BOX_PDDC_VAL
+				, A.PD_INTERFACE_YN
+				, A.DLVY_GUBN
+				, A.PD_IWHUPRC
+				, A.PRICE_POLICY
+				, A.LINK_MODP_DATE
+				, A.PD_MDL
+				, A.MIN_QTY
+				, E.ATFL_SEQ
+				, E.ATFL_ID
+				, E.STFL_PATH
+				, E.STFL_NAME
+				, E.ORFL_NAME
+				, E.FILE_EXT
+				, E.FILE_SIZE
+				, E.DEL_YN
+				, E.REGP_ID
+				, E.REG_DTM
+				, E.MODP_ID
+				, E.MOD_DTM
+				, E.FILEPATH_FLAG
+			FROM TB_PDINFOXM A 
+			LEFT JOIN TB_COATFLXD E 
+			ON A.ATFL_ID =E.ATFL_ID 
+			 WHERE A.PD_CODE IN
+			  (
+				 SELECT B.PD_CODE 
+				 FROM TB_EVENT_MAIN_D B 
+				 JOIN TB_EVENT_MAIN C 
+					 ON B.GRP_CD =C.GRP_CD 
+				 WHERE C.GRP_CD=#{GRP_CD}
+			 )
+			AND  A.RPIMG_SEQ = E.ATFL_SEQ
+	</select>
+	
+	<!-- 선택기획전상품수 -->
+	<select id="selectCount" parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="int">
+	 SELECT COUNT(*)
+		  FROM TB_EVENT_MAIN_D A 
+		 WHERE A.GRP_CD=( 
+		 		SELECT B.GRP_CD 
+		 		FROM TB_EVENT_MAIN B 
+		 		WHERE B.GRP_CD =#{GRP_CD}
+		 )
+	</select> 
+
+	<!--기획전코드 중복체크  -->
+	<select id="grpChk" parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="int">
+		SELECT COUNT(*) AS count
+		FROM TB_EVENT_MAIN
+		WHERE GRP_CD=#{GRP_CD}
+	</select>
+	
+	<!-- 기획전상품 정렬 -->
+	<select id="getOrderByList" parameterType="mall.web.domain.TB_EVENT_MAIN"  resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT A.PD_CODE
+				, A.SUPR_ID
+				, A.PD_NAME
+				, A.CAGO_ID
+				, A.PD_PRICE
+				, A.MEMBER_PRICE
+				, A.SVMN_GUBN
+				, A.SVMN_VAL
+				, A.INVEN_QTY
+				, A.POS_NAME
+				, A.PD_BARCD
+				, A.STORE_CTR
+				, A.PD_STD
+				, A.DTB_DLINE
+				, A.MAKE_COM
+				, A.ORG_CT
+				, A.SALE_CON
+				, A.PD_DINFO
+				, A.DLVREF_GUIDE
+				, A.ATFL_ID
+				, A.RPIMG_SEQ
+				, A.ADC1_NAME
+				, A.ADC2_NAME
+				, A.ADC3_NAME
+				, A.ADC4_NAME
+				, A.ADC5_NAME
+				, A.ADC1_VAL
+				, A.ADC2_VAL
+				, A.ADC3_VAL
+				, A.ADC4_VAL
+				, A.ADC5_VAL
+				, A.PD_ICON
+				, A.STD_UNIT
+				, A.REGP_ID
+				, A.REG_DTM
+				, A.MODP_ID
+				, A.MOD_DTM
+				, A.TAX_GUBN
+				, A.DEL_YN
+				, A.PD_MSTCD
+				, A.OBTM
+				, A.DTL_ATFL_ID
+				, A.DTL_USE_YN
+				, A.LINK_YN
+				, A.BUNDLE_CNT
+				, A.DLVR_INDI_YN
+				, A.KEEP_GUBN
+				, A.PACKING_GUBN
+				, A.KEEP_LOCATION
+				, A.LIMIT_QTY
+				, A.INPUT_CNT
+				, A.RETAIL_GUBN
+				, A.QNT_LIMT_USE
+				, A.ONDY_GUBN
+				, A.RETAIL_YN
+				, A.OPTION_GUBN
+				, A.BOX_PDDC_GUBN
+				, A.BOX_PDDC_VAL
+				, A.PD_INTERFACE_YN
+				, A.DLVY_GUBN
+				, A.PD_IWHUPRC
+				, A.PRICE_POLICY
+				, A.LINK_MODP_DATE
+				, A.PD_MDL
+				, A.MIN_QTY
+				, E.ATFL_SEQ
+				, E.ATFL_ID
+				, E.STFL_PATH
+				, E.STFL_NAME
+				, E.ORFL_NAME
+				, E.FILE_EXT
+				, E.FILE_SIZE
+				, E.DEL_YN
+				, E.REGP_ID
+				, E.REG_DTM
+				, E.MODP_ID
+				, E.MOD_DTM
+				, E.FILEPATH_FLAG
+				, CASE WHEN A.MEMBER_PRICE = 0 OR A.MEMBER_PRICE IS NULL THEN A.PD_PRICE 
+					    ELSE A.MEMBER_PRICE 
+					    END AS PD_PRICE_RESULT
+		FROM TB_PDINFOXM A 
+		LEFT JOIN TB_COATFLXD E 
+		ON A.ATFL_ID =E.ATFL_ID 
+ 		WHERE A.PD_CODE IN
+ 		 (
+	 	SELECT B.PD_CODE 
+		 FROM TB_EVENT_MAIN_D B 
+		 JOIN TB_EVENT_MAIN C 
+			 ON B.GRP_CD =C.GRP_CD 
+		 WHERE C.GRP_CD=#{GRP_CD}
+ 		)
+		AND  A.RPIMG_SEQ = E.ATFL_SEQ
+		<if test="sortGubun != null or sortGubun != ''">
+			<if test='sortGubun == "PD_PRICE"'>
+				<if test='sortOdr == "desc"'>
+					ORDER BY PD_PRICE_RESULT DESC, A.PD_NAME ASC
+				</if>	
+				<if test='sortOdr == "asc"'>
+					ORDER BY PD_PRICE_RESULT ASC, A.PD_NAME ASC
+				</if>
+				<if test='sortOdr== "PD_NAME"'>
+					ORDER BY A.PD_NAME ASC, PD_PRICE ASC
+				</if>
+			</if>
+		</if>
+		<if test="sortGubun == null or sortGubun == ''">
+			ORDER BY PD_PRICE_RESULT ASC, A.PD_NAME ASC
+		</if>
+	</select>
+	
+	<!-- 상품 첨부파일 리스트 -->
+	<select id="selectFileList" parameterType="mall.web.domain.TB_COATFLXD" resultType="mall.web.domain.TB_COATFLXD">
+		SELECT ATFL_ID, ATFL_SEQ, STFL_PATH, STFL_NAME, ORFL_NAME, FILE_EXT, FILE_SIZE, DEL_YN
+		FROM MALL.TB_COATFLXD
+		WHERE ATFL_ID = #{ATFL_ID}
+		ORDER BY ATFL_SEQ
+	</select>
+
+
+	<!--전체 상품  -->
+	<select id="getAllFind" parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="mall.web.domain.TB_EVENT_MAIN">
+	   SELECT 	  A.GRP_CD
+				, A.GRP_NM
+				, A.USE_YN
+				, A.REG_DTM
+				, A.REGP_ID
+				, A.MOD_DTM
+				, A.MODP_ID
+				, A.START_DT
+				, A.END_DT
+				, A.RPIMG_SEQ
+				, A.ATFL_ID 
+				, A.ATFL_ID_D 
+				, A.D_USE_YN
+				, B.STFL_PATH
+				, B.STFL_NAME
+				, B.FILEPATH_FLAG
+		  FROM TB_EVENT_MAIN A
+		 INNER JOIN TB_COATFLXD B 
+			ON A.ATFL_ID =B.ATFL_ID
+			AND A.RPIMG_SEQ = B.ATFL_SEQ 
+		 WHERE A.GRP_CD = #{GRP_CD}
+	</select>
+	
+	
+</mapper>
+
+
+
+<!-- 
+<mapper namespace="mall.web.mapper.admin.EventMgrMapper">
+	<sql id="searchCondition">
+		<where>	
+			<if test="@org.apache.commons.lang3.StringUtils@isNotBlank(schTxt)">
+				EVENT_NAME LIKE '%' || #{schTxt} || '%'
+			</if>
+			<if test="AD_NAME != null and AD_NAME != '' and AD_NAME != ' ' ">
+			    AND EVENT_NAME = #{AD_NAME}
+			</if>
+			AND DEL_YN = 'N'
+			AND SUPR_ID = #{SUPR_ID}
+		</where>  
+	</sql>
+	
+	<sql id="makeAdId">
+	</sql>
+	
+	<select id="count" parameterType="mall.web.domain.TB_EVENTIFXM" resultType="int">
+		SELECT COUNT(*)
+		  FROM TB_EVENTIFXM
+		<include refid="searchCondition"/>
+	</select>
+	
+	<select id="paginatedList" parameterType="mall.web.domain.TB_EVENTIFXM" resultType="mall.web.domain.TB_EVENTIFXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			  FROM (
+					SELECT
+						EVENT_ID
+						, EVENT_NAME
+						, START_DT
+						, END_DT
+						, AD_DESC
+						, TOP_ATFL
+						, DEL_YN
+						, TOP_TYPE
+						, END_YN
+						, REGP_ID
+						, REG_DTM
+						, MODP_ID
+						, MOD_DTM
+						, ( SELECT COUNT(*) FROM TB_ADPDIFXM A WHERE A.EVENT_ID = EVENT_ID  ) PD_CNT
+					FROM TB_EVENTIFXM
+					ORDER BY EVENT_ID desc
+			        )
+			<include refid="searchCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<select id="selectList" parameterType="mall.web.domain.TB_EVENTIFXM" resultType="mall.web.domain.TB_EVENTIFXM">  팝업창 광고목록
+			SELECT *
+			  FROM (
+					SELECT
+						SUPR_ID
+						, EVENT_ID
+						, EVENT_NAME
+						, START_DT
+						, END_DT
+						, MENU_NAME
+						, MENU_YN
+						, MENU_ORDER
+						, EVENT_DESC
+						, TOP_ATFL
+						, DEL_YN
+						, ATFL_ID
+						, TOP_TYPE
+						, END_YN
+						, REGP_ID
+						, REG_DTM
+					FROM TB_EVENTIFXM
+					ORDER BY EVENT_ID ASC
+			        )
+			<include refid="searchCondition"/>
+	</select>
+	
+	<select id="find" parameterType="mall.web.domain.TB_EVENTIFXM" resultType="mall.web.domain.TB_EVENTIFXM">
+			SELECT
+				SUPR_ID
+				, EVENT_ID
+				, EVENT_NAME
+				, START_DT
+				, END_DT
+				, MENU_NAME
+				, MENU_YN
+				, MENU_ORDER
+				, EVENT_DESC
+				, TOP_ATFL
+				, DEL_YN
+				, ATFL_ID
+				, TOP_TYPE
+				, END_YN
+				, REGP_ID
+				, REG_DTM
+			FROM TB_EVENTIFXM
+			WHERE EVENT_ID = #{EVENT_ID}
+	</select>
+	
+	<select id="detailList" parameterType="mall.web.domain.TB_EVENTPDXM" resultType="mall.web.domain.TB_EVENTPDXM">
+		SELECT *
+		  FROM (
+				SELECT
+					EVENT_ID
+					, PD_ID
+					, PD_NAME
+					, PD_PRICE
+					, SELL_PRICE
+					, PD_DESC
+					, DEL_YN
+					, ORD
+					, REGP_ID
+					, REG_DTM
+					, MODP_ID
+					, MOD_DTM
+				FROM 
+					TB_EVENTPDXM
+				WHERE
+					EVENT_ID = #{EVENT_ID} AND DEL_YN = 'N'
+				ORDER BY ORD ASC
+		        )
+	</select>
+	
+	<insert id="insert" parameterType="mall.web.domain.TB_EVENTIFXM">
+		<selectKey keyProperty="EVENT_ID" order="BEFORE" resultType="String">
+			SELECT 'E' || LPAD(NVL(MAX(TO_NUMBER(SUBSTR(EVENT_ID, 3))), 0) + 1, 4, '0') 
+			  FROM TB_EVENTIFXM
+			 WHERE SUPR_ID = #{SUPR_ID}
+		</selectKey>
+		INSERT INTO
+			TB_EVENTIFXM (
+				SUPR_ID
+				, EVENT_ID
+				, EVENT_NAME
+				, START_DT
+				, END_DT
+				, MENU_NAME
+				, MENU_YN
+				, MENU_ORDER
+				, EVENT_DESC
+				, TOP_ATFL
+				, DEL_YN
+				, ATFL_ID
+				, TOP_TYPE
+				, END_YN
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			) VALUES (
+				#{SUPR_ID}
+				, #{EVENT_ID}
+				, #{EVENT_NAME}
+				, #{START_DT}
+				, #{END_DT}
+				, #{MENU_NAME}
+				, #{MENU_YN}
+				, #{MENU_ORDER}
+				, #{EVENT_DESC}
+				, #{TOP_ATFL}
+				, #{DEL_YN}
+				, #{ATFL_ID}
+				, #{TOP_TYPE}
+				, #{END_YN}
+				, #{REGP_ID}
+				, SYSDATE
+				, #{REGP_ID}
+				, SYSDATE
+			)
+	</insert>
+	
+	<update id="update" parameterType="mall.web.domain.TB_EVENTIFXM">
+		UPDATE
+			TB_EVENTIFXM
+		SET
+			EVENT_NAME = #{EVENT_NAME}
+			, START_DT = #{START_DT}
+			, END_DT = #{END_DT}
+			, EVENT_DESC = #{EVENT_DESC}
+			, MENU_NAME = #{MENU_NAME}
+			, MENU_YN = #{MENU_YN}
+			, MENU_ORDER = #{MENU_ORDER}
+			, TOP_ATFL = #{TOP_ATFL}
+			, ATFL_ID = #{ATFL_ID}
+			, END_YN = #{END_YN}
+			, TOP_TYPE = #{TOP_TYPE}
+			, MODP_ID = #{REGP_ID}
+			, MOD_DTM = sysdate
+		WHERE EVENT_ID = #{EVENT_ID}
+		  AND SUPR_ID = #{SUPR_ID}
+	</update>	 
+	
+	<update id="delete" parameterType="mall.web.domain.TB_EVENTIFXM">
+		UPDATE
+			TB_EVENTIFXM
+		SET
+			DEL_YN = 'Y'
+			, MODP_ID = #{REGP_ID}
+			, MOD_DTM = SYSDATE
+		WHERE EVENT_ID = #{EVENT_ID}
+		  AND SUPR_ID = #{SUPR_ID}
+	</update>	 
+	
+	<insert id="admgrInsert" parameterType="mall.web.domain.TB_ADPDIFXM">
+		INSERT INTO
+			TB_ADPDIFXM (
+				EVENT_ID
+				, PD_ID
+				, PD_NAME 
+				, PD_PRICE 
+				, SELL_PRICE 
+				, PD_CONS
+				, ATFL_NAME
+				, DEL_YN
+				, ORD
+				, OPT_NAME
+				, OPT_PRICE
+				, UNIT_NAME
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			) VALUES (
+				#{EVENT_ID}
+				, #{PD_ID}
+				, #{PD_NAME}
+				, #{PD_PRICE}
+				, #{SELL_PRICE}
+				, #{PD_CONS}
+				, #{PD_ID}||'.jpg'
+				, 'N'
+				, #{ORD} 
+				, #{OPT_NAME}
+				, #{OPT_PRICE}
+				, #{UNIT_NAME}
+				, #{REGP_ID} 
+				, SYSDATE
+				, #{REGP_ID} 
+				, SYSDATE
+			)
+	</insert>
+	
+	<update id="admgrUpdate" parameterType="mall.web.domain.TB_ADPDIFXM">
+		UPDATE
+			TB_ADPDIFXM
+		SET
+			PD_NAME = #{PD_NAME}
+			, PD_PRICE = #{PD_PRICE}
+			, SELL_PRICE = #{SELL_PRICE}
+			, PD_CONS = #{PD_CONS}
+			, DEL_YN = #{DEL_YN}
+			, ORD = #{ORD}
+			, OPT_NAME = #{OPT_NAME}
+			, OPT_PRICE = #{OPT_PRICE}
+			, UNIT_NAME = #{UNIT_NAME}
+		WHERE
+			EVENT_ID = #{EVENT_ID} AND PD_ID = #{PD_ID}
+	</update>	 
+	
+	<insert id="copyAdInsert" parameterType="mall.web.domain.TB_EVENTIFXM">
+		<selectKey keyProperty="EVENT_ID_NEW" order="BEFORE" resultType="String">
+			<include refid="makeAdId" />
+		</selectKey>
+		
+	     INSERT INTO
+            TB_EVENTIFXM (
+                EVENT_ID
+                , AD_NAME
+                , START_DT
+                , END_DT
+                , AD_DESC
+                , TOP_ATFL
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM
+            ) SELECT 
+               #{EVENT_ID_NEW}
+                , AD_NAME
+                , START_DT
+                , END_DT
+                , AD_DESC
+                , TOP_ATFL
+                , REGP_ID
+                , REG_DTM
+                , MODP_ID
+                , MOD_DTM   
+              FROM 
+              	TB_EVENTIFXM
+              WHERE 
+              	EVENT_ID = #{EVENT_ID}
+	</insert>
+	
+	<insert id="copyPdInsert" parameterType="mall.web.domain.TB_ADPDIFXM">
+		INSERT INTO
+			TB_ADPDIFXM (
+				EVENT_ID
+				, PD_ID
+				, PD_NAME 
+				, PD_PRICE 
+				, SELL_PRICE 
+				, PD_CONS
+				, ATFL_NAME
+				, DEL_YN
+				, OPT_NAME
+				, OPT_PRICE
+				, UNIT_NAME
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			) SELECT
+				#{EVENT_ID_NEW}
+				, PD_ID
+				, PD_NAME 
+				, PD_PRICE 
+				, SELL_PRICE 
+				, PD_CONS
+				, ATFL_NAME
+				, DEL_YN
+				, OPT_NAME
+				, OPT_PRICE
+				, UNIT_NAME
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			FROM 
+				TB_ADPDIFXM
+			WHERE 
+				EVENT_ID = #{EVENT_ID}
+	</insert>
+
+	<insert id="excelUpload" parameterType="mall.web.domain.TB_ADPDIFXM">
+		MERGE INTO TB_ADPDIFXM
+		            USING DUAL
+		            ON ( EVENT_ID = #{EVENT_ID} and PD_ID = #{PD_ID} )
+			<if test='CHK_UPDATE != null and CHK_UPDATE != "" and CHK_UPDATE == "Y" '>
+		            WHEN MATCHED THEN
+		                      UPDATE SET
+										  PD_NAME = #{PD_NAME}
+										, PD_PRICE = #{PD_PRICE}
+										, SELL_PRICE = #{SELL_PRICE}
+										, PD_CONS = #{PD_CONS}
+										, ATFL_NAME = #{PD_ID}||'.jpg'
+										, DEL_YN = #{DEL_YN}
+										, ORD = #{ORD}
+										, OPT_NAME = #{OPT_NAME}
+										, OPT_PRICE = #{OPT_PRICE}
+										, UNIT_NAME = #{UNIT_NAME}
+			</if>
+			
+		            WHEN NOT MATCHED THEN
+		                      INSERT (
+										EVENT_ID
+										, PD_ID
+										, PD_NAME 
+										, PD_PRICE 
+										, SELL_PRICE 
+										, PD_CONS
+										, ATFL_NAME
+										, DEL_YN
+										, ORD
+										, OPT_NAME
+										, OPT_PRICE
+										, UNIT_NAME
+										, REGP_ID
+										, REG_DTM
+										, MODP_ID
+										, MOD_DTM
+									) 
+		                     VALUES (
+										#{EVENT_ID}
+										, #{PD_ID}
+										, #{PD_NAME}
+										, #{PD_PRICE}
+										, #{SELL_PRICE}
+										, #{PD_CONS}
+										, #{PD_ID}||'.jpg'
+										, 'N'
+										, #{ORD} 
+										, #{OPT_NAME} 
+										, #{OPT_PRICE} 
+										, #{UNIT_NAME} 
+										, #{REGP_ID} 
+										, SYSDATE
+										, #{REGP_ID} 
+										, SYSDATE
+									)
+	</insert>
+	
+	<insert id="copyInsert" parameterType="mall.web.domain.TB_ADPDIFXM">
+		INSERT INTO
+			TB_ADPDIFXM (
+				EVENT_ID
+				, PD_ID
+				, PD_NAME 
+				, PD_PRICE 
+				, SELL_PRICE 
+				, PD_CONS
+				, ATFL_NAME
+				, DEL_YN
+				, OPT_NAME
+				, OPT_PRICE
+				, UNIT_NAME
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			) SELECT
+				#{EVENT_ID_NCOPY}
+				, PD_ID
+				, PD_NAME 
+				, PD_PRICE 
+				, SELL_PRICE 
+				, PD_CONS
+				, ATFL_NAME
+				, DEL_YN
+				, OPT_NAME
+				, OPT_PRICE
+				, UNIT_NAME
+				, REGP_ID
+				, REG_DTM
+				, MODP_ID
+				, MOD_DTM
+			FROM 
+				TB_ADPDIFXM
+            WHERE 
+              	EVENT_ID = #{EVENT_ID} AND PD_ID = #{PD_ID}
+	</insert> 
+
+</mapper>
+
+ -->

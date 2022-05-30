@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.RequestMgrMapper">
+	
+	<!-- 공통 where 조건 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test='schGbn == "STAFF_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND STAFF_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "COM_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND COM_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>	
+			<if test="ORDER_CON != null and ORDER_CON != ''">
+			    AND ORDER_CON = #{ORDER_CON}
+			</if>	
+			<if test="PAY_METD != null and PAY_METD != ''">
+			    AND PAY_METD = #{PAY_METD}
+			</if>
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND ORDER_DATE <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				AND ORDER_DATE <![CDATA[<=]]> #{datepickerEnd}
+			</if>
+		
+		</where>  
+	</sql>
+	
+	<!-- 리스트 카운트 -->
+	<select id="count" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="int">
+		SELECT COUNT(*)
+		  FROM (
+				SELECT *
+				  FROM XTB_ODINFOXM A      /*주문정보 마스터*/
+			    )
+		<include refid="searchCondition"/>
+	</select>
+
+	<!-- 리스트 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			  FROM (
+					SELECT A.ORDER_NUM    /*주문번호*/
+					     , TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') AS ORDER_DATE    /*주문일자*/
+					     , A.COM_NAME								  /*업체명*/
+					     , A.BIZR_NUM								  /*사업자등록번호*/
+					     , A.CEO_NAME        /*회원ID명(주문자)*/
+					     , A.STAFF_NAME      /*담당자 명*/
+					     , A.STAFF_CPON      /*담당자 전화번호*/
+					     , A.ORDER_AMT       /*주문금액*/
+					     , A.ORDER_CON								        /*주문상태*/
+					     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+					     , A.ARRIVAL_DATE
+					     , (SELECT COUNT(*) FROM XTB_ODINFOXM B WHERE B.ORDER_NUM = A.ORDER_NUM) ORDER_CNT
+					  FROM XTB_ODINFOXM A     /*주문정보 마스터*/
+				    )
+			<include refid="searchCondition"/>
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "DATE_ORDER"'>
+					<if test='DATE_ORDER == "desc"'>
+						ORDER BY ORDER_DATE desc
+					</if>	
+					<if test='DATE_ORDER == "asc"'>
+						ORDER BY ORDER_DATE asc
+					</if>	
+				</if>
+				<if test='ORDER_GUBUN == "COM_NAME"'>
+					<if test='COM_NAME_ORDER == "desc"'>
+						ORDER BY COM_NAME desc
+					</if>	
+					<if test='COM_NAME_ORDER == "asc"'>
+						ORDER BY COM_NAME asc
+					</if>	
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY ORDER_NUM desc
+			</if>
+			
+		<include refid="default.pagerFooter"/>
+	</select>
+
+
+	<!-- 리스트 목록 -->
+	<select id="excelList" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="HashMap">
+			SELECT *
+			  FROM (
+                    SELECT A.ORDER_NUM    /*주문번호*/
+                         , TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') AS ORDER_DATE    /*주문일자*/
+                         , A.COM_NAME                                  /*업체명*/
+                         , A.BIZR_NUM                                  /*사업자등록번호*/
+                         , A.CEO_NAME        /*회원ID명(주문자)*/
+                         , A.STAFF_NAME      /*담당자 명*/
+                         , A.STAFF_CPON      /*담당자 전화번호*/
+                         , A.STAFF_MAIL      /*담당자 이메일*/
+                         , A.POST_NUM
+                         , A.BASC_ADDR
+                         , A.DTL_ADDR
+                         , A.ORDER_MSG
+                         , A.ORDER_AMT       /*주문금액*/
+                         , A.ORDER_CON                                        /*주문상태*/
+                         , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+                         , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM    	/*결제수단 명*/
+                         , (SELECT FC_GET_COMCOD_NM(PDT.TAX_GUBN) FROM TB_PDINFOXM PDT WHERE PDT.PD_CODE = B.PD_CODE) AS TAX_GUBN_NM    	/*면세과세구분 명*/
+                         , A.ARRIVAL_DATE
+                         , (SELECT COUNT(*) FROM XTB_ODINFOXM CC WHERE CC.ORDER_NUM = A.ORDER_NUM) ORDER_CNT
+                         , B.ORDER_DTNUM
+                         , B.PD_CODE
+                         , B.PD_NAME
+                         , B.PD_PRICE
+                         , CASE WHEN B.PDDC_GUBN = 'PDDC_GUBN_02' THEN B.PD_PRICE - B.PDDC_VAL
+                                WHEN B.PDDC_GUBN = 'PDDC_GUBN_03' THEN B.PD_PRICE - (B.PD_PRICE* B.PDDC_VAL/100)
+                                ELSE B.PD_PRICE
+                           END REAL_PRICE
+                         , B.PDDC_GUBN
+                         , B.PDDC_VAL
+                         , B.ORDER_QTY
+                         , B.ORDER_AMT D_ORDER_AMT
+                         , B.PAY_METD
+                         , B.DLVY_CON
+                         , B.DLVY_TDN
+                         , B.DLVY_ROWNUM
+                         , CASE WHEN B.DLVY_ROWNUM = 'base' THEN '기본배송'
+                                WHEN B.DLVY_ROWNUM = 'etc' THEN '개별배송'
+                                ELSE C.DLVY_NAME
+                           END DLVY_NAME
+                         , CASE WHEN B.DLVY_ROWNUM = 'base' THEN A.STAFF_NAME
+                                WHEN B.DLVY_ROWNUM = 'etc' THEN ''
+                                ELSE C.STAFF_NAME
+                           END D_STAFF_NAME 
+                         , CASE WHEN B.DLVY_ROWNUM = 'base' THEN A.STAFF_CPON
+                                WHEN B.DLVY_ROWNUM = 'etc' THEN ''
+                                ELSE C.STAFF_CPON
+                           END D_STAFF_CPON 
+                         , CASE WHEN B.DLVY_ROWNUM = 'base' THEN '(' || A.POST_NUM || ')' || ' ' || A.BASC_ADDR || ' ' || A.DTL_ADDR
+                                WHEN B.DLVY_ROWNUM = 'etc' THEN ''
+                                ELSE '(' || C.POST_NUM || ')' || ' ' || C.BASC_ADDR || ' ' || C.DTL_ADDR
+                           END DLVY_ADDR
+                         , C.POST_NUM D_POST_NUM
+                         , C.BASC_ADDR D_BASC_ADDR
+                         , C.DTL_ADDR D_DTL_ADDR
+                      FROM XTB_ODINFOXM A, (SELECT * FROM XTB_ODINFOXD WHERE DEL_YN = 'N' ) B, (SELECT * FROM XTB_ODDLAIXM WHERE DEL_YN = 'N' )  C
+                     WHERE A.ORDER_NUM = B.ORDER_NUM
+                       AND B.ORDER_NUM = C.ORDER_NUM(+)
+                       AND B.DLVY_ROWNUM = C.DLVY_ROWNUM(+)
+				    )
+			<include refid="searchCondition"/>
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "DATE_ORDER"'>
+					<if test='DATE_ORDER == "desc"'>
+						ORDER BY ORDER_DATE desc
+					</if>	
+					<if test='DATE_ORDER == "asc"'>
+						ORDER BY ORDER_DATE asc
+					</if>	
+				</if>
+				<if test='ORDER_GUBUN == "COM_NAME"'>
+					<if test='COM_NAME_ORDER == "desc"'>
+						ORDER BY COM_NAME desc
+					</if>	
+					<if test='COM_NAME_ORDER == "asc"'>
+						ORDER BY COM_NAME asc
+					</if>	
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY ORDER_NUM desc, ORDER_DTNUM desc
+			</if>
+			
+	</select>
+	
+	<!-- 일괄상태변경 -->
+	<update id="updateState" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE TB_ODINFOXM
+		   SET ORDER_CON = #{ORDER_CON}
+		     , MODP_ID = #{MODP_ID}
+		     , MOD_DTM = SYSDATE
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	<!-- 주문정보 마스터 정보 - 상세화면 -->
+	<select id="getMasterInfo" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODINFOXM">
+		SELECT ORDER_NUM    /*주문번호*/
+             , TO_CHAR(TO_DATE(ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') AS ORDER_DATE
+             , ORDER_PW
+             , ORDER_AMT
+             , ORDER_CON
+             , PAY_METD
+             , COM_NAME
+             , BIZR_NUM
+             , CEO_NAME
+             , COM_TEL
+             , POST_NUM
+             , BASC_ADDR
+             , DTL_ADDR
+             , EXTRA_ADDR
+             , STAFF_NAME
+             , STAFF_MAIL
+             , STAFF_CPON
+             , ORDER_MSG
+             , ARRIVAL_DATE
+             , ATFL_ID
+             , DLVY_ATFL
+             , CARD_ATFL
+		  FROM XTB_ODINFOXM       /*주문정보 마스터*/
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</select>
+	<!-- 주문정보 상세 - 상세화면   -->
+	<select id="getDetailsList" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODINFOXD">
+		SELECT A.ORDER_DTNUM  /*주문상세번호*/
+		     , A.ORDER_NUM
+             , A.PD_CODE
+             , A.PD_NAME
+             , A.PD_PRICE
+             , CASE WHEN A.PDDC_GUBN = 'PDDC_GUBN_02' THEN A.PD_PRICE - A.PDDC_VAL
+                    WHEN A.PDDC_GUBN = 'PDDC_GUBN_03' THEN A.PD_PRICE - (A.PD_PRICE* A.PDDC_VAL/100)
+                    ELSE A.PD_PRICE
+               END REAL_PRICE
+             , A.PDDC_GUBN
+             , A.PDDC_VAL
+             , A.ORDER_QTY
+             , A.ORDER_AMT
+             , A.ORDER_CON
+             , A.PAY_METD
+             , A.DLVY_CON
+             , A.DLVY_TDN
+             , A.DLVY_ROWNUM
+             , (SELECT DLVY_NAME FROM XTB_ODDLAIXM B WHERE B.DEL_YN = 'N' AND  B.ORDER_NUM = A.ORDER_NUM AND B.DLVY_ROWNUM = A.DLVY_ROWNUM) DLVY_NAME
+		  FROM XTB_ODINFOXD  A     /*주문정보 상세*/
+		 WHERE A.ORDER_NUM = #{ORDER_NUM} 
+		   AND A.DEL_YN = 'N' 
+		 ORDER BY A.ORDER_DTNUM    
+	</select>
+	<!-- 배송지 정보 - 상세화면 -->
+	<select id="getDeliveryInfo" parameterType="mall.web.domain.XTB_ODINFOXM" resultType="mall.web.domain.XTB_ODDLAIXM">
+		SELECT A.ORDER_NUM /*주문번호*/
+             , A.DLVY_ROWNUM
+             , A.DLVY_NAME
+             , A.STAFF_NAME
+             , A.STAFF_CPON
+             , A.POST_NUM
+             , A.BASC_ADDR
+             , A.DTL_ADDR
+             , A.DLVY_MSG
+		  FROM XTB_ODDLAIXM A   /*주문배송지정보 */
+		 WHERE A.ORDER_NUM = #{ORDER_NUM}
+		   AND A.DEL_YN = 'N' 
+	</select>
+	
+	<!-- 주문상태 및 결제 정보 수정 -->
+	<update id="getDetailsUpdate" parameterType="mall.web.domain.XTB_ODINFOXM">
+		UPDATE XTB_ODINFOXM
+		   SET ORDER_CON = #{ORDER_CON} /*주문상태*/
+		     , MODP_ID = #{REGP_ID}
+		     , MOD_DTM = SYSDATE
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	<!-- 배송정보 수정 -->
+	<update id="getDeliveryUpdate" parameterType="mall.web.domain.XTB_ODDLAIXM">
+		UPDATE XTB_ODDLAIXM
+		   SET DLAR_GUBN = #{DLAR_GUBN}	/*배송지구분*/
+		     , RECV_PERS = #{RECV_PERS}	/*수령인*/
+		     , POST_NUM = #{POST_NUM}	/*우편번호*/
+		     , BASC_ADDR = #{BASC_ADDR} /*기본주소*/
+		     , DTL_ADDR = #{DTL_ADDR}	/*상세주소*/
+		     , RECV_TELN = #{RECV_TELN} /*수령인 전화번호*/
+		     , RECV_CPON = #{RECV_CPON} /*수령인 휴대전화*/
+		     , DLVY_MSG = #{DLVY_MSG}	/*배송메세지*/
+		     , MODP_ID = #{REGP_ID}
+		     , MOD_DTM = SYSDATE
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+</mapper>

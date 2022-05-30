@@ -1,0 +1,1297 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.OrderMgrLinkMapper">
+	
+	<!-- 공통 where 조건 -->
+	<sql id="searchCondition">
+		<where>	
+			<if test='schGbn == "MEMB_NM"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND MEMB_NM LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>		
+			<if test='schGbn == "RECV_PERS"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND RECV_PERS LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test='schGbn == "COM_NAME"'>
+				<if test="schTxt != null and schTxt != ''">
+				    AND COM_NAME LIKE '%'||#{schTxt}||'%'
+				</if>	
+			</if>
+			<if test="ORDER_CON != null and ORDER_CON != ''">
+			    AND ORDER_CON = #{ORDER_CON}
+			</if>	
+			<if test="ORDER_CON == null or ORDER_CON == ''">
+			    AND NOT ORDER_CON IN ('ORDER_CON_04','ORDER_CON_08','ORDER_CON_08','ORDER_CON_11')
+			</if>
+			<if test="PAY_METD != null and PAY_METD != ''">
+			    AND PAY_METD = #{PAY_METD}
+			</if>
+			<if test="datepickerStr != null and datepickerStr != ''">
+				AND TO_CHAR(TO_DATE(ORDER_DATE,'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD') <![CDATA[>=]]> #{datepickerStr}
+			</if>
+			<if test="datepickerEnd != null and datepickerEnd != ''">
+				AND TO_CHAR(TO_DATE(ORDER_DATE,'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD') <![CDATA[<=]]> #{datepickerEnd}
+			</if>
+			<if test="LOGIN_SUPR_ID != null and LOGIN_SUPR_ID != ''">
+				AND EXISTS (SELECT 1 
+			      	          FROM (SELECT ORDER_NUM AS ONUM FROM IIBS.TB_ODINFOXD WHERE SUPR_ID = #{LOGIN_SUPR_ID} ) OD
+				             WHERE ORDER_NUM = OD.ONUM
+				           )
+			</if>
+			
+		</where>  
+	</sql>
+	
+	<!-- 리스트 카운트 -->
+	<select id="count" parameterType="mall.web.domain.TB_ODINFOXM" resultType="int">
+		SELECT count(*)
+			 FROM
+			(
+			  SELECT  INFO.*
+      			   	     , MEM.COM_NAME
+			    FROM (
+						SELECT A.ORDER_NUM    /*주문번호*/
+						     , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+				     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+						     , A.MEMB_ID								  /*회원ID (주문자)*/
+						     , FC_GET_MEMBID_NM(A.MEMB_ID) AS MEMB_NM     /*회원ID명(주문자)*/
+						     , C.RECV_PERS    /*수령인*/
+						     <!-- , B.PD_NAME      /*제품명*/ -->
+						     , A.ORDER_AMT    /*주문금액*/
+						     , A.ORDER_CON								        /*주문상태*/
+						     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+						     , A.PAY_METD										/*결제수단*/
+						     , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM      /*결제수단 명*/
+						  FROM IIBS.TB_ODINFOXM A      /*주문정보 마스터*/
+						 <!-- INNER JOIN IIBS.TB_ODINFOXD B /*주문정보 상세*/
+						    ON A.ORDER_NUM = B.ORDER_NUM -->
+						 INNER JOIN IIBS.TB_ODDLAIXM C /*주문배송지정보*/
+						    ON A.ORDER_NUM = C.ORDER_NUM
+						 WHERE DEL_YN IS NULL OR DEL_YN = 'N'
+					    ) INFO
+		          LEFT OUTER JOIN IIBS.TB_MBINFOXM MEM
+		            ON INFO.MEMB_ID = MEM.MEMB_ID
+		       )
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 리스트 목록 -->
+	<select id="paginatedList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		<include refid="default.pagerHeader"/>	
+		   SELECT *
+			 FROM
+			(
+			  SELECT  INFO.*
+      			   	     , MEM.COM_NAME
+			    FROM (
+					SELECT A.ORDER_NUM    /*주문번호*/
+					     , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+					     , A.MEMB_ID								  /*회원ID (주문자)*/
+					     , (SELECT MEMB_NAME FROM IIBS.TB_MBINFOXM WHERE MEMB_ID = A.MEMB_ID) AS MEMB_NM     /*회원ID명(주문자)*/
+					     , C.RECV_PERS    /*수령인*/
+					     <!-- , B.PD_NAME      /*제품명*/ -->
+					     , (SELECT PD_NAME FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM AND ROWNUM = 1) AS PD_NAME
+					     , A.ORDER_AMT    /*주문금액*/
+					     , A.ORDER_CON								        /*주문상태*/
+					     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+					     , A.PAY_METD										/*결제수단*/
+					     , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM      /*결제수단 명*/
+					     , (SELECT COUNT(*)-1 FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM) AS count /*주문 제품 갯수*/
+					     , ORDER_DTM		/*주문일시*/
+					     , PAY_DTM			/*결제일시*/
+					     , DECODE(DAP_YN,'Y',DLVY_AMT,'0') AS DLVY_AMT         /*배송료*/
+					     , DECODE(DLAR_GUBN,'DLAR_GUBN_05','현장출고','직배송요청') AS DLAR_GUBN   /*출고방식*/
+					     , DECODE(DLVY_MSG,'',' ','있음') AS DLVY_MSG    /*배송메세지 유무*/
+			             , DECODE((SELECT ADM_REF 
+					                      FROM IIBS.TB_MBINFOXM MBINFO, IIBS.TB_ODINFOXM ODINFO 
+					                    WHERE MBINFO.MEMB_ID = ODINFO.MEMB_ID 
+					                        AND ODINFO.ORDER_NUM = A.ORDER_NUM),'',' ','있음') AS ADM_REF    /*관리자설명참조 유무*/
+                        <!-- , NVL(TO_CHAR(TO_DATE(C.DLAR_DATE,'YYYYMMDD'),'YYYY-MM-DD'),'')|| ' '||C.DLAR_TIME AS DLAR_DATE_TIME   /*출고 시간*/ -->
+                        , DECODE(LENGTH(DLAR_DATE),8,TO_CHAR(TO_DATE(DLAR_DATE,'YYYYMMDD'),'YYYY-MM-DD'),'')|| ' '||DLAR_TIME AS DLAR_DATE_TIME   /*출고 시간*/
+                        , DLAR_DATE
+        				, DECODE(DLAR_TIME, '오전', 1, '오후', 2, '', 4, 3) DLAR_TIME
+        				, CPON_YN
+					  FROM IIBS.TB_ODINFOXM A      /*주문정보 마스터*/
+					 <!-- INNER JOIN IIBS.TB_ODINFOXD B /*주문정보 상세*/
+					    ON A.ORDER_NUM = B.ORDER_NUM -->
+					 INNER JOIN IIBS.TB_ODDLAIXM C /*주문배송지정보*/
+					    ON A.ORDER_NUM = C.ORDER_NUM
+					 WHERE DEL_YN IS NULL OR DEL_YN = 'N'		
+				    ) INFO
+			        LEFT OUTER JOIN IIBS.TB_MBINFOXM MEM
+			        ON INFO.MEMB_ID = MEM.MEMB_ID
+	        	) LIST
+			<include refid="searchCondition"/>
+			
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "DATE_ORDER"'>
+					<if test='DATE_ORDER == "desc"'>
+						ORDER BY ORDER_DATE desc
+					</if>	
+					<if test='DATE_ORDER == "asc"'>
+						ORDER BY ORDER_DATE asc
+					</if>	
+				</if>
+				<if test='ORDER_GUBUN == "MEMB_NM_ORDER"'>
+					<if test='MEMB_NM_ORDER == "desc"'>
+						ORDER BY MEMB_NM desc, ORDER_NUM ASC
+					</if>	
+					<if test='MEMB_NM_ORDER == "asc"'>
+						ORDER BY MEMB_NM asc, ORDER_NUM ASC
+					</if>
+				</if>
+				<if test='ORDER_GUBUN == "COM_NAME_ORDER"'>
+					<if test='MEMB_NM_ORDER == "desc"'>
+						ORDER BY COM_NAME desc nulls last, ORDER_NUM ASC
+					</if>	
+					<if test='MEMB_NM_ORDER == "asc"'>
+						ORDER BY COM_NAME asc, ORDER_NUM ASC
+					</if>
+				</if>
+				<if test='ORDER_GUBUN == "PAY_DATE_ORDER"'>
+					<if test='PAY_DATE_ORDER == "desc"'>
+						ORDER BY PAY_DTM desc nulls last, ORDER_NUM ASC
+					</if>	
+					<if test='PAY_DATE_ORDER == "asc"'>
+						ORDER BY PAY_DTM asc, ORDER_NUM ASC
+					</if>
+				</if>
+				<if test='ORDER_GUBUN == "DLAR_DATE_ORDER"'>
+					<if test='DLAR_DATE_ORDER == "desc"'>
+						ORDER BY DLAR_DATE desc, DLAR_TIME ASC, ORDER_NUM ASC
+					</if>	
+					<if test='DLAR_DATE_ORDER == "asc"'>
+						ORDER BY DLAR_DATE asc, DLAR_TIME ASC, ORDER_NUM ASC
+					</if>
+				</if>				
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY ORDER_DATE desc, ORDER_NUM ASC
+			</if>
+			<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 일괄상태변경 -->
+	<update id="updateState" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE IIBS.TB_ODINFOXM
+		   SET ORDER_CON = #{ORDER_CON_STATE}
+		     , MODP_ID = #{MODP_ID}
+		     , MOD_DTM = SYSDATE
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	<!-- 주문정보 마스터 정보 - 상세화면 -->
+	<select id="getMasterInfo" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT ORDER_NUM    /*주문번호*/
+		     , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+		     , MEMB_ID								  /*회원ID (주문자)*/
+		     , FC_GET_MEMBID_NM(MEMB_ID) AS MEMB_NM     /*회원ID명(주문자)*/
+		     , ORDER_AMT    /*주문금액*/
+		     , ORDER_CON								        /*주문상태*/
+		     , FC_GET_COMCOD_NM(ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+		     , PAY_METD										/*결제수단*/
+		     , FC_GET_COMCOD_NM(PAY_METD) AS PAY_METD_NM      /*결제수단 명*/
+		     , DAP_YN	/*배송비결재여부*/
+		     , DLVY_CON	/*배송상태*/
+		     , FC_GET_COMCOD_NM(DLVY_CON) AS DLVY_CON_NM      /*배송상태 명*/
+		     , (SELECT DLVY_COM FROM IIBS.TB_ODINFOXD XD WHERE XD.ORDER_NUM = A.ORDER_NUM AND SUPR_ID = #{LOGIN_SUPR_ID} AND ROWNUM = 1) AS DLVY_COM /*배송업체*/
+		     , FC_GET_COMCOD_NM(DLVY_COM) AS DLVY_COM_NM      /*배송업체 명*/
+		     , DLVY_TDN /*배송운송장번호*/
+		     , CNCL_CON	/*취소상태*/
+		     , RFND_CON /*환불상태*/
+		     , CNCL_MSG /*취소사유*/
+		     , DLVY_AMT			/*배송비*/
+		     , PAY_DTM 			/*결제일시*/
+		     , CPON_YN 			/*쿠폰사용여부*/
+		  FROM IIBS.TB_ODINFOXM A       /*주문정보 마스터*/
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</select>
+	
+	
+	<!-- 주문정보 상세 - 상세화면   -->
+	<select id="getDetailsList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXD">
+		SELECT ORDER_DTNUM  /*주문상세번호*/
+		     , ORDER_NUM    /*주문번호*/
+		     , PD_CODE      /*제품코드*/
+		     , PD_NAME      /*제품명*/
+		     , ORDER_QTY    /*주문 수량*/
+		     , ORDER_AMT    /*주문금액*/
+		     , PDDC_VAL     /*제품할인 값*/
+		     , PD_PRICE     /*상품가격*/
+		     , PDDC_GUBN    /*상품할인구분*/
+		     , (SELECT CUT_UNIT FROM TB_PDCUTXM WHERE PD_CODE = A.PD_CODE AND SEQ = PD_CUT_SEQ ) PD_CUT_SEQ
+		     , NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = A.OPTION_CODE ),
+                        (SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTD_CODE = A.OPTION_CODE AND N.PD_CODE = A.PD_CODE AND M.OPTM_CODE = N.OPTION_GUBN) ) AS OPTION_CODE
+             , SUPR_ID
+             , DLVY_TDN
+             , DLVY_CON
+             , ORDER_CON
+             , LINK_ORDER_KEY
+             , NVL( (SELECT COMDCD_NAME FROM TB_COMCODXD WHERE COMM_CODE = 'DLVY_COM' AND COMD_CODE = A.DLVY_COM), A.DLVY_COM) AS DLVY_COM
+		  FROM IIBS.TB_ODINFOXD A      /*주문정보 상세*/
+		 WHERE ORDER_NUM = #{ORDER_NUM} 
+		   AND ORDER_QTY > 0
+		 ORDER BY ORDER_DTNUM      
+	</select>
+	<!-- 배송지 정보 - 상세화면 -->
+	<select id="getDeliveryInfo" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODDLAIXM">
+		SELECT ORDER_NUM /*주문번호*/
+		     , DLAR_GUBN /*배송지구분*/
+		     , RECV_PERS /*수령인*/
+		     , POST_NUM  /*우편번호*/
+		     , BASC_ADDR /*기본주소*/
+		     , DTL_ADDR  /*상세주소*/
+		     , RECV_TELN /*수령인 전화번호*/
+		     , RECV_CPON /*수령인 휴대전화*/
+		     , DLVY_MSG  /*배송메세지*/
+		     , (SELECT ADM_REF 
+		     		FROM IIBS.TB_MBINFOXM A, IIBS.TB_ODINFOXM B 
+		     	   WHERE A.MEMB_ID = B.MEMB_ID 
+		     	     AND B.ORDER_NUM =#{ORDER_NUM}) AS ADM_REF	/*관리자설명참조*/
+		     , DLAR_DATE 	/* 출고일 */
+     		 , DLAR_TIME 	/* 배송시간/출고시간 */
+		  FROM IIBS.TB_ODDLAIXM /*주문배송지정보 */
+		 WHERE ORDER_NUM = #{ORDER_NUM}		   
+	</select>
+	
+	<!-- 주문상태 및 결제 정보 수정 -->
+	<update id="getDetailsUpdate" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE IIBS.TB_ODINFOXM
+		   SET ORDER_CON = #{ORDER_CON} /*주문상태*/
+		     , CNCL_CON = #{CNCL_CON}	/*취소상태*/
+		     <if test="CNCL_CON != null and CNCL_CON != ''">
+				, CNCL_REQDTM = SYSDATE	/*취소 요청일시*/
+			 </if>	
+			 <if test="CNCL_CON == null or CNCL_CON == ''">
+				, CNCL_REQDTM = ''	/*취소 요청일시*/
+			 </if>
+		     , RFND_CON = #{RFND_CON}	/*환불상태*/
+		     <if test="RFND_CON != null and RFND_CON != ''">
+				, RFND_REQDTM = SYSDATE	/*환불 요청일시*/
+			 </if>	
+			 <if test="RFND_CON == null or RFND_CON == ''">
+				, RFND_REQDTM = ''	/*환불 요청일시*/
+			 </if>
+			 , PAY_METD = #{PAY_METD}	/*결제수단*/	
+		     , DLVY_COM = #{DLVY_COM}	/*배송업체*/
+		     , DLVY_TDN = #{DLVY_TDN}	/*배송운송장번호*/
+		     , MODP_ID = #{MODP_ID}
+		     , MOD_DTM = SYSDATE
+		     <if test='PAY_AMT != null and PAY_AMT!=""'>
+		     , PAY_AMT = #{PAY_AMT}
+		     </if>
+		     <if test='PAY_DTM != null and PAY_DTM!=""'>
+				, PAY_DTM = TO_DATE(#{PAY_DTM},'YYYYMMDDHH24MISS') 
+			 </if>
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	
+	
+	
+	<!-- 배송정보 수정 -->
+	<update id="getDeliveryUpdate" parameterType="mall.web.domain.TB_ODDLAIXM">
+		UPDATE IIBS.TB_ODDLAIXM
+		   SET DLAR_GUBN = #{DLAR_GUBN}	/*배송지구분*/
+		     , RECV_PERS = #{RECV_PERS}	/*수령인*/
+		     , POST_NUM = #{POST_NUM}	/*우편번호*/
+		     , BASC_ADDR = #{BASC_ADDR} /*기본주소*/
+		     , DTL_ADDR = #{DTL_ADDR}	/*상세주소*/
+		     , RECV_TELN = #{RECV_TELN} /*수령인 전화번호*/
+		     , RECV_CPON = #{RECV_CPON} /*수령인 휴대전화*/
+		     , DLVY_MSG = #{DLVY_MSG}	/*배송메세지*/
+		     , MODP_ID = #{MODP_ID}
+		     , MOD_DTM = SYSDATE
+		     , DLAR_TIME = #{DLAR_TIME}
+		     <if test="DLAR_DATE != null and DLAR_DATE != ''">
+				, DLAR_DATE = #{DLAR_DATE}
+			 </if>	
+		     
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+	</update>
+	
+	<!-- 피킹리스트 -->
+	<select id="pickingList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT *
+              FROM (
+                    SELECT A.ORDER_NUM    /*주문번호*/
+                         , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+                         , A.MEMB_ID                                  /*회원ID (주문자)*/
+                         , FC_GET_MEMBID_NM(A.MEMB_ID) AS MEMB_NM     /*회원ID명(주문자)*/
+                         , B.PD_NAME
+                         , A.ORDER_AMT    /*주문금액*/
+                         , A.ORDER_CON                                        /*주문상태*/
+                         , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+                         , A.PAY_METD                                        /*결제수단*/
+                         , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM      /*결제수단 명*/
+                         , (SELECT COUNT(*)-1 FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM) AS count /*주문 제품 갯수*/
+                         , B.ORDER_QTY /*제품수량*/
+                         , C.PD_STD /*규격*/
+                         , C.PD_BARCD  /*바코드*/
+                         , C.KEEP_GUBN	/*보관온도기준*/
+                         , C.PACKING_GUBN	/*패킹기준*/
+                         , D.COM_NAME		/*회사명*/
+                         <!-- , NVL(D.COM_NAME, D.MEMB_NAME) COM_ORD -->
+                         , CASE WHEN D.COM_NAME IS NULL THEN D.MEMB_NAME
+                           ELSE D.COM_NAME || '(' || D.MEMB_NAME || ')'
+                           END COM_ORD
+                         , D.CAR_NUM
+                         , FC_GET_COMCOD_NM(D.CAR_NUM) AS CAR_NUM_NM      /*차량번호*/
+                         , (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) PD_CUT_SEQ
+		     			 , NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = B.OPTION_CODE )
+		     			 , (SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE AND M.OPTM_CODE = N.OPTION_GUBN) ) AS OPTION_CODE
+		     			 , C.DLVY_GUBN
+                      FROM IIBS.TB_ODINFOXM A      /*주문정보 마스터*/
+                     INNER JOIN IIBS.TB_ODINFOXD B /*주문정보 상세*/
+                        ON A.ORDER_NUM = B.ORDER_NUM
+                     INNER JOIN IIBS.TB_PDINFOXM C
+                        ON B.PD_CODE = C.PD_CODE    
+                     INNER JOIN IIBS.TB_MBINFOXM D
+                        ON A.MEMB_ID = D.MEMB_ID           
+                   <!-- WHERE TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') = TO_CHAR(SYSDATE,'yyyy-MM-dd') -->
+                     WHERE  A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03')
+                       <if test="list != null and list.size!=0">
+                       AND A.ORDER_NUM IN 
+	                      <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	                      	#{item}
+	                      </foreach> 
+                       </if>
+                       <if test="list != null and list.size==0">
+                       AND A.ORDER_NUM IN ('')
+                       </if>
+                    )
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "goods"'>
+           			ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN
+				</if>
+				<if test='ORDER_GUBUN == "com"'>
+           			ORDER BY DLVY_GUBN, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "car"'>
+           			ORDER BY DLVY_GUBN, CAR_NUM, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+          		ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN 
+			</if>
+	</select>
+	
+	
+	<!-- 배송정보 수정 -->
+	<update id="updatePickingList" parameterType="java.util.List">
+		<!-- <foreach collection="list" item="list" index="index" separator=";"> -->
+		UPDATE IIBS.TB_ODINFOXM
+		   SET ORDER_CON = 'ORDER_CON_03'	/*주문상태*/
+			  ,MOD_DTM = SYSDATE
+			  ,MODP_ID = 'admin'		    
+		 WHERE ORDER_NUM = #{ORDER_NUM} <!-- #{list.ORDER_NUM} -->
+		 <!-- </foreach> -->
+	</update>
+	
+	
+	<!-- 엑셀리스트-->
+	<select id="excelList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap"><!-- 원래 : mall.web.domain.XTB_ODINFOXM -->
+			<include refid="default.pagerHeader"/>	
+			SELECT *
+			 FROM
+			(
+			  SELECT  ORDER_DATE    /*주문일자*/
+			  			 , PAY_DTM		  /*결제일시*/
+				         , ORDER_NUM    /*주문번호*/
+				         , ORDER_CON
+				         , MEM.MEMB_ID AS MEMB_ID
+				      	 , TRIM(MEMB_NM) AS MEMB_NM     /*회원ID명(주문자)*/
+					     , MEM.COM_NAME     /*(회사명)*/
+					     , PD_NAME || DECODE(count,0,'',' 외 '||count||'종') AS PD_NAME /*주문상품*/
+					     , ORDER_AMT
+					     , DLVY_AMT
+					     , ORDER_AMT - DLVY_AMT AS REAL_AMT 
+					     , ORDER_CON_NM || DECODE(INFO.PAY_METD_NM,'','',DECODE(INFO.PAY_METD_NM,'','',' (' || INFO.PAY_METD_NM || ')')) AS ORDER_CON_NM
+					     , DLAR_GUBN || ' ' || DLAR_DATE_TIME AS DLAR_GUBN
+					     , DLVY_MSG
+					     , INFO.ADM_REF
+					     , PAY_METD		/*20190531_결제수단추가*/
+			    FROM (
+					SELECT A.ORDER_NUM
+					     , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+					     , A.MEMB_ID
+					     , (SELECT MEMB_NAME FROM IIBS.TB_MBINFOXM WHERE MEMB_ID = A.MEMB_ID) AS MEMB_NM
+					     , C.RECV_PERS
+					     , (SELECT PD_NAME FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM AND ROWNUM = 1) AS PD_NAME
+					     , A.ORDER_AMT 
+					     , A.ORDER_CON
+					     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM 
+					     , A.PAY_METD	
+					     , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM 
+					     , (SELECT COUNT(*)-1 FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM) AS count
+					     , ORDER_DTM
+					     , PAY_DTM	
+					     , DECODE(DAP_YN,'Y',DLVY_AMT,'0') AS DLVY_AMT 
+					     , DECODE(DLAR_GUBN,'DLAR_GUBN_05','현장출고','직배송요청') AS DLAR_GUBN 
+					     , DECODE(DLVY_MSG,'',' ','있음') AS DLVY_MSG
+			             , DECODE((SELECT ADM_REF 
+					                      FROM IIBS.TB_MBINFOXM MBINFO, IIBS.TB_ODINFOXM ODINFO 
+					                    WHERE MBINFO.MEMB_ID = ODINFO.MEMB_ID 
+					                        AND ODINFO.ORDER_NUM = A.ORDER_NUM),'',' ','있음') AS ADM_REF  
+                        <!-- , NVL(TO_CHAR(TO_DATE(C.DLAR_DATE,'YYYYMMDD'),'YYYY-MM-DD'),'')|| ' '||C.DLAR_TIME AS DLAR_DATE_TIME -->
+                        ,DECODE(LENGTH(DLAR_DATE),8,TO_CHAR(TO_DATE(DLAR_DATE,'YYYYMMDD'),'YYYY-MM-DD'),'')|| ' '||DLAR_TIME AS DLAR_DATE_TIME   /*출고 시간*/
+					  FROM IIBS.TB_ODINFOXM A  
+					 INNER JOIN IIBS.TB_ODDLAIXM C /*주문배송지정보*/
+					    ON A.ORDER_NUM = C.ORDER_NUM
+					 WHERE DEL_YN IS NULL OR DEL_YN = 'N'
+				    ) INFO
+			        LEFT OUTER JOIN IIBS.TB_MBINFOXM MEM
+			        ON INFO.MEMB_ID = MEM.MEMB_ID
+	        	)
+				<include refid="searchCondition"/>
+				<if test="list != null and list.size!=0">
+                       AND (1,ORDER_NUM) IN
+	               <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	         	        	(1,#{item})
+	               </foreach> 
+             	</if>
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "DATE_ORDER"'>
+					<if test='DATE_ORDER == "desc"'>
+						ORDER BY ORDER_DATE desc
+					</if>	
+					<if test='DATE_ORDER == "asc"'>
+						ORDER BY ORDER_DATE asc
+					</if>	
+				</if>
+				<if test='ORDER_GUBUN == "MEMB_NM_ORDER"'>
+					<if test='MEMB_NM_ORDER == "desc"'>
+						ORDER BY MEMB_NM desc
+					</if>	
+					<if test='MEMB_NM_ORDER == "asc"'>
+						ORDER BY MEMB_NM asc
+					</if>
+				</if>
+				<if test='ORDER_GUBUN == "COM_NAME_ORDER"'>
+					<if test='MEMB_NM_ORDER == "desc"'>
+						ORDER BY COM_NAME desc nulls last
+					</if>	
+					<if test='MEMB_NM_ORDER == "asc"'>
+						ORDER BY COM_NAME asc
+					</if>
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY ORDER_DATE desc
+			</if>
+			
+			<include refid="default.pagerFooter"/>
+			
+	</select>
+	
+	<!-- 엑셀리스트(디테일)-->
+	<select id="detailExcelList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap">
+	SELECT ODA.*
+	     , PD.PD_BARCD
+	     , FC_GET_COMCOD_NM(PD.TAX_GUBN) AS TAX_GUBN
+	     , ODA.PD_PRICE - ODA.PDDC_VAL AS ORDER_PREICE 
+	  FROM 
+	  (
+	    SELECT ODM.*
+	         , ODD.PD_CODE
+	         , ODD.PD_NAME
+	         , (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = ODD.PD_CODE AND SEQ = ODD.PD_CUT_SEQ ) PD_CUT_SEQ
+	         , (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = ODD.OPTION_CODE) OPTION_NAME
+	         , ODD.ORDER_QTY
+	         , ODD.PD_PRICE
+	         , ODD.PDDC_VAL
+	         , ODD.ORDER_AMT
+	      FROM
+	      (
+	        SELECT ORDER_NUM    
+	             ,TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE
+	             , OD.MEMB_ID                               
+	             , ME.COM_NAME
+	             , FC_GET_MEMBID_NM(OD.MEMB_ID) AS MEMB_NM
+	             , DAP_YN
+	          FROM IIBS.TB_ODINFOXM OD,IIBS.TB_MBINFOXM ME 
+	         WHERE ORDER_NUM = #{ORDER_NUM} 
+	           AND OD.MEMB_ID = ME.MEMB_ID
+	      ) ODM
+	      LEFT OUTER JOIN IIBS.TB_ODINFOXD ODD
+	      	ON ODM.ORDER_NUM = ODD.ORDER_NUM
+	      	AND ODD.ORDER_QTY > 0
+	  ) ODA
+	  LEFT OUTER JOIN IIBS.TB_PDINFOXM PD
+	  	ON ODA.PD_CODE = PD.PD_CODE	      
+	</select>
+	
+	<!-- 피킹리스트 (상품별)-->
+	<select id="pickingGoodsList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT *
+              FROM (
+                    SELECT  B.PD_CODE
+                    		,B.PD_NAME
+                    		,C.INPUT_CNT
+                    		,SUM (B.ORDER_QTY) AS ORDER_QTY                         /*주문수량*/		                 
+		                 	,C.PD_STD                                               /*규격*/
+		                 	,C.PD_BARCD                                            	/*바코드*/
+		                	,C.KEEP_LOCATION										/*보관장소*/
+		                	,C.KEEP_GUBN                                       		/*보관기준*/
+		                	,C.PACKING_GUBN                                       	/*패킹기준*/
+		                	,C.ATFL_ID												/*파일첨부*/
+		                	,C.RPIMG_SEQ											/*대표이미지순번*/
+		                	, (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) PD_CUT_SEQ
+		     			    , NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = OPTION_CODE )
+		     			    ,(SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTM_CODE = N.OPTION_GUBN AND M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE) ) AS OPTION_CODE
+                        	,(SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'DLVY_GUBN' AND COMD_CODE = C.DLVY_GUBN) AS DLVY_GUBN
+		              FROM IIBS.TB_ODINFOXM A                                    		/*주문정보 마스터*/
+		             	   INNER JOIN IIBS.TB_ODINFOXD B ON A.ORDER_NUM = B.ORDER_NUM
+		             	   INNER JOIN IIBS.TB_PDINFOXM C ON B.PD_CODE = C.PD_CODE       
+                   <!-- WHERE TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') = TO_CHAR(SYSDATE,'yyyy-MM-dd') -->
+                     WHERE  A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03')
+                       <if test="list != null and list.size!=0">
+                       AND A.ORDER_NUM IN 
+	                      <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	                      	#{item}
+	                      </foreach> 
+                       </if>
+                       <if test="list != null and list.size==0">
+                       AND A.ORDER_NUM IN ('')
+                       </if>
+                     GROUP BY	B.PD_CODE , 
+                     				B.PD_NAME, 
+                     				B.OPTION_CODE, 
+                     				B.PD_CUT_SEQ, 
+                     				C.PD_STD, 
+                     				C.PD_BARCD, 
+                     				C.KEEP_LOCATION, 
+                    				C.PACKING_GUBN, 
+                    				C.KEEP_GUBN , 
+                     				C.ATFL_ID, 
+                     				C.RPIMG_SEQ,
+                     				C.INPUT_CNT,
+                     				C.DLVY_GUBN
+                    HAVING SUM (B.ORDER_QTY)>0
+                    )
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "goods"'>
+					ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "com"'>
+           			ORDER BY DLVY_GUBN, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "car"'>
+           			ORDER BY DLVY_GUBN, CAR_NUM, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN 
+			</if>
+	</select>
+	
+	<!-- 피킹리스트 (매출처별)-->
+	<select id="pickingComList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT *
+              FROM (
+                    SELECT 
+		                 A.MEMB_ID,                                      /*회원ID (주문자)*/
+		                 FC_GET_MEMBID_NM (A.MEMB_ID) AS MEMB_NM,        /*회원ID명(주문자)*/
+		                 B.PD_NAME,
+		                 C.INPUT_CNT,	              
+		                 SUM (B.ORDER_QTY) AS ORDER_QTY,                  /*주문수량*/
+		                 C.PD_STD,                                               /*규격*/
+		                 C.PD_BARCD,                                            /*바코드*/
+		                 C.KEEP_GUBN,                                        /*보관온도기준*/
+		                 C.PACKING_GUBN,                                       /*패킹기준*/
+		                 D.COM_NAME,                                            /*회사명*/
+		                 CASE
+		                    WHEN D.COM_NAME IS NULL THEN D.MEMB_NAME
+		                    ELSE D.COM_NAME || '(' || D.MEMB_NAME || ')'
+		                 END
+		                    COM_ORD,
+		                 C.ATFL_ID,
+		                 C.RPIMG_SEQ
+		                 , (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) PD_CUT_SEQ
+		     			 , NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = OPTION_CODE )
+		     			 , (SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTM_CODE = N.OPTION_GUBN AND M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE) ) AS OPTION_CODE
+                         , (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'DLVY_GUBN' AND COMD_CODE = C.DLVY_GUBN) AS DLVY_GUBN
+		            FROM IIBS.TB_ODINFOXM A                                    /*주문정보 마스터*/
+		                 INNER JOIN IIBS.TB_ODINFOXD B                          /*주문정보 상세*/
+		                                         ON A.ORDER_NUM = B.ORDER_NUM
+		                 INNER JOIN IIBS.TB_PDINFOXM C ON B.PD_CODE = C.PD_CODE
+		                 INNER JOIN IIBS.TB_MBINFOXM D ON A.MEMB_ID = D.MEMB_ID     
+                   <!-- WHERE TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') = TO_CHAR(SYSDATE,'yyyy-MM-dd') -->
+                     WHERE  A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03')
+                       <if test="list != null and list.size!=0">
+                       AND A.ORDER_NUM IN 
+	                      <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	                      	#{item}
+	                      </foreach> 
+                       </if>
+                       <if test="list != null and list.size==0">
+                       AND A.ORDER_NUM IN ('')
+                       </if>
+                    GROUP BY	B.PD_CODE , 
+                    				B.PD_NAME, 
+                    				B.OPTION_CODE, 
+                    				B.PD_CUT_SEQ, 
+                    				C.PD_STD, 
+                    				C.PD_BARCD, 
+                    				C.KEEP_LOCATION,
+                    				C.INPUT_CNT, 
+                    				D.COM_NAME,
+                    				C.PACKING_GUBN, 
+                    				C.KEEP_GUBN , 
+                    				C.ATFL_ID, 
+                    				C.RPIMG_SEQ, 
+                    				A.MEMB_ID, 
+                    				D.MEMB_NAME,
+                    				C.DLVY_GUBN
+                   HAVING SUM (B.ORDER_QTY)>0
+                    )
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "goods"'>
+					ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "com"'>
+           			ORDER BY DLVY_GUBN, COM_ORD, KEEP_GUBN, PACKING_GUBN
+				</if>
+				<if test='ORDER_GUBUN == "car"'>
+           			ORDER BY DLVY_GUBN, CAR_NUM, COM_ORD, KEEP_GUBN, PACKING_GUBN
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN 
+			</if>
+	</select>
+	
+	<!-- 피킹리스트 (차량별)-->
+	<select id="pickingCarList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		SELECT *
+              FROM (
+                    SELECT
+		                 A.MEMB_ID,                                      /*회원ID (주문자)*/
+		                 FC_GET_MEMBID_NM (A.MEMB_ID) AS MEMB_NM,        /*회원ID명(주문자)*/
+		                 B.PD_NAME,
+		                 C.INPUT_CNT,
+		                 SUM (B.ORDER_QTY) AS ORDER_QTY,                  /*주문수량*/
+		                 C.PD_STD,                                        /*규격*/
+		                 C.PD_BARCD,                                      /*바코드*/
+		                 C.KEEP_GUBN,                                     /*보관온도기준*/
+		                 C.PACKING_GUBN,                                  /*패킹기준*/
+		                 D.COM_NAME,                                      /*회사명*/
+		                 CASE
+		                    WHEN D.COM_NAME IS NULL THEN D.MEMB_NAME
+		                    ELSE D.COM_NAME || '(' || D.MEMB_NAME || ')'
+		                 END
+		                    COM_ORD,
+		                 D.CAR_NUM,
+		                 FC_GET_COMCOD_NM (D.CAR_NUM) AS CAR_NUM_NM,           /*차량번호*/
+		                 C.ATFL_ID,											/*대표이미지*/
+		                 C.RPIMG_SEQ    									/*대표이미지 순번*/
+		                 , (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) PD_CUT_SEQ
+		     			 , NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = OPTION_CODE ),
+                        		(SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTM_CODE = N.OPTION_GUBN AND M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE) ) AS OPTION_CODE
+                         ,(SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'DLVY_GUBN' AND COMD_CODE = C.DLVY_GUBN) AS DLVY_GUBN
+		             FROM IIBS.TB_ODINFOXM A                                    /*주문정보 마스터*/
+		                 INNER JOIN IIBS.TB_ODINFOXD B                          /*주문정보 상세*/
+		                                         ON A.ORDER_NUM = B.ORDER_NUM
+		                 INNER JOIN IIBS.TB_PDINFOXM C ON B.PD_CODE = C.PD_CODE
+		                 INNER JOIN IIBS.TB_MBINFOXM D ON A.MEMB_ID = D.MEMB_ID
+                   <!-- WHERE TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') = TO_CHAR(SYSDATE,'yyyy-MM-dd') -->
+                     WHERE  A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03')
+                       <if test="list != null and list.size!=0">
+                       AND A.ORDER_NUM IN 
+	                      <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	                      	#{item}
+	                      </foreach> 
+                       </if>
+                       <if test="list != null and list.size==0">
+                       AND A.ORDER_NUM IN ('')
+                       </if>
+                    GROUP BY	B.PD_CODE, 
+                    				B.PD_NAME, 
+                    				B.OPTION_CODE, 
+                    				B.PD_CUT_SEQ, 
+                    				C.PD_STD, 
+                    				C.PD_BARCD, 
+                    				C.KEEP_LOCATION, 
+                    				C.PACKING_GUBN, 
+                    				C.KEEP_GUBN, 
+                    				C.ATFL_ID, 
+                    				C.RPIMG_SEQ,
+                    				C.INPUT_CNT, 
+                    				A.MEMB_ID, 
+                    				D.MEMB_NAME,
+                    				D.COM_NAME,
+                    				D.CAR_NUM,
+                    				C.DLVY_GUBN
+                   HAVING SUM (B.ORDER_QTY)>0
+                    )
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "goods"'>
+					ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN  
+				</if>
+				<if test='ORDER_GUBUN == "com"'>
+           			ORDER BY DLVY_GUBN, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "car"'>
+           			ORDER BY DLVY_GUBN, CAR_NUM, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN  
+			</if>
+	</select>
+	
+	
+	<!-- 주문내역 삭제 -->
+	<update id="deleteOrdList" parameterType="java.util.List">
+		UPDATE IIBS.TB_ODINFOXM
+		   SET DEL_YN = 'Y',		/*삭제여부*/
+		   	   MOD_DTM = SYSDATE	/*수정날짜*/
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+		   AND ORDER_CON IN ('ORDER_CON_01','ORDER_CON_04','ORDER_CON_07')
+	</update>
+	
+	
+	<!-- 주문내역 상세삭제 -->
+	<update id="deleteOrdDetail" parameterType="java.util.List">
+		UPDATE IIBS.TB_ODINFOXD
+		   SET DEL_YN = 'Y',		/*삭제여부*/
+		       MOD_DTM = SYSDATE,	/*수정날짜*/
+		       MODP_ID = 'admin'
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+		   AND ORDER_CON IN ('ORDER_CON_01','ORDER_CON_04','ORDER_CON_07')
+	</update>
+	
+	<!-- 주문정보 수량/가격변경 -->
+	<update id="updateDatailQty" parameterType="mall.web.domain.TB_ODINFOXD">
+		UPDATE IIBS.TB_ODINFOXD
+		   SET <!-- ORDER_QTY = #{ORDER_QTY},		/*주문수량*/
+		       ORDER_AMT = CASE WHEN PDDC_GUBN = 'PDDC_GUBN_02' THEN (PD_PRICE - PDDC_VAL) * #{ORDER_QTY}
+		                        WHEN PDDC_GUBN = 'PDDC_GUBN_03' THEN (PD_PRICE - (PD_PRICE* PDDC_VAL/100))*#{ORDER_QTY}
+		                        ELSE PD_PRICE *#{ORDER_QTY} END , -->
+			   MOD_DTM = SYSDATE,
+			   MODP_ID = 'admin'			   
+			   <if test="SUPR_ID == LOGIN_SUPR_ID">	<!-- 로그인한 사용자의 업체코드와 주문된 상품의 업체코드가 같을 경우에만 변경 -->
+			   	<if test="DLVY_COM != null and DLVY_COM != ''">
+			   	, DLVY_COM = #{DLVY_COM}
+			   	</if>
+			   	, ORDER_CON = #{ORDER_CON}
+			   	, DLVY_TDN = #{DTL_DLVY_TDN}
+	     	   </if>			   
+	    WHERE ORDER_NUM = #{ORDER_NUM} <!-- #{list.ORDER_NUM} -->
+	      AND ORDER_DTNUM = #{ORDER_DTNUM}
+	       
+   		  <!-- AND ORDER_CON = 'ORDER_CON_01' -->
+	</update>
+	
+	<!-- 주문정보 수량변경 -->
+	<update id="updateMasterQty" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE IIBS.TB_ODINFOXM
+		   SET ORDER_AMT = (SELECT SUM(ORDER_AMT) FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = #{ORDER_NUM}) + DLVY_AMT,
+		       PAY_AMT = CASE WHEN PAY_AMT IS NULL THEN NULL
+		                      ELSE (SELECT SUM(ORDER_AMT) FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = #{ORDER_NUM}) + DLVY_AMT END ,
+			   MOD_DTM = SYSDATE
+			   <!-- MODP_ID = #{} --> 
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+		   <!-- AND ORDER_CON = 'ORDER_CON_01' -->
+	</update>
+	
+	
+	<!-- 상품 공급업체 리스트 불러오기 2020-02-25 -->
+	<select id="getPdSuprList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap">		
+		SELECT A.SUPR_ID
+		     , NVL( (SELECT SUPR_NAME FROM IIBS.TB_SPINFOXM WHERE SUPR_ID = A.SUPR_ID) , '미등록업체') AS SUPR_NAME
+		  FROM IIBS.TB_ODINFOXD A
+		 WHERE ORDER_NUM = #{ORDER_NUM}
+		 GROUP BY SUPR_ID
+		 ORDER BY SUPR_ID ASC		
+	</select>
+	
+
+	<!-- 피킹리스트 엑셀(상품별)-->
+	<select id="pickingGoodsExcel" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap">
+		SELECT PD_CODE
+		        , PD_NAME || NVL2(PD_CUT_SEQ,'(세절방식 : '||PD_CUT_SEQ||')','')||NVL2(OPTION_CODE,'(색상 : '||OPTION_CODE||')','') AS PD_NAME
+		        , INPUT_CNT
+		        , ORDER_QTY
+		        , PD_STD
+		        , PD_BARCD
+		        , KEEP_LOCATION
+                , KEEP_GUBN
+                , PACKING_GUBN
+		        , ATFL_ID
+		        , RPIMG_SEQ
+		        , DLVY_GUBN
+              FROM (
+                    SELECT  B.PD_CODE
+                    		,B.PD_NAME
+                    		,C.INPUT_CNT
+                    		,SUM (B.ORDER_QTY) AS ORDER_QTY                         /*주문수량*/		                 
+		                 	,C.PD_STD                                               /*규격*/
+		                 	,C.PD_BARCD                                            	/*바코드*/
+		                	,C.KEEP_LOCATION										/*보관장소*/
+			                ,C.KEEP_GUBN
+			                ,C.PACKING_GUBN		                	
+		                	,C.ATFL_ID												/*파일첨부*/
+		                	,C.RPIMG_SEQ											/*대표이미지순번*/
+		                	, (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) PD_CUT_SEQ
+			     			, NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = OPTION_CODE )
+			     			, (SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTM_CODE = N.OPTION_GUBN AND M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE) ) AS OPTION_CODE
+	                        , (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'DLVY_GUBN' AND COMD_CODE = C.DLVY_GUBN) AS DLVY_GUBN
+		              FROM IIBS.TB_ODINFOXM A                                    		/*주문정보 마스터*/
+		             	   INNER JOIN IIBS.TB_ODINFOXD B ON A.ORDER_NUM = B.ORDER_NUM
+		             	   INNER JOIN IIBS.TB_PDINFOXM C ON B.PD_CODE = C.PD_CODE       
+                   <!-- WHERE TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') = TO_CHAR(SYSDATE,'yyyy-MM-dd') -->
+                     WHERE  A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03')
+                       <if test="list != null and list.size!=0">
+                       AND A.ORDER_NUM IN 
+	                      <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	                      	#{item}
+	                      </foreach> 
+                       </if>
+                       <if test="list != null and list.size==0">
+                       AND A.ORDER_NUM IN ('')
+                       </if>
+                     GROUP BY	B.PD_CODE, 
+                     				B.PD_NAME, 
+                     				B.OPTION_CODE, 
+                     				B.PD_CUT_SEQ, 
+                     				C.PD_STD, 
+                     				C.PD_BARCD, 
+                     				C.KEEP_LOCATION, 
+                    				C.PACKING_GUBN, 
+                    				C.KEEP_GUBN , 
+                     				C.ATFL_ID, 
+                     				C.RPIMG_SEQ,
+                     				C.INPUT_CNT,
+                     				C.DLVY_GUBN
+                    HAVING SUM (B.ORDER_QTY)>0
+                    )
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "goods"'>
+					ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN  
+				</if>
+				<if test='ORDER_GUBUN == "com"'>
+           			ORDER BY DLVY_GUBN, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "car"'>
+           			ORDER BY DLVY_GUBN, CAR_NUM, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN  
+			</if>
+	</select>
+	
+	<!-- 피킹리스트 엑셀(매출처별)-->
+	<select id="pickingComExcel" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap">
+		SELECT MEMB_ID
+                , MEMB_NM
+                , PD_NAME || NVL2(PD_CUT_SEQ,'(세절방식 : '||PD_CUT_SEQ||')','')||NVL2(OPTION_CODE,'(색상 : '||OPTION_CODE||')','') AS PD_NAME
+                , PD_CODE
+                , INPUT_CNT
+                , ORDER_QTY
+                , PD_STD
+                , PD_BARCD
+                , KEEP_GUBN
+                , PACKING_GUBN
+                , COM_NAME
+                , COM_ORD
+                , ATFL_ID
+                , RPIMG_SEQ
+                , DLVY_GUBN
+              FROM (
+                    SELECT 
+		                 A.MEMB_ID,                                      /*회원ID (주문자)*/
+		                 FC_GET_MEMBID_NM (A.MEMB_ID) AS MEMB_NM,        /*회원ID명(주문자)*/
+		                 B.PD_NAME,
+		                 B.PD_CODE,           
+		                 C.INPUT_CNT,
+		                 SUM (B.ORDER_QTY) AS ORDER_QTY,                  /*주문수량*/
+		                 C.PD_STD,                                               /*규격*/
+		                 C.PD_BARCD,                                            /*바코드*/
+		                 C.KEEP_GUBN,                                        /*보관온도기준*/
+		                 C.PACKING_GUBN,                                       /*패킹기준*/
+		                 D.COM_NAME,                                            /*회사명*/
+		                 CASE
+		                    WHEN D.COM_NAME IS NULL THEN D.MEMB_NAME
+		                    ELSE D.COM_NAME || '(' || D.MEMB_NAME || ')'
+		                 END
+		                    COM_ORD,
+		                 C.ATFL_ID,
+		                 C.RPIMG_SEQ
+		                 , (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) PD_CUT_SEQ
+		     			    , NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = OPTION_CODE )
+                        ,(SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTM_CODE = N.OPTION_GUBN AND M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE) ) AS OPTION_CODE
+                        ,(SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'DLVY_GUBN' AND COMD_CODE = C.DLVY_GUBN) AS DLVY_GUBN
+		            FROM IIBS.TB_ODINFOXM A                                    /*주문정보 마스터*/
+		                 INNER JOIN IIBS.TB_ODINFOXD B                          /*주문정보 상세*/
+		                                         ON A.ORDER_NUM = B.ORDER_NUM
+		                 INNER JOIN IIBS.TB_PDINFOXM C ON B.PD_CODE = C.PD_CODE
+		                 INNER JOIN IIBS.TB_MBINFOXM D ON A.MEMB_ID = D.MEMB_ID     
+                   <!-- WHERE TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') = TO_CHAR(SYSDATE,'yyyy-MM-dd') -->
+                     WHERE  A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03')
+                       <if test="list != null and list.size!=0">
+                       AND A.ORDER_NUM IN 
+	                      <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	                      	#{item}
+	                      </foreach> 
+                       </if>
+                       <if test="list != null and list.size==0">
+                       AND A.ORDER_NUM IN ('')
+                       </if>
+                    GROUP BY	B.PD_CODE, 
+                    				B.PD_NAME, 
+                    				B.OPTION_CODE, 
+                    				B.PD_CUT_SEQ,
+                    				C.PD_STD, 
+                    				C.PD_BARCD, 
+                    				C.KEEP_LOCATION,
+                    				C.INPUT_CNT, 
+                    				D.COM_NAME,
+                    				C.PACKING_GUBN, 
+                    				C.KEEP_GUBN, 
+                    				C.ATFL_ID, 
+                    				C.RPIMG_SEQ, 
+                    				A.MEMB_ID, 
+                    				D.MEMB_NAME,
+                    				C.DLVY_GUBN
+                   HAVING SUM (B.ORDER_QTY)>0
+                    )
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "goods"'>
+					ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN   
+				</if>
+				<if test='ORDER_GUBUN == "com"'>
+           			ORDER BY DLVY_GUBN, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "car"'>
+           			ORDER BY DLVY_GUBN, CAR_NUM, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN   
+			</if>
+	</select>
+	
+	<!-- 피킹리스트 엑셀(차량별)-->
+	<select id="pickingCarExcel" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap">
+		SELECT MEMB_ID
+		        , MEMB_NM
+		        , PD_NAME || NVL2(PD_CUT_SEQ,'(세절방식 : '||PD_CUT_SEQ||')','')||NVL2(OPTION_CODE,'(색상 : '||OPTION_CODE||')','') AS PD_NAME
+		        , PD_CODE
+		        , INPUT_CNT
+		        , ORDER_QTY
+		        , PD_STD
+		        , PD_BARCD
+		        , KEEP_GUBN
+		        , PACKING_GUBN
+		        , COM_NAME
+		        , COM_ORD
+		        , CAR_NUM
+		        , CAR_NUM_NM
+		        , ATFL_ID
+		        , RPIMG_SEQ
+		        , DLVY_GUBN
+              FROM (
+                    SELECT
+		                 A.MEMB_ID,                                      /*회원ID (주문자)*/
+		                 FC_GET_MEMBID_NM (A.MEMB_ID) AS MEMB_NM,        /*회원ID명(주문자)*/
+		                 B.PD_NAME,
+		                 B.PD_CODE,
+		                 C.INPUT_CNT,
+		                 SUM (B.ORDER_QTY) AS ORDER_QTY,                  /*주문수량*/
+		                 C.PD_STD,                                        /*규격*/
+		                 C.PD_BARCD,                                      /*바코드*/
+		                 C.KEEP_GUBN,                                     /*보관온도기준*/
+		                 C.PACKING_GUBN,                                  /*패킹기준*/
+		                 D.COM_NAME,                                      /*회사명*/
+		                 CASE
+		                    WHEN D.COM_NAME IS NULL THEN D.MEMB_NAME
+		                    ELSE D.COM_NAME || '(' || D.MEMB_NAME || ')'
+		                 END
+		                    COM_ORD,
+		                 D.CAR_NUM,
+		                 NVL(FC_GET_COMCOD_NM (D.CAR_NUM),'미등록') AS CAR_NUM_NM,           /*차량번호*/
+		                 C.ATFL_ID,											/*대표이미지*/
+		                 C.RPIMG_SEQ    									/*대표이미지 순번*/
+		                 , (SELECT CUT_UNIT FROM IIBS.TB_PDCUTXM WHERE PD_CODE = B.PD_CODE AND SEQ = B.PD_CUT_SEQ ) PD_CUT_SEQ
+		     			 , NVL ( (SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'OPTION_GUBN' AND COMD_CODE = OPTION_CODE ),
+                        	(SELECT OPTDCD_NAME FROM IIBS.TB_OPTCODXD M, IIBS.TB_PDINFOXM N  WHERE M.OPTM_CODE = N.OPTION_GUBN AND M.OPTD_CODE = B.OPTION_CODE AND N.PD_CODE = B.PD_CODE) ) AS OPTION_CODE
+                        ,(SELECT COMDCD_NAME FROM IIBS.TB_COMCODXD WHERE COMM_CODE = 'DLVY_GUBN' AND COMD_CODE = C.DLVY_GUBN) AS DLVY_GUBN
+		             FROM IIBS.TB_ODINFOXM A                                    /*주문정보 마스터*/
+		                 INNER JOIN IIBS.TB_ODINFOXD B                          /*주문정보 상세*/
+		                                         ON A.ORDER_NUM = B.ORDER_NUM
+		                 INNER JOIN IIBS.TB_PDINFOXM C ON B.PD_CODE = C.PD_CODE
+		                 INNER JOIN IIBS.TB_MBINFOXM D ON A.MEMB_ID = D.MEMB_ID
+                   <!-- WHERE TO_CHAR(TO_DATE(A.ORDER_DATE,'yyyy-MM-dd'),'yyyy-MM-dd') = TO_CHAR(SYSDATE,'yyyy-MM-dd') -->
+                     WHERE  A.ORDER_CON IN ('ORDER_CON_02','ORDER_CON_03')
+                       <if test="list != null and list.size!=0">
+                       AND A.ORDER_NUM IN 
+	                      <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+	                      	#{item}
+	                      </foreach> 
+                       </if>
+                       <if test="list != null and list.size==0">
+                       AND A.ORDER_NUM IN ('')
+                       </if>
+                    GROUP BY	B.PD_CODE, 
+                    				B.PD_NAME, 
+                    				B.OPTION_CODE, 
+                    				B.PD_CUT_SEQ, 
+                    				C.PD_STD, 
+                    				C.PD_BARCD, 
+                    				C.KEEP_LOCATION, 
+                    				C.PACKING_GUBN, 
+                    				C.KEEP_GUBN , 
+                    				C.ATFL_ID, 
+                    				C.RPIMG_SEQ,
+                    				C.INPUT_CNT, 
+                    				A.MEMB_ID, 
+                    				D.MEMB_NAME,
+                    				D.COM_NAME,
+                    				D.CAR_NUM,
+                    				C.DLVY_GUBN
+                   HAVING SUM (B.ORDER_QTY)>0
+                    )
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "goods"'>
+					ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN   
+				</if>
+				<if test='ORDER_GUBUN == "com"'>
+           			ORDER BY DLVY_GUBN, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+				<if test='ORDER_GUBUN == "car"'>
+           			ORDER BY DLVY_GUBN, CAR_NUM, COM_ORD, KEEP_GUBN, PACKING_GUBN 
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY DLVY_GUBN, KEEP_GUBN, PACKING_GUBN   
+			</if>
+	</select>
+	
+	
+	<!-- 리스트 목록 -->
+	<select id="paginatedDeleteList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="mall.web.domain.TB_ODINFOXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			 FROM
+			(
+			  SELECT  INFO.*
+      			   	     , MEM.COM_NAME
+			    FROM (
+					SELECT A.ORDER_NUM    /*주문번호*/
+					     , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+					     , A.MEMB_ID								  /*회원ID (주문자)*/
+					     , (SELECT MEMB_NAME FROM IIBS.TB_MBINFOXM WHERE MEMB_ID = A.MEMB_ID) AS MEMB_NM     /*회원ID명(주문자)*/
+					     , C.RECV_PERS    /*수령인*/
+					     <!-- , B.PD_NAME      /*제품명*/ -->
+					     , (SELECT PD_NAME FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM AND ROWNUM = 1) AS PD_NAME
+					     , A.ORDER_AMT    /*주문금액*/
+					     , A.ORDER_CON								        /*주문상태*/
+					     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+					     , A.PAY_METD										/*결제수단*/
+					     , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM      /*결제수단 명*/
+					     , (SELECT COUNT(*)-1 FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM) AS count /*주문 제품 갯수*/
+					     , ORDER_DTM		/*주문일시*/
+					     , PAY_DTM			/*결제일시*/
+					     , DECODE(DAP_YN,'Y',DLVY_AMT,'0') AS DLVY_AMT         /*배송료*/
+					     , DECODE(DLAR_GUBN,'DLAR_GUBN_05','현장출고','직배송요청') AS DLAR_GUBN   /*출고방식*/
+					     , DECODE(DLVY_MSG,'',' ','있음') AS DLVY_MSG    /*배송메세지 유무*/
+			             , DECODE((SELECT ADM_REF 
+					                      FROM IIBS.TB_MBINFOXM MBINFO, IIBS.TB_ODINFOXM ODINFO 
+					                    WHERE MBINFO.MEMB_ID = ODINFO.MEMB_ID 
+					                        AND ODINFO.ORDER_NUM = A.ORDER_NUM),'',' ','있음') AS ADM_REF    /*관리자설명참조 유무*/
+                        , NVL(TO_CHAR(TO_DATE(C.DLAR_DATE,'YYYYMMDD'),'YYYY-MM-DD'),'')|| ' '||C.DLAR_TIME AS DLAR_DATE_TIME   /*출고 시간*/
+					  FROM IIBS.TB_ODINFOXM A      /*주문정보 마스터*/
+					 <!-- INNER JOIN IIBS.TB_ODINFOXD B /*주문정보 상세*/
+					    ON A.ORDER_NUM = B.ORDER_NUM -->
+					 INNER JOIN IIBS.TB_ODDLAIXM C /*주문배송지정보*/
+					    ON A.ORDER_NUM = C.ORDER_NUM
+					 WHERE DEL_YN = 'Y'
+				    ) INFO
+			        LEFT OUTER JOIN IIBS.TB_MBINFOXM MEM
+			        ON INFO.MEMB_ID = MEM.MEMB_ID
+	        	)
+			<include refid="searchCondition"/>
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "DATE_ORDER"'>
+					<if test='DATE_ORDER == "desc"'>
+						ORDER BY ORDER_DATE desc
+					</if>	
+					<if test='DATE_ORDER == "asc"'>
+						ORDER BY ORDER_DATE asc
+					</if>	
+				</if>
+				<if test='ORDER_GUBUN == "MEMB_NM_ORDER"'>
+					<if test='MEMB_NM_ORDER == "desc"'>
+						ORDER BY MEMB_NM desc
+					</if>	
+					<if test='MEMB_NM_ORDER == "asc"'>
+						ORDER BY MEMB_NM asc
+					</if>
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY ORDER_DATE desc
+			</if>
+			
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	<!-- 리스트 카운트 -->
+	<select id="deleteCount" parameterType="mall.web.domain.TB_ODINFOXM" resultType="int">
+		SELECT COUNT(*)
+		  FROM (
+				SELECT A.ORDER_NUM    /*주문번호*/
+				     , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+				     , A.MEMB_ID								  /*회원ID (주문자)*/
+				     , FC_GET_MEMBID_NM(A.MEMB_ID) AS MEMB_NM     /*회원ID명(주문자)*/
+				     , C.RECV_PERS    /*수령인*/
+				     <!-- , B.PD_NAME      /*제품명*/ -->
+				     , A.ORDER_AMT    /*주문금액*/
+				     , A.ORDER_CON								        /*주문상태*/
+				     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM    /*주문상태 명*/
+				     , A.PAY_METD										/*결제수단*/
+				     , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM      /*결제수단 명*/
+				  FROM IIBS.TB_ODINFOXM A      /*주문정보 마스터*/
+				 <!-- INNER JOIN IIBS.TB_ODINFOXD B /*주문정보 상세*/
+				    ON A.ORDER_NUM = B.ORDER_NUM -->
+				 INNER JOIN IIBS.TB_ODDLAIXM C /*주문배송지정보*/
+				    ON A.ORDER_NUM = C.ORDER_NUM
+				 WHERE DEL_YN = 'Y'
+			    )
+		<include refid="searchCondition"/>
+	</select>
+	
+	<!-- 주문내역 삭제복원 -->
+	<update id="deleteReturnOrdList" parameterType="java.util.List">
+		UPDATE IIBS.TB_ODINFOXM
+		   SET DEL_YN = 'N',		/*삭제여부*/
+		   	   MOD_DTM = SYSDATE,	/*수정날짜*/
+		   	   MODP_ID = 'admin'	/*수정날짜*/
+		 WHERE ORDER_NUM = #{ORDER_NUM} <!-- #{list.ORDER_NUM} -->
+		   AND ORDER_CON IN ('ORDER_CON_01','ORDER_CON_04','ORDER_CON_07')
+	</update>
+	
+	<!-- 주문내역 상세삭제 복원-->
+	<update id="deleteReturnOrdDtlList" parameterType="java.util.List">
+		UPDATE IIBS.TB_ODINFOXD
+		   SET DEL_YN = 'N',		/*삭제여부*/
+		       MOD_DTM = SYSDATE,	/*수정날짜*/
+		       MODP_ID = 'admin'
+		 WHERE ORDER_NUM = #{ORDER_NUM} <!-- #{list.ORDER_NUM} -->
+		   AND ORDER_CON IN ('ORDER_CON_01','ORDER_CON_04','ORDER_CON_07')
+	</update>
+	
+	
+	<!-- 엑셀전체리스트-->
+	<select id="excelAllList" parameterType="mall.web.domain.TB_ODINFOXM" resultType="HashMap"><!-- 원래 : mall.web.domain.XTB_ODINFOXM -->
+			SELECT *
+			 FROM
+			(
+			  SELECT  ORDER_DATE    /*주문일자*/
+			  			 , PAY_DTM		  /*결제일시*/
+				         , ORDER_NUM    /*주문번호*/
+				         , ORDER_CON
+				         , MEM.MEMB_ID AS MEMB_ID
+				      	 , TRIM(MEMB_NM) AS MEMB_NM     /*회원ID명(주문자)*/
+					     , MEM.COM_NAME     /*(회사명)*/
+					     , PD_NAME || DECODE(count,0,'',' 외 '||count||'종') AS PD_NAME /*주문상품*/
+					     , ORDER_AMT
+					     , DLVY_AMT
+					     , ORDER_AMT - DLVY_AMT AS REAL_AMT 
+					     , ORDER_CON_NM || DECODE(INFO.PAY_METD_NM,'','',DECODE(INFO.PAY_METD_NM,'','',' (' || INFO.PAY_METD_NM || ')')) AS ORDER_CON_NM
+					     , DLAR_GUBN || ' ' || DLAR_DATE_TIME AS DLAR_GUBN
+					     , DLVY_MSG
+					     , INFO.ADM_REF
+					     , PAY_METD		/*20190531_결제수단추가*/
+			    FROM (
+					SELECT A.ORDER_NUM
+					     , TO_CHAR(TO_DATE(ORDER_DATE,DECODE(LENGTH(ORDER_DATE),8,'YYYYMMDD','YYYYMMDDHH24MISS'))
+		     								,DECODE(LENGTH(ORDER_DATE),8,'yyyy-MM-dd','yyyy-MM-dd HH24:mi:SS')) AS ORDER_DATE    /*주문일자*/
+					     , A.MEMB_ID
+					     , (SELECT MEMB_NAME FROM IIBS.TB_MBINFOXM WHERE MEMB_ID = A.MEMB_ID) AS MEMB_NM
+					     , C.RECV_PERS
+					     , (SELECT PD_NAME FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM AND ROWNUM = 1) AS PD_NAME
+					     , A.ORDER_AMT 
+					     , A.ORDER_CON
+					     , FC_GET_COMCOD_NM(A.ORDER_CON) AS ORDER_CON_NM 
+					     , A.PAY_METD	
+					     , FC_GET_COMCOD_NM(A.PAY_METD) AS PAY_METD_NM 
+					     , (SELECT COUNT(*)-1 FROM IIBS.TB_ODINFOXD WHERE ORDER_NUM = A.ORDER_NUM) AS count
+					     , ORDER_DTM
+					     , PAY_DTM	
+					     , DECODE(DAP_YN,'Y',DLVY_AMT,'0') AS DLVY_AMT 
+					     , DECODE(DLAR_GUBN,'DLAR_GUBN_05','현장출고','직배송요청') AS DLAR_GUBN 
+					     , DECODE(DLVY_MSG,'',' ','있음') AS DLVY_MSG
+			             , DECODE((SELECT ADM_REF 
+					                      FROM IIBS.TB_MBINFOXM MBINFO, IIBS.TB_ODINFOXM ODINFO 
+					                    WHERE MBINFO.MEMB_ID = ODINFO.MEMB_ID 
+					                        AND ODINFO.ORDER_NUM = A.ORDER_NUM),'',' ','있음') AS ADM_REF  
+                        <!-- , NVL(TO_CHAR(TO_DATE(C.DLAR_DATE,'YYYYMMDD'),'YYYY-MM-DD'),'')|| ' '||C.DLAR_TIME AS DLAR_DATE_TIME -->
+                        ,DECODE(LENGTH(DLAR_DATE),8,TO_CHAR(TO_DATE(DLAR_DATE,'YYYYMMDD'),'YYYY-MM-DD'),'')|| ' '||DLAR_TIME AS DLAR_DATE_TIME   /*출고 시간*/
+					  FROM IIBS.TB_ODINFOXM A  
+					 INNER JOIN IIBS.TB_ODDLAIXM C /*주문배송지정보*/
+					    ON A.ORDER_NUM = C.ORDER_NUM
+					 WHERE DEL_YN IS NULL OR DEL_YN = 'N'
+				    ) INFO
+			        LEFT OUTER JOIN IIBS.TB_MBINFOXM MEM
+			        ON INFO.MEMB_ID = MEM.MEMB_ID
+	        	)
+				<include refid="searchCondition"/>
+			<if test="ORDER_GUBUN != null and ORDER_GUBUN != ''">
+				<if test='ORDER_GUBUN == "DATE_ORDER"'>
+					<if test='DATE_ORDER == "desc"'>
+						ORDER BY ORDER_DATE desc
+					</if>	
+					<if test='DATE_ORDER == "asc"'>
+						ORDER BY ORDER_DATE asc
+					</if>	
+				</if>
+				<if test='ORDER_GUBUN == "MEMB_NM_ORDER"'>
+					<if test='MEMB_NM_ORDER == "desc"'>
+						ORDER BY MEMB_NM desc
+					</if>	
+					<if test='MEMB_NM_ORDER == "asc"'>
+						ORDER BY MEMB_NM asc
+					</if>
+				</if>
+				<if test='ORDER_GUBUN == "COM_NAME_ORDER"'>
+					<if test='MEMB_NM_ORDER == "desc"'>
+						ORDER BY COM_NAME desc nulls last
+					</if>	
+					<if test='MEMB_NM_ORDER == "asc"'>
+						ORDER BY COM_NAME asc
+					</if>
+				</if>
+			</if>
+			<if test="ORDER_GUBUN == null or ORDER_GUBUN == ''">
+				ORDER BY ORDER_DATE desc
+			</if>			
+	</select>
+	
+	<update id="excelUpdate_Dlvy" parameterType="mall.web.domain.TB_ODINFOXM">
+		UPDATE 
+			IIBS.TB_ODINFOXM
+		SET
+			MODP_ID = #{MODP_ID}
+	      , MOD_DTM = SYSDATE
+	      , DLVY_COM = #{DLVY_COM} 
+		  , DLVY_TDN = #{DLVY_TDN}
+		  , ORDER_CON = 'ORDER_CON_05'
+		WHERE
+			ORDER_NUM = TRIM(#{ORDER_NUM})
+	</update>
+	
+</mapper>

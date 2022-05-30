@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.ProductLinkMgrMapper">
+	<sql id="searchCondition">
+		<where>	
+			<if test="SUPR_ID != null and SUPR_ID != ''">
+			    AND SUPR_ID = #{SUPR_ID}
+			</if>
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "PD_NAME"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND PD_NAME LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>	
+				<if test='schGbn == "PD_CODE"'>
+					<if test="schTxt != null and schTxt != ''">
+					    AND PD_CODE LIKE '%' || #{schTxt} || '%'
+					</if>	
+				</if>
+			</if>
+			AND DEL_YN = 'N'
+		</where>  
+	</sql>
+
+	<select id="count" parameterType="mall.web.domain.TB_PDLINKXM" resultType="int">
+			SELECT COUNT(*)
+			  FROM (
+					SELECT
+						A.PD_CODE
+						, A.SUPR_ID
+						, FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+						, A.PD_NAME
+						, A.CAGO_ID
+						, FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+						, A.PD_PRICE
+						, A.PDDC_GUBN
+						, A.PDDC_VAL
+						, A.SVMN_GUBN
+						, A.SVMN_VAL
+						, A.INVEN_QTY
+						, A.POS_NAME
+						, A.PD_BARCD
+						, A.STORE_CTR
+						, A.PD_STD
+						, A.DTB_DLINE
+						, A.MAKE_COM
+						, A.ORG_CT
+						, A.SALE_CON
+						, A.PD_DINFO
+						, A.DLVREF_GUIDE
+						, A.ATFL_ID
+						, A.RPIMG_SEQ
+						, A.ADC1_NAME
+						, A.ADC2_NAME
+						, A.ADC3_NAME
+						, A.ADC4_NAME
+						, A.ADC5_NAME
+						, A.ADC1_VAL
+						, A.ADC2_VAL
+						, A.ADC3_VAL
+						, A.ADC4_VAL
+						, A.ADC5_VAL
+						, A.PD_ICON
+						, A.STD_UNIT
+						, A.REGP_ID
+						, A.REG_DTM
+						, A.MODP_ID
+						, A.MOD_DTM
+						, A.TAX_GUBN
+						, A.DEL_YN
+						, A.DTL_ATFL_ID
+						, A.DTL_USE_YN
+                        , B.CAGO_ID_PATH
+                        , B.CAGO_NM_PATH
+                        , B.SORT_ORDR
+                        , C.PD_PRICE01
+                        , C.PD_PRICE02
+                        , C.PD_PRICE03
+                        , C.PD_PRICE04
+                        , C.PD_PRICE05
+					FROM TB_PDINFOXM A,
+                         (
+                            SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+                            FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' )
+                            START WITH UPCAGO_ID IS NULL
+                            CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+                         ) B,
+                         (
+							SELECT PD_CODE 
+							     , SUM(PD_PRICE01) PD_PRICE01
+							     , SUM(PD_PRICE02) PD_PRICE02
+							     , SUM(PD_PRICE03) PD_PRICE03
+							     , SUM(PD_PRICE04) PD_PRICE04
+							     , SUM(PD_PRICE05) PD_PRICE05
+							 FROM (
+							        SELECT PD_CODE
+							             , DECODE(MALL_GUBN, '01', MAX(PD_PRICE)) PD_PRICE01
+							             , DECODE(MALL_GUBN, '02', MAX(PD_PRICE)) PD_PRICE02
+							             , DECODE(MALL_GUBN, '03', MAX(PD_PRICE)) PD_PRICE03
+							             , DECODE(MALL_GUBN, '04', MAX(PD_PRICE)) PD_PRICE04
+							             , DECODE(MALL_GUBN, '05', MAX(PD_PRICE)) PD_PRICE05
+							          FROM (
+							                SELECT A.PD_CODE, A.PD_NAME, B.MALL_GUBN, C.COMDCD_NAME, B.PD_PRICE
+							                  FROM TB_PDINFOXM A, TB_PDLINKXM B, TB_COMCODXD C
+							                 WHERE A.PD_CODE = B.PD_CODE
+							                   AND B.MALL_GUBN = C.COMD_CODE(+)
+							                   AND C.COMM_CODE(+) = 'MALL_GUBN'
+							               )
+							         GROUP BY PD_CODE, MALL_GUBN
+							       )
+							 GROUP BY PD_CODE
+                         ) C
+                    WHERE A.CAGO_ID = B.CAGO_ID 
+                      AND A.LINK_YN = 'Y'
+                      AND A.PD_CODE = C.PD_CODE(+) 
+			        )
+		<include refid="searchCondition"/>
+	</select>
+	
+	<select id="paginatedList" parameterType="mall.web.domain.TB_PDLINKXM" resultType="mall.web.domain.TB_PDLINKXM">
+		<include refid="default.pagerHeader"/>	
+			SELECT *
+			  FROM (
+					SELECT
+						A.PD_CODE
+						, A.SUPR_ID
+						, FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
+						, A.PD_NAME
+						, A.CAGO_ID
+						, FC_GET_CAGOID_NM(A.CAGO_ID) CAGO_NAME
+						, A.PD_PRICE
+						, A.PDDC_GUBN
+						, A.PDDC_VAL
+						, A.SVMN_GUBN
+						, A.SVMN_VAL
+						, A.INVEN_QTY
+						, A.POS_NAME
+						, A.PD_BARCD
+						, A.STORE_CTR
+						, A.PD_STD
+						, A.DTB_DLINE
+						, A.MAKE_COM
+						, A.ORG_CT
+						, A.SALE_CON
+						, A.PD_DINFO
+						, A.DLVREF_GUIDE
+						, A.ATFL_ID
+						, A.RPIMG_SEQ
+						, A.ADC1_NAME
+						, A.ADC2_NAME
+						, A.ADC3_NAME
+						, A.ADC4_NAME
+						, A.ADC5_NAME
+						, A.ADC1_VAL
+						, A.ADC2_VAL
+						, A.ADC3_VAL
+						, A.ADC4_VAL
+						, A.ADC5_VAL
+						, A.PD_ICON
+						, A.STD_UNIT
+						, A.REGP_ID
+						, A.REG_DTM
+						, A.MODP_ID
+						, A.MOD_DTM
+						, A.TAX_GUBN
+						, A.DEL_YN
+						, A.DTL_ATFL_ID
+						, A.DTL_USE_YN
+                        , B.CAGO_ID_PATH
+                        , B.CAGO_NM_PATH
+                        , B.SORT_ORDR
+                        , C.PD_PRICE01
+                        , C.PD_PRICE02
+                        , C.PD_PRICE03
+                        , C.PD_PRICE04
+                        , C.PD_PRICE05
+					FROM TB_PDINFOXM A,
+                         (
+                            SELECT CAGO_ID, CAGO_NAME, UPCAGO_ID, SORT_ORDR,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_ID, '>'), 2) CAGO_ID_PATH,
+                                   SUBSTR(SYS_CONNECT_BY_PATH(CAGO_NAME, '>'), 2) CAGO_NM_PATH
+                            FROM (SELECT * FROM TB_PDCAGOXM WHERE USE_YN = 'Y' )
+                            START WITH UPCAGO_ID IS NULL
+                            CONNECT BY PRIOR CAGO_ID = UPCAGO_ID
+                         ) B,
+                         (
+							SELECT PD_CODE
+							     , SUM(PD_PRICE01) PD_PRICE01
+							     , SUM(PD_PRICE02) PD_PRICE02
+							     , SUM(PD_PRICE03) PD_PRICE03
+							     , SUM(PD_PRICE04) PD_PRICE04
+							     , SUM(PD_PRICE05) PD_PRICE05
+							 FROM (
+							        SELECT PD_CODE
+							             , DECODE(MALL_GUBN, '01', MAX(PD_PRICE)) PD_PRICE01
+							             , DECODE(MALL_GUBN, '02', MAX(PD_PRICE)) PD_PRICE02
+							             , DECODE(MALL_GUBN, '03', MAX(PD_PRICE)) PD_PRICE03
+							             , DECODE(MALL_GUBN, '04', MAX(PD_PRICE)) PD_PRICE04
+							             , DECODE(MALL_GUBN, '05', MAX(PD_PRICE)) PD_PRICE05
+							          FROM (
+							                SELECT A.PD_CODE, A.PD_NAME, B.MALL_GUBN, C.COMDCD_NAME, B.PD_PRICE
+							                  FROM TB_PDINFOXM A, TB_PDLINKXM B, TB_COMCODXD C
+							                 WHERE A.PD_CODE = B.PD_CODE
+							                   AND B.MALL_GUBN = C.COMD_CODE(+)
+							                   AND C.COMM_CODE(+) = 'MALL_GUBN'
+							               )
+							         GROUP BY PD_CODE, MALL_GUBN
+							       )
+							 GROUP BY PD_CODE
+                         ) C
+                    WHERE A.CAGO_ID = B.CAGO_ID 
+                      AND A.LINK_YN = 'Y'
+                      AND A.PD_CODE = C.PD_CODE(+) 
+					<if test="sortGubun != null and sortGubun != ''">
+						<if test='sortGubun == "PD_NAME"'>
+							<if test='sortOdr == "desc"'>
+								ORDER BY A.PD_NAME desc
+							</if>	
+							<if test='sortOdr == "asc"'>
+								ORDER BY A.PD_NAME asc
+							</if>	
+						</if>
+						<if test='sortGubun == "CAGO_SORT"'>
+							<if test='sortOdr == "desc"'>
+								ORDER BY A.SORT_ORDR desc, A.PD_NAME asc
+							</if>	
+							<if test='sortOdr == "asc"'>
+								ORDER BY A.SORT_ORDR asc, A.PD_NAME asc
+							</if>
+						</if>
+						<if test='sortGubun == "REG_DTM"'>
+							<if test='sortOdr == "desc"'>
+								ORDER BY A.REG_DTM desc, A.PD_NAME asc
+							</if>	
+							<if test='sortOdr == "asc"'>
+								ORDER BY A.REG_DTM asc, A.PD_NAME asc
+							</if>
+						</if>
+					</if>
+					<if test="sortGubun == null or sortGubun == ''">
+						ORDER BY A.PD_NAME
+					</if>
+			        )
+			<include refid="searchCondition"/>
+		<include refid="default.pagerFooter"/>
+	</select>
+	
+	
+	<update id="update" parameterType="mall.web.domain.TB_PDLINKXM">
+		MERGE INTO TB_PDLINKXM
+		            USING DUAL
+		            ON ( PD_CODE = #{PD_CODE} and MALL_GUBN = #{MALL_GUBN} )
+         WHEN MATCHED THEN
+                   UPDATE SET
+					  PD_PRICE = #{PD_PRICE}
+					, MODP_ID = #{REGP_ID}
+					, MOD_DTM = SYSDATE
+         WHEN NOT MATCHED THEN
+                   INSERT (
+					PD_CODE
+					, MALL_GUBN
+					, PD_PRICE 
+					, REGP_ID
+					, REG_DTM
+					, MODP_ID
+					, MOD_DTM
+				) 
+                  VALUES (
+					#{PD_CODE}
+					, #{MALL_GUBN}
+					, #{PD_PRICE}
+					, #{REGP_ID} 
+					, SYSDATE
+					, #{REGP_ID} 
+					, SYSDATE
+				)
+	</update>
+	
+</mapper>

@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mall.web.mapper.admin.EntryCategoryMenuMgrMapper">
+	<sql id="searchCondition">
+		<where>	
+			<if test="SUPR_ID != null and SUPR_ID != ''">
+			    AND SUPR_ID = #{SUPR_ID}
+			</if>			
+			<if test="schGbn != null and schGbn != ''">
+				<if test='schGbn == "CAGO_ID"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+					            AND CAGO_ID LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if>	
+				<if test='schGbn == "CAGO_NAME"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+					            AND CAGO_NAME LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if>
+				<!-- <if test='schGbn == "PD_NAME"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+					            AND PD_NAME LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if>	
+				<if test='schGbn == "PD_CODE"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+					            AND PD_CODE LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if>
+				<if test='schGbn == "PD_BARCD"'>
+					<choose>
+						<when test="schTxt_befList != null">
+							<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+					            AND PD_BARCD LIKE '%' || #{item} || '%'
+					        </foreach>
+						</when>
+					</choose>
+				</if> -->
+			</if>
+			AND DEL_YN = 'N'
+		</where>  
+	</sql>
+	
+	
+	<select id="getSuprList" parameterType="mall.web.domain.TB_SPINFOXM" resultType="mall.web.domain.TB_COATFLXD">
+	   SELECT *
+	     FROM TB_SPINFOXM
+		WHERE SCSS_YN = 'N' <!-- 탈퇴하지 않았을경우 -->
+		ORDER BY REG_DTM
+	</select>
+	
+	
+	<select id="getEntrycagoList" resultType="mall.web.domain.TB_ENTRYCAGOXM">
+	   SELECT ENTRY_ID
+			, ENTRY_NAME
+			, SORT_ORDR
+			, USE_YN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+			, IMG_URL
+	     FROM TB_ENTRYCAGOXM
+		ORDER BY SORT_ORDR
+	</select>
+	
+	<select id="getEntrycago" parameterType="String" resultType="mall.web.domain.TB_ENTRYCAGOXM">
+	   SELECT ENTRY_ID
+			, ENTRY_NAME
+			, SORT_ORDR
+			, USE_YN
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+			, IMG_URL
+	     FROM TB_ENTRYCAGOXM
+	    WHERE ENTRY_ID = #{value}
+		ORDER BY SORT_ORDR
+	</select>
+	
+	<select id="getEntrycagoDetail" parameterType="String" resultType="mall.web.domain.TB_ENTRYCAGOXD">
+	   SELECT ENTRY_ID
+			, ENTRYD_ID
+			, (SELECT CAGO_NAME FROM TB_PDCAGOXM WHERE CAGO_ID = ENTRYD_ID AND ROWNUM = '1') AS ENTRYD_NAME
+			, SORT_ORDR
+			, REGP_ID
+			, REG_DTM
+			, MODP_ID
+			, MOD_DTM
+	     FROM TB_ENTRYCAGOXD
+	    WHERE ENTRY_ID = #{value}	    
+		ORDER BY SORT_ORDR
+		
+	</select>
+	
+	
+	<select id="paginatedList" parameterType="mall.web.domain.TB_PDCAGOXM" resultType="mall.web.domain.TB_PDCAGOXM">
+		<include refid="default.pagerHeader"/>
+			SELECT CAGO_ID
+			     , CAGO_NAME			     
+			  FROM (SELECT LEVEL LVL
+			             , CAGO_ID
+			             , CAGO_NAME
+			             , USE_YN
+			             , DEL_YN
+			          FROM (SELECT * FROM TB_PDCAGOXM WHERE DEL_YN != 'Y' AND USE_YN = 'Y')
+			         START WITH UPCAGO_ID IS NULL
+			       CONNECT BY PRIOR CAGO_ID = UPCAGO_ID) 
+			  WHERE LVL = '2'		
+				<if test="schGbn != null and schGbn != ''">
+					<if test='schGbn == "CAGO_ID"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+						            AND CAGO_ID LIKE '%' || #{item} || '%'
+						        </foreach>
+							</when>
+						</choose>
+					</if>	
+					<if test='schGbn == "CAGO_NAME"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+						            AND CAGO_NAME LIKE '%' || #{item} || '%'
+						        </foreach>
+							</when>
+						</choose>
+					</if>
+				</if>
+		<include refid="default.pagerFooter"/>		        
+	</select>
+	
+	<select id="count" parameterType="mall.web.domain.TB_PDCAGOXM" resultType="int">
+			SELECT count(*)
+			  FROM (SELECT LEVEL LVL
+			             , CAGO_ID
+			             , CAGO_NAME
+			             , USE_YN
+			             , DEL_YN
+			          FROM (SELECT * FROM TB_PDCAGOXM WHERE DEL_YN != 'Y' AND USE_YN = 'Y')
+			         START WITH UPCAGO_ID IS NULL
+			       CONNECT BY PRIOR CAGO_ID = UPCAGO_ID)  
+			  WHERE LVL = '2'
+				<if test="schGbn != null and schGbn != ''">
+					<if test='schGbn == "CAGO_ID"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+						            AND CAGO_ID LIKE '%' || #{item} || '%'
+						        </foreach>
+							</when>
+						</choose>
+					</if>	
+					<if test='schGbn == "CAGO_NAME"'>
+						<choose>
+							<when test="schTxt_befList != null">
+								<foreach collection="schTxt_befList" item="item" index="index" separator="" open="" close="">
+						            AND CAGO_NAME LIKE '%' || #{item} || '%'
+						        </foreach>
+							</when>
+						</choose>
+					</if>
+				</if>
+	</select>
+	
+	
+	<update id="updateEntryCagoxm" parameterType="mall.web.domain.TB_ENTRYCAGOXM">
+		UPDATE TB_ENTRYCAGOXM 
+		   SET ENTRY_NAME = #{ENTRY_NAME}
+		     , SORT_ORDR = #{SORT_ORDRM}
+		     , USE_YN = #{USE_YN}
+		     , MODP_ID = #{MODP_ID}
+		     , MOD_DTM = SYSDATE
+		 WHERE ENTRY_ID = #{ENTRY_ID}		    
+	</update>	
+	
+	<insert id="insertEntryCagoxm" parameterType="mall.web.domain.TB_ENTRYCAGOXM">
+		INSERT INTO 
+			TB_ENTRYCAGOXM( ENTRY_ID
+						  , ENTRY_NAME
+						  , SORT_ORDR
+						  , USE_YN
+						  , REGP_ID
+						  , REG_DTM
+						  , MODP_ID
+						  , MOD_DTM )
+	    		    VALUES( #{ENTRY_ID}
+	    		    	  , #{ENTRY_NAME}
+						  , #{SORT_ORDRM}
+						  , #{USE_YN}
+						  , #{REGP_ID}
+						  , SYSDATE
+						  , #{MODP_ID}
+						  , SYSDATE )	    
+	</insert>	
+	
+	<select id="getEntCagoMaxEtryId" resultType="String">
+		SELECT LPAD((MAX(ENTRY_ID)+1), 7, '0') FROM TB_ENTRYCAGOXM
+	</select>
+	
+	
+	<insert id="insertEntryCagoxd" parameterType="mall.web.domain.TB_ENTRYCAGOXD">
+		INSERT INTO 
+			TB_ENTRYCAGOXD( ENTRY_ID
+						  , ENTRYD_ID
+						  , SORT_ORDR
+						  , REGP_ID
+						  , REG_DTM
+						  , MODP_ID
+						  , MOD_DTM )
+	    		    VALUES( #{ENTRY_ID}
+						  , #{ENTRYD_ID}
+						  , #{SORT_ORDR}
+						  , #{REGP_ID}
+						  , SYSDATE
+						  , #{MODP_ID}
+						  , SYSDATE )
+	</insert>
+	
+	
+	<delete id="deleteEntryCagoxd" parameterType="String">
+		DELETE 
+		  FROM TB_ENTRYCAGOXD 
+		 WHERE ENTRY_ID = #{value}
+	</delete>
+	
+	<delete id="deleteEntryCagoxm" parameterType="String">
+		DELETE 
+		  FROM TB_ENTRYCAGOXM
+		 WHERE ENTRY_ID = #{value}
+	</delete>
+
+</mapper>

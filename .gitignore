@@ -18,4 +18,11 @@ target/
 
 src/main/webapp/upload
 
- 
+META-INF/
+WEB-INF/
+danal/
+html/
+layout/
+resources/
+robots.txt
+upload/ 

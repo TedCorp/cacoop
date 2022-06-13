@@ -771,8 +771,8 @@
       
       const LOCAL_SUCCESS_URL = 'http://localhost:8888/payment/success';
       const LOCAL_FAIL_URL = 'http://localhost:8888/payment/fail';
-      const SERVER_SUCCESS_URL = 'http://cacoop.co.kr/payment/success';
-      const SERVER_FAIL_URL = 'http://cacoop.co.kr/payment/fail';
+      const SERVER_SUCCESS_URL = 'http://www.cacoop.co.kr/payment/success';
+      const SERVER_FAIL_URL = 'http://www.cacoop.co.kr/payment/fail';
 
       tossPayments.requestPayment(paymentType, {
         amount: $("#totAmt").val(),

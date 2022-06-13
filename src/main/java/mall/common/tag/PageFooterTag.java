@@ -200,7 +200,7 @@ public class PageFooterTag extends BodyTagSupport
 
             if(pageNum == i)
             {
-                sb.append("<li><a>").append(pageNum).append("</a></li>");
+                sb.append("<li><a style='color:#3498ff'><b>").append(pageNum).append("</b></a></li>");
             } else{
                 sb.append("<li><a href=\"" + url + "?");
                 sb.append("pageNum=").append(i).append("&rowCnt=").append(rowCount).append(gSearchStr).append("\">");

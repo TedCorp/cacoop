@@ -2297,158 +2297,158 @@ public class OrderRestController extends DefaultController{
 	 * @return
 	 * @throws Exception
 	 */
-	@RequestMapping(value={ "/cancel/popup" }, method=RequestMethod.POST)
-	public ModelAndView orderCancel(@ModelAttribute TB_ODINFOXM tb_odinfoxm, HttpServletRequest request, Model model) throws Exception {
-		// 로그인 정보
-		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
-		tb_odinfoxm.setREGP_ID(loginUser.getMEMB_ID());
-
-		ModelAndView mav = new ModelAndView();
-		Map<String,String> payResMap = new HashMap<String,String>();
-
-    	boolean bState = false;
-    	String STATE ="";
-    	String PAY_METD = tb_odinfoxm.getPAY_METD();
-    	
-		//결제 정보가 있을경우
-		if(StringUtils.isNotEmpty(tb_odinfoxm.getPAY_MDKY())){
-
-		    /*
-		     * [결제취소 요청 페이지]
-		     *
-		     * LG유플러스으로 부터 내려받은 거래번호(LGD_TID)를 가지고 취소 요청을 합니다.(파라미터 전달시 POST를 사용하세요)
-		     * (승인시 LG유플러스으로 부터 내려받은 PAYKEY와 혼동하지 마세요.)
-		     */
-		    String CST_PLATFORM			= environment.getRequiredProperty("lguplus.cst_platform");		//LG유플러스 결제서비스 선택(test:테스트, service:서비스)
-		    String CST_MID				= environment.getRequiredProperty("lguplus.cst_mid");			//LG유플러스으로 부터 발급받으신 상점아이디를 입력하세요.
-		    String LGD_MID				= ("test".equals(CST_PLATFORM.trim())?"t":"")+CST_MID;  		//테스트 아이디는 't'를 제외하고 입력하세요.
-		    																							//상점아이디(자동생성)
-		    String LGD_TID				= tb_odinfoxm.getPAY_MDKY();                      				//LG유플러스으로 부터 내려받은 거래번호(LGD_TID)
-
-			/* 
-			 * ※ 중요
-			 * 환경설정 파일의 경우 반드시 외부에서 접근이 가능한 경로에 두시면 안됩니다.
-			 * 해당 환경파일이 외부에 노출이 되는 경우 해킹의 위험이 존재하므로 반드시 외부에서 접근이 불가능한 경로에 두시기 바랍니다. 
-			 * 예) [Window 계열] C:\inetpub\wwwroot\lgdacom ==> 절대불가(웹 디렉토리)
-			 */
-		    String configPath 			= environment.getRequiredProperty("lguplus.configPath");	//LG유플러스에서 제공한 환경파일("/conf/lgdacom.conf") 위치 지정.
-		        
-		    LGD_TID     				= ( LGD_TID == null )?"":LGD_TID; 
-		    
-		    XPayClient xpay = new XPayClient();
-		    xpay.Init(configPath, CST_PLATFORM);
-		    xpay.Init_TX(LGD_MID);
-		    xpay.Set("LGD_TXNAME", "Cancel");
-		    xpay.Set("LGD_TID", LGD_TID);
-		 
-		    /*
-		     * 1. 결제취소 요청 결과처리
-		     *
-		     * 취소결과 리턴 파라미터는 연동메뉴얼을 참고하시기 바랍니다.
-			 *
-			 * [[[중요]]] 고객사에서 정상취소 처리해야할 응답코드
-			 * 1. 신용카드 : 0000, AV11  
-			 * 2. 계좌이체 : 0000, RF00, RF10, RF09, RF15, RF19, RF23, RF25 (환불진행중 응답건-> 환불결과코드.xls 참고)
-			 * 3. 나머지 결제수단의 경우 0000(성공) 만 취소성공 처리
-			 *
-		     */
-		    if (xpay.TX()) {
-		        //1)결제취소결과 화면처리(성공,실패 결과 처리를 하시기 바랍니다.)
-		    	boolean isXpayOK = false;
-		    	payResMap.put("msg01", "취소요청이 완료되었습니다.  <br>"
-									 + "TX 취소요청 통신 응답코드 = " 	+ xpay.m_szResCode + "<br>"		//통신 응답코드("0000" 일 때 통신 성공)
-									 + "TX 취소요청 통신 응답메시지 = " + xpay.m_szResMsg + "<p>");		//통신 응답메시지
-		    	// 신용카드
-		    	if("SC0010".equals(PAY_METD)){
-		    		// 취소 정상 승인
-		    		if("0000".equals( xpay.m_szResCode ) || "AV11".equals( xpay.m_szResCode )) {
-		    			mav.addObject("alertMessage", "[" + xpay.m_szResCode + "] " + "결제 취소요청이 완료되었습니다.");
-		    			isXpayOK = true;
-		    		}
-		    		
-		    	// 계좌이체	
-		    	} else if("SC0030".equals(PAY_METD)){
-		    		// 환불 정상 승인
-		    		if( "0000".equals( xpay.m_szResCode ) || "RF00".equals( xpay.m_szResCode )) {
-		    			mav.addObject("alertMessage", "[" + xpay.m_szResCode + "] " + "환불이 정상 처리되었습니다.");
-		    			isXpayOK = true;
-		    		}
-		    		
-		    		// 환불 진행중 승인
-		    		if( "RF10".equals( xpay.m_szResCode ) || "RF09".equals( xpay.m_szResCode ) || 
-		    			"RF15".equals( xpay.m_szResCode ) || "RF19".equals( xpay.m_szResCode ) || 
-		    			"RF23".equals( xpay.m_szResCode ) || "RF25".equals( xpay.m_szResCode )) {
-		    			mav.addObject("alertMessage", "[" + xpay.m_szResCode + "] " + "환불이 요청되었습니다. 환불진행중입니다.");
-		    			isXpayOK = true;
-		    		}
-		    		
-		    	// 기타 결제	
-		    	} else {
-		    		if("0000".equals( xpay.m_szResCode )) {
-		    			mav.addObject("alertMessage", "결제 취소요청이 완료되었습니다.");
-		    			isXpayOK = true;
-		    		}
-		    	}
-		    	
-		    	if(isXpayOK) {
-		    		tb_odinfoxm.setORDER_CON("ORDER_CON_04");
-					tb_odinfoxm.setCNCL_CON("CNCL_CON_03");		// 취소완료
-
-					try{
-						if (orderService.cancelObject(tb_odinfoxm) > 0){
-							orderService.orderPayUpdateDtl(tb_odinfoxm);
-							orderAtomyAza(tb_odinfoxm);	// 애터미아자 API 호출 (결제완료, 배송완료, 주문취소, 환불)
-						}
-						bState = isXpayOK;
-	        			STATE = "OK";
-	        			
-	        		} catch(Exception e){
-	        			// data : null 이면 주문 실패처리
-	        			STATE = "결제취소완료, 상점 DB처리 실패.";
-	        		}
-		    	} else {
-					//통신상의 문제 발생(최종결제요청 결과 실패 DB처리)
-		    		mav.addObject("alertMessage", "결제 취소요청이 실패하였습니다.\n  - TX Response_code = " + xpay.m_szResCode + " - \nTX Response_msg = " + xpay.m_szResMsg);
-					payResMap.put("msg08" , "최종결제요청 결과 실패, DB처리하시기 바랍니다.<br>");
-        			STATE = "최종결제요청 결과 실패, DB처리하시기 바랍니다.";
-				}
-				
-		    }else {
-		        //2)API 요청 실패 화면처리
-		    	mav.addObject("alertMessage", "결제 취소요청이 실패하였습니다.\n  - TX Response_code = " + xpay.m_szResCode + " - \nTX Response_msg = " + xpay.m_szResMsg);
-    			STATE = "결제취소요청실패, API 요청 실패.";
-		    }
-		    
-		    try {
-			    //결제 로그 처리
-		    	TB_LGUPLUS tb_lguplus = new TB_LGUPLUS();
-			    tb_lguplus.setLGD_TID(LGD_TID);
-			    tb_lguplus.setLGD_OID(tb_odinfoxm.getORDER_NUM());
-			    tb_lguplus.setGUBUN("CANCEL");
-			    tb_lguplus.setLGD_RESPCODE(xpay.m_szResCode);
-			    tb_lguplus.setLGD_RESPMSG(xpay.m_szResMsg);
-			    tb_lguplus.setLGD_PAYTYPE(PAY_METD);
-			    tb_lguplus.setSTATE(STATE);
-			    
-			    if(tb_lguplus.getLGD_TID() != null) {
-					orderService.lguplusLogInsert(tb_lguplus);
-			    }
-				
-			}catch(Exception e){
-				logger.info("LgUplus Logging Error : " + e.toString());
-			}
-		    
-		}else{
-			mav.addObject("alertMessage", "PG사 결제정보가 없습니다. 결제수단을 확인해주세요.");
-		}
-
-		mav.addObject("payResMap", payResMap);
-		mav.addObject("gubun", "popup");
-		mav.addObject("returnUrl", servletContextPath.concat("/m/order/view/" + tb_odinfoxm.getORDER_NUM()));
-		mav.setViewName("alertMessage");
-
-		return mav;		
-	}
+//	@RequestMapping(value={ "/cancel/popup" }, method=RequestMethod.POST)
+//	public ModelAndView orderCancel(@ModelAttribute TB_ODINFOXM tb_odinfoxm, HttpServletRequest request, Model model) throws Exception {
+//		// 로그인 정보
+//		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
+//		tb_odinfoxm.setREGP_ID(loginUser.getMEMB_ID());
+//
+//		ModelAndView mav = new ModelAndView();
+//		Map<String,String> payResMap = new HashMap<String,String>();
+//
+//    	boolean bState = false;
+//    	String STATE ="";
+//    	String PAY_METD = tb_odinfoxm.getPAY_METD();
+//    	
+//		//결제 정보가 있을경우
+//		if(StringUtils.isNotEmpty(tb_odinfoxm.getPAY_MDKY())){
+//
+//		    /*
+//		     * [결제취소 요청 페이지]
+//		     *
+//		     * LG유플러스으로 부터 내려받은 거래번호(LGD_TID)를 가지고 취소 요청을 합니다.(파라미터 전달시 POST를 사용하세요)
+//		     * (승인시 LG유플러스으로 부터 내려받은 PAYKEY와 혼동하지 마세요.)
+//		     */
+//		    String CST_PLATFORM			= environment.getRequiredProperty("lguplus.cst_platform");		//LG유플러스 결제서비스 선택(test:테스트, service:서비스)
+//		    String CST_MID				= environment.getRequiredProperty("lguplus.cst_mid");			//LG유플러스으로 부터 발급받으신 상점아이디를 입력하세요.
+//		    String LGD_MID				= ("test".equals(CST_PLATFORM.trim())?"t":"")+CST_MID;  		//테스트 아이디는 't'를 제외하고 입력하세요.
+//		    																							//상점아이디(자동생성)
+//		    String LGD_TID				= tb_odinfoxm.getPAY_MDKY();                      				//LG유플러스으로 부터 내려받은 거래번호(LGD_TID)
+//
+//			/* 
+//			 * ※ 중요
+//			 * 환경설정 파일의 경우 반드시 외부에서 접근이 가능한 경로에 두시면 안됩니다.
+//			 * 해당 환경파일이 외부에 노출이 되는 경우 해킹의 위험이 존재하므로 반드시 외부에서 접근이 불가능한 경로에 두시기 바랍니다. 
+//			 * 예) [Window 계열] C:\inetpub\wwwroot\lgdacom ==> 절대불가(웹 디렉토리)
+//			 */
+//		    String configPath 			= environment.getRequiredProperty("lguplus.configPath");	//LG유플러스에서 제공한 환경파일("/conf/lgdacom.conf") 위치 지정.
+//		        
+//		    LGD_TID     				= ( LGD_TID == null )?"":LGD_TID; 
+//		    
+//		    XPayClient xpay = new XPayClient();
+//		    xpay.Init(configPath, CST_PLATFORM);
+//		    xpay.Init_TX(LGD_MID);
+//		    xpay.Set("LGD_TXNAME", "Cancel");
+//		    xpay.Set("LGD_TID", LGD_TID);
+//		 
+//		    /*
+//		     * 1. 결제취소 요청 결과처리
+//		     *
+//		     * 취소결과 리턴 파라미터는 연동메뉴얼을 참고하시기 바랍니다.
+//			 *
+//			 * [[[중요]]] 고객사에서 정상취소 처리해야할 응답코드
+//			 * 1. 신용카드 : 0000, AV11  
+//			 * 2. 계좌이체 : 0000, RF00, RF10, RF09, RF15, RF19, RF23, RF25 (환불진행중 응답건-> 환불결과코드.xls 참고)
+//			 * 3. 나머지 결제수단의 경우 0000(성공) 만 취소성공 처리
+//			 *
+//		     */
+//		    if (xpay.TX()) {
+//		        //1)결제취소결과 화면처리(성공,실패 결과 처리를 하시기 바랍니다.)
+//		    	boolean isXpayOK = false;
+//		    	payResMap.put("msg01", "취소요청이 완료되었습니다.  <br>"
+//									 + "TX 취소요청 통신 응답코드 = " 	+ xpay.m_szResCode + "<br>"		//통신 응답코드("0000" 일 때 통신 성공)
+//									 + "TX 취소요청 통신 응답메시지 = " + xpay.m_szResMsg + "<p>");		//통신 응답메시지
+//		    	// 신용카드
+//		    	if("SC0010".equals(PAY_METD)){
+//		    		// 취소 정상 승인
+//		    		if("0000".equals( xpay.m_szResCode ) || "AV11".equals( xpay.m_szResCode )) {
+//		    			mav.addObject("alertMessage", "[" + xpay.m_szResCode + "] " + "결제 취소요청이 완료되었습니다.");
+//		    			isXpayOK = true;
+//		    		}
+//		    		
+//		    	// 계좌이체	
+//		    	} else if("SC0030".equals(PAY_METD)){
+//		    		// 환불 정상 승인
+//		    		if( "0000".equals( xpay.m_szResCode ) || "RF00".equals( xpay.m_szResCode )) {
+//		    			mav.addObject("alertMessage", "[" + xpay.m_szResCode + "] " + "환불이 정상 처리되었습니다.");
+//		    			isXpayOK = true;
+//		    		}
+//		    		
+//		    		// 환불 진행중 승인
+//		    		if( "RF10".equals( xpay.m_szResCode ) || "RF09".equals( xpay.m_szResCode ) || 
+//		    			"RF15".equals( xpay.m_szResCode ) || "RF19".equals( xpay.m_szResCode ) || 
+//		    			"RF23".equals( xpay.m_szResCode ) || "RF25".equals( xpay.m_szResCode )) {
+//		    			mav.addObject("alertMessage", "[" + xpay.m_szResCode + "] " + "환불이 요청되었습니다. 환불진행중입니다.");
+//		    			isXpayOK = true;
+//		    		}
+//		    		
+//		    	// 기타 결제	
+//		    	} else {
+//		    		if("0000".equals( xpay.m_szResCode )) {
+//		    			mav.addObject("alertMessage", "결제 취소요청이 완료되었습니다.");
+//		    			isXpayOK = true;
+//		    		}
+//		    	}
+//		    	
+//		    	if(isXpayOK) {
+//		    		tb_odinfoxm.setORDER_CON("ORDER_CON_04");
+//					tb_odinfoxm.setCNCL_CON("CNCL_CON_03");		// 취소완료
+//
+//					try{
+//						if (orderService.cancelObject(tb_odinfoxm) > 0){
+//							orderService.orderPayUpdateDtl(tb_odinfoxm);
+//							orderAtomyAza(tb_odinfoxm);	// 애터미아자 API 호출 (결제완료, 배송완료, 주문취소, 환불)
+//						}
+//						bState = isXpayOK;
+//	        			STATE = "OK";
+//	        			
+//	        		} catch(Exception e){
+//	        			// data : null 이면 주문 실패처리
+//	        			STATE = "결제취소완료, 상점 DB처리 실패.";
+//	        		}
+//		    	} else {
+//					//통신상의 문제 발생(최종결제요청 결과 실패 DB처리)
+//		    		mav.addObject("alertMessage", "결제 취소요청이 실패하였습니다.\n  - TX Response_code = " + xpay.m_szResCode + " - \nTX Response_msg = " + xpay.m_szResMsg);
+//					payResMap.put("msg08" , "최종결제요청 결과 실패, DB처리하시기 바랍니다.<br>");
+//        			STATE = "최종결제요청 결과 실패, DB처리하시기 바랍니다.";
+//				}
+//				
+//		    }else {
+//		        //2)API 요청 실패 화면처리
+//		    	mav.addObject("alertMessage", "결제 취소요청이 실패하였습니다.\n  - TX Response_code = " + xpay.m_szResCode + " - \nTX Response_msg = " + xpay.m_szResMsg);
+//    			STATE = "결제취소요청실패, API 요청 실패.";
+//		    }
+//		    
+//		    try {
+//			    //결제 로그 처리
+//		    	TB_LGUPLUS tb_lguplus = new TB_LGUPLUS();
+//			    tb_lguplus.setLGD_TID(LGD_TID);
+//			    tb_lguplus.setLGD_OID(tb_odinfoxm.getORDER_NUM());
+//			    tb_lguplus.setGUBUN("CANCEL");
+//			    tb_lguplus.setLGD_RESPCODE(xpay.m_szResCode);
+//			    tb_lguplus.setLGD_RESPMSG(xpay.m_szResMsg);
+//			    tb_lguplus.setLGD_PAYTYPE(PAY_METD);
+//			    tb_lguplus.setSTATE(STATE);
+//			    
+//			    if(tb_lguplus.getLGD_TID() != null) {
+//					orderService.lguplusLogInsert(tb_lguplus);
+//			    }
+//				
+//			}catch(Exception e){
+//				logger.info("LgUplus Logging Error : " + e.toString());
+//			}
+//		    
+//		}else{
+//			mav.addObject("alertMessage", "PG사 결제정보가 없습니다. 결제수단을 확인해주세요.");
+//		}
+//
+//		mav.addObject("payResMap", payResMap);
+//		mav.addObject("gubun", "popup");
+//		mav.addObject("returnUrl", servletContextPath.concat("/m/order/view/" + tb_odinfoxm.getORDER_NUM()));
+//		mav.setViewName("alertMessage");
+//
+//		return mav;		
+//	}
 
 	/**
 	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

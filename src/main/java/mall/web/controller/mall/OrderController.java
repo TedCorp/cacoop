@@ -373,7 +373,7 @@ public class OrderController extends DefaultController{
 
 		System.out.println(REQ_DATA);
 		
-		RES_DATA = danalFun.CallCredit(REQ_DATA, true);
+//		RES_DATA = danalFun.CallCredit(REQ_DATA, true);
 		
 		//if ("0000".equals(RES_DATA.get("RETURNCODE"))) {
 		//	
@@ -457,7 +457,7 @@ public class OrderController extends DefaultController{
 		REQ_DATA.put("TXTYPE", "BILL");
 		REQ_DATA.put("SERVICETYPE", "DANALCARD");
 
-		RES_DATA = danalFun.CallCredit(REQ_DATA, false);
+//		RES_DATA = danalFun.CallCredit(REQ_DATA, false);
 
 		String RETURNCODE = (String) RES_DATA.get("RETURNCODE");
 		String RETURNMSG = (String) RES_DATA.get("RETURNMSG");
@@ -734,7 +734,7 @@ public class OrderController extends DefaultController{
 			REQ_DATA.put("SERVICETYPE", "DANALCARD");
 
 			
-			RES_DATA = danalFun.CallCredit(REQ_DATA, false);
+//			RES_DATA = danalFun.CallCredit(REQ_DATA, false);
 			
 			if( RES_DATA.get("RETURNCODE").equals("0000")){
 				// 결제 성공 시 작업 진행
@@ -890,7 +890,7 @@ public class OrderController extends DefaultController{
 		System.out.println(REQ_DATA);
 		
 		//RES_DATA = danalFun.CallCredit(REQ_DATA, false);
-		RES_DATA = danalFun.CallDanalBank(REQ_DATA, true);
+//		RES_DATA = danalFun.CallDanalBank(REQ_DATA, true);
 
 		String STARTURL = (String) RES_DATA.get("STARTURL");
 		String STARTPARAMS = (String) RES_DATA.get("STARTPARAMS");
@@ -968,7 +968,7 @@ public class OrderController extends DefaultController{
 		REQ_DATA.put("TXTYPE", "BILL");
 		REQ_DATA.put("SERVICETYPE", "WIRETRANSFER");
 
-		RES_DATA = danalFun.CallDanalBank(REQ_DATA, false);
+//		RES_DATA = danalFun.CallDanalBank(REQ_DATA, false);
 
 		String RETURNCODE = (String) RES_DATA.get("RETURNCODE");
 		String RETURNMSG = (String) RES_DATA.get("RETURNMSG");
@@ -1101,7 +1101,7 @@ public class OrderController extends DefaultController{
 			REQ_DATA.put("SERVICETYPE", "WIRETRANSFER");
 
 			
-			RES_DATA = danalFun.CallDanalBank(REQ_DATA, false);
+//			RES_DATA = danalFun.CallDanalBank(REQ_DATA, false);
 			
 			if( RES_DATA.get("RETURNCODE").equals("0000")){
 				// 결제 성공 시 작업 진행

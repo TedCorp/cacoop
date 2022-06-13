@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@ include file="/layout/inc/taglib.jsp" %>
+<link href="../../resources/css/common.css" rel="stylesheet">
 
 <body class="hold-transition skin-blue sidebar-mini">
 	<div class="wrapper">

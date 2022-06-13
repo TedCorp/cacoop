@@ -16,4 +16,6 @@ bin/
 *.MF
 target/
 
+src/main/webapp/upload
+
  

@@ -84,7 +84,6 @@ public class PaymentController extends DefaultController{
     	TB_ODINFOXM tb_odinfoxm = new TB_ODINFOXM();
     	TB_LGUPLUS tb_lguplus = new TB_LGUPLUS();
         HttpHeaders headers = new HttpHeaders();
-        // headers.setBasicAuth(SECRET_KEY, ""); // spring framework 5.2 이상 버전에서 지원
         headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString((SECRET_KEY + ":").getBytes()));
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -101,23 +100,14 @@ public class PaymentController extends DefaultController{
             model.addAttribute("orderId", successNode.get("orderId").asText());
             System.out.println("successNode : " + successNode);
             JSONObject jsonNode = new JSONObject(successNode.toString());
-            
             Object mId = jsonNode.get("mId");
             Object method = jsonNode.get("method");
             Object status = jsonNode.get("status");
             Object requestedAt = jsonNode.get("requestedAt");
             Object approvedAt = jsonNode.get("approvedAt");
             Object useEscrow = jsonNode.get("useEscrow");
-//          String giftCertificate = jsonNode.getString("giftCertificate");
-//          String discount = jsonNode.getString("discount");
-//          String cancels = jsonNode.getString("cancels");
             Object secret = jsonNode.get("secret");
-//            Object useDiscount = jsonNode.get("useDiscount");
-//            Object discountAmount = jsonNode.get("discountAmount");
-//            Object useCashReceipt = jsonNode.get("useCashReceipt");
-//            Object currency = jsonNode.get("currency");
             Object totalAmount = jsonNode.get("totalAmount");
-//            Object balanceAmount = jsonNode.get("balanceAmount");
             if(method.toString().equals("카드")) {
             	System.out.println("카드 결제");
             	JSONObject card = new JSONObject(jsonNode.get("card").toString());
@@ -146,17 +136,6 @@ public class PaymentController extends DefaultController{
             
             if(method.toString().equals("계좌이체")) {
             	System.out.println("계좌이체 결제");
-//            	JSONObject virtualAccount = new JSONObject(jsonNode.get("virtualAccount").toString());
-//            	Object accountNumber = virtualAccount.getString("accountNumber");
-//            	Object accountType = virtualAccount.getString("accountType");
-//            	Object bank = virtualAccount.getString("bank");
-//            	Object cardType = virtualAccount.getString("cardType");
-//            	Object customerName = virtualAccount.getString("customerName");
-//            	Object dueDate = virtualAccount.getString("dueDate");
-//            	Object expired = virtualAccount.getBoolean("expired");
-//            	Object settlementStatus = virtualAccount.getString("settlementStatus");
-//            	Object refundStatus = virtualAccount.getString("refundStatus");
-            	
             	tb_lguplus.setLGD_RESPMSG("계좌이체 확인");
             	tb_lguplus.setLGD_PAYTYPE("SC0030");
             	tb_odinfoxm.setPAY_METD("SC0030");

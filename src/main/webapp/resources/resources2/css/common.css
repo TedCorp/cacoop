@@ -2320,7 +2320,7 @@ select::-ms-expand { display: none; }
 	margin-bottom:10px
 }
 .img-list-type .row {
-	width: 100%;
+/* 	width: 100%; */
 	margin-bottom: 40px;
 }
 .img-list-type .row li{

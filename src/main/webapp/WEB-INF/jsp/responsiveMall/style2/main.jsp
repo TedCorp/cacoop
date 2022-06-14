@@ -42,7 +42,6 @@
                     <!-- 상품제목 -->
                     <h2>${list.GRP_NM}</h2>
                     <div class="img-list-type">
-
                         <ul class="row clear-fix " style="display: flex;flex-direction: row; flex-wrap: wrap; align-items: center;">
                             <c:forEach var="ent" items="${ list.PDLIST }" varStatus="status">
                                 <c:if test="${ !empty(ent.ATFL_ID)  }">

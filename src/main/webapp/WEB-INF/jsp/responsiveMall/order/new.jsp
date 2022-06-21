@@ -28,9 +28,9 @@
    $(function() {
       // 로그인 체크   
       if("${USER.MEMB_ID}" == ""){
-         alert("로그인이 필요합니다.");
+        /*  alert("로그인이 필요합니다.");
          location.href = "${contextPath}/m/user/loginForm";
-         return false;
+         return false; */
       }else{
          fn_dlarGubn();
       }

@@ -215,11 +215,11 @@
 				return false;
 			}
 			
-	       	<c:if test="${empty USER.MEMB_ID}">
+	      /*  	<c:if test="${empty USER.MEMB_ID}">
 				alert("로그인이 필요합니다.");
 				location.href = "${contextPath}/m/user/loginForm";
 				return false;
-			</c:if>
+			</c:if> */
 
 			<c:if test="${result.SALE_CON eq 'SALE_CON_02' }">
 				alert("품절된 상품은 구매 할 수 없습니다.");

@@ -63,12 +63,12 @@ public class UserLoginCheckInterceptor extends HandlerInterceptorAdapter {
 
 		// 로그인 검사
 		if (request.getServletPath().contains("/mypage") || 
-			request.getServletPath().contains("/order") ||
-			request.getServletPath().contains("/wishList") ||
+//			request.getServletPath().contains("/order") ||
+//			request.getServletPath().contains("/wishList") ||
 			request.getServletPath().contains("/basket") || 
 			request.getServletPath().contains("/m/mypage") || 
-			request.getServletPath().contains("/m/order") ||
-			request.getServletPath().contains("/m/wishList") ||
+//			request.getServletPath().contains("/m/order") ||
+//			request.getServletPath().contains("/m/wishList") ||
 			request.getServletPath().contains("/m/basket") 
 		) {
 			// 기존 세션 정보

@@ -1788,16 +1788,27 @@ public class ProductMgrController extends DefaultController{
 		
 			RestTemplate restTemplate = new RestTemplate();
 
+
+			String pageNum = request.getParameter("pageNum");
+			int nPageNum = 0;
+			
+			if(pageNum == null || "".equals(pageNum)) {
+				pageNum = "0";
+			} else {
+				nPageNum = Integer.parseInt(request.getParameter("pageNum"))-1;
+			}
+
 			String schTxt = request.getParameter("schTxt") == null?"":request.getParameter("schTxt");
 			String brand = request.getParameter("brand") == null?"":request.getParameter("brand");
 			int listCnt = request.getParameter("listCnt") == null? 10 :Integer.parseInt(request.getParameter("listCnt"));
-			int pageNum = request.getParameter("pageNum") == null? 0 :Integer.parseInt(request.getParameter("pageNum"))-1;
-			int offset = (pageNum)*listCnt;
-			if(offset<0) offset = 0;
+//			int pageNum = request.getParameter("pageNum") == null? 0 :Integer.parseInt(request.getParameter("pageNum"))-1;
 			
+			int offset = (nPageNum)*listCnt;
+			if(offset<0) offset = 0;
+
 			restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 			
-			String url = "http://ct.e-kiss.co.kr:24088/api/v2/prdSynth";
+			String url = "http://cloud.1472.ai:8080/api/v2/prdSynth";
 		  	HttpHeaders httpHeaders = new HttpHeaders();
 		  	httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 		  	
@@ -1831,137 +1842,128 @@ public class ProductMgrController extends DefaultController{
 	  }
 	
 	@RequestMapping(value = {"/insertLinkProduct"},method= {RequestMethod.POST})
-	public ModelAndView linkProductInsert(@ModelAttribute String prdNums, HttpServletRequest request, Model model) throws Exception {
-
-		
+	public @ResponseBody void linkProductInsert(@ModelAttribute String prdNums, HttpServletRequest request, Model model) throws Exception {
 		// 로그인정보
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
-//		productInfo.setREGP_ID(loginUser.getMEMB_ID());
 		String[] prdNos = request.getParameter("prdNums").split(",");
 		TB_PDINFOXM tb_pdinfoxm = new TB_PDINFOXM();
 		tb_pdinfoxm.setSUPR_ID(loginUser.getSUPR_ID());
-		
 		
 		for (String prdNo : prdNos) {
 			
 			tb_pdinfoxm.setN_PD_CODE(prdNo);
 			
-			int valichk = productMgrService.linkDuplicateChk(tb_pdinfoxm); 
+			int valichk = productMgrService.linkDuplicateChk(tb_pdinfoxm);
+			
+			RestTemplate restTemplate = new RestTemplate();
+			restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+			
+			String url = "http://cloud.1472.ai:8080/api/v2/prdSynth/"+prdNo;
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+			
+			HttpEntity<?> requestMessage = new HttpEntity<>(httpHeaders);
+			HttpEntity<String> response = restTemplate.postForEntity(url, requestMessage, String.class);
+			JSONObject requestBody = new JSONObject(response.getBody());
+			String[] imgLink = requestBody.get("dtlHtmlCn").toString().split("\"");
+
+			TB_PDINFOXM productInfo = new TB_PDINFOXM();
+			productInfo.setPD_NAME(requestBody.get("prductNm").toString());
+			productInfo.setSUPR_ID(loginUser.getSUPR_ID());
+			productInfo.setCAGO_ID("021000000000");
+			productInfo.setCAGO_ID_LEN(productInfo.getCAGO_ID().length()+1);
+			productInfo.setPD_PRICE(requestBody.get("cnsmrPc").toString());
+			productInfo.setINVEN_QTY("999");
+			productInfo.setSALE_CON("SALE_CON_01");
+//			productInfo.setATFL_ID("00000");
+			productInfo.setPD_DINFO(imgLink[1]);
+			productInfo.setREGP_ID(loginUser.getMEMB_NAME());
+			productInfo.setMODP_ID(loginUser.getMEMB_NAME());
+			productInfo.setRETAIL_YN("N");
+			productInfo.setBOX_PDDC_GUBN("PDDC_GUBN_01");
+			productInfo.setIMGURL(request.getParameter("thumnail"));
+			productInfo.setN_PD_CODE(requestBody.get("prdNo").toString());
 			if(valichk == 0 ) {
-				
-				RestTemplate restTemplate = new RestTemplate();
-				restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-				
-				String url = "http://ct.e-kiss.co.kr:24088/api/v2/prdSynth/"+prdNo;
-				HttpHeaders httpHeaders = new HttpHeaders();
-				httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-				
-				HttpEntity<?> requestMessage = new HttpEntity<>(httpHeaders);
-				HttpEntity<String> response = restTemplate.postForEntity(url, requestMessage, String.class);
-				JSONObject requestBody = new JSONObject(response.getBody());
-				String[] imgLink = requestBody.get("dtlHtmlCn").toString().split("\"");
-				
-				TB_PDINFOXM productInfo = new TB_PDINFOXM();
-				productInfo.setPD_NAME(requestBody.get("prductNm").toString());
-				productInfo.setSUPR_ID(loginUser.getSUPR_ID());
-				productInfo.setCAGO_ID("021000000000");
-				productInfo.setCAGO_ID_LEN(productInfo.getCAGO_ID().length()+1);
-				productInfo.setPD_PRICE(requestBody.get("cnsmrPc").toString());
-				productInfo.setINVEN_QTY("999");
-				productInfo.setSALE_CON("SALE_CON_01");
-//				productInfo.setATFL_ID("00000");
-				productInfo.setREGP_ID(loginUser.getMEMB_NAME());
-				productInfo.setMODP_ID(loginUser.getMEMB_NAME());
-				productInfo.setRETAIL_YN("N");
-				productInfo.setBOX_PDDC_GUBN("PDDC_GUBN_01");
-				productInfo.setIMGURL(imgLink[1]);
-				productInfo.setN_PD_CODE(requestBody.get("prdNo").toString());
-				
 				int nRtn = productMgrService.insertLinkedObject(productInfo);
+			}
+			if(requestBody.get("prdOptSetNo") != null){
+				System.out.println(11111);
+				System.out.println(productInfo.getN_PD_CODE());
+				String PD_CODE = productMgrService.selectByNpdcode(productInfo.getN_PD_CODE());
+
+				TB_PDOPTION tb_pdoption = new TB_PDOPTION();
+				tb_pdoption.setPD_CODE(PD_CODE);
+				List<?> pdOption = productMgrService.getOptionList(tb_pdoption);
+				if(!pdOption.isEmpty()) {
+					productMgrService.optionDelete(tb_pdoption);
+				}
+				tb_pdoption.setDEL_YN("N");
+				tb_pdoption.setSELL_YN("Y");
 				
-				System.out.println("prdOptSetNo : " + requestBody.get("prdOptSetNo"));
-				
-				if(requestBody.get("prdOptSetNo") != null){
-					String PD_CODE = productMgrService.selectByNpdcode(productInfo.getN_PD_CODE());
-					TB_PDOPTION tb_pdoption = new TB_PDOPTION();
-					tb_pdoption.setPD_CODE(PD_CODE);
-					tb_pdoption.setDEL_YN("N");
-					tb_pdoption.setSELL_YN("Y");
-					
-					url = "http://ct.e-kiss.co.kr:24088/api/v1/prdOptSetOne";
-					String requestJson = "{" + 
-					  "\"cmpnyNo\": 10001,"+
+				url = "http://cloud.1472.ai:8080/api/v1/prdOptSetOne";
+				String requestJson = "{" + 
+				  "\"cmpnyNo\": 10001,"+
 //					  "\"cmpnyNo\":"+ requestBody.get("createCmpnyNo")+","+
-					  "\"prdOptSetNo\": "+requestBody.get("prdOptSetNo")+","+
-					  "\"delYn\": \"N\","+
-					  "\"offset\": 0," +
-					  "\"pageNumber\": 0," +
-					  "\"pageSize\": 100," +
-					  "\"paged\": true" +
-					  "}";
+				  "\"prdOptSetNo\": "+requestBody.get("prdOptSetNo")+","+
+				  "\"delYn\": \"N\","+
+				  "\"offset\": 0," +
+				  "\"pageNumber\": 0," +
+				  "\"pageSize\": 100," +
+				  "\"paged\": true" +
+				  "}";
 
-					HttpEntity<?> requestSet = new HttpEntity<>(requestJson, httpHeaders);
-					response = restTemplate.postForEntity(url, requestSet, String.class);
-					requestBody = new JSONObject(response.getBody());
-					System.out.println("requestBody : " +requestBody);
-					
-					JSONArray body = (JSONArray)requestBody.get("prdOptList");
-					System.out.println("body : " + body);
-					
-					int dtlCnt =0;
-					JSONObject option1 = body.getJSONObject(0); 
-					JSONObject option2 = null;
-					JSONObject option3 = null;
-					if(body.length() == 3) {
-						option2 = body.getJSONObject(1); 
-						option3 = body.getJSONObject(2); 
-					}else if(body.length() == 2) {
-						option2 = body.getJSONObject(1); 
-					}
-					
-					JSONArray optDtls1 = (JSONArray)option1.get("prdOptDtlList");
-					for(int i =0;i<optDtls1.length();i++) {
-						tb_pdoption.setOPTION1_NAME(option1.getString("prdOptNm"));
-						tb_pdoption.setOPTION1_VALUE(((JSONObject)optDtls1.get(i)).getString("prdOptDtlNm"));
-						if(option2 != null) {
-							
-							JSONArray optDtls2 = (JSONArray)option2.get("prdOptDtlList");
-							for(int j =0; j<optDtls2.length();j++) {
-								tb_pdoption.setOPTION2_NAME(option2.getString("prdOptNm"));
-								tb_pdoption.setOPTION2_VALUE(((JSONObject)optDtls2.get(j)).getString("prdOptDtlNm"));
-								
-								if(option3 != null) {
-									JSONArray optDtls3 = (JSONArray)option3.get("prdOptDtlList");
-									for(int k =0; k<optDtls3.length();k++) {
-										tb_pdoption.setOPTION3_NAME(option3.getString("prdOptNm"));
-										tb_pdoption.setOPTION3_VALUE(((JSONObject)optDtls3.get(j)).getString("prdOptDtlNm"));
-										dtlCnt += productMgrService.optionInsert(tb_pdoption);
-										System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()
-														   +"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE()
-															+"name3 : "+tb_pdoption.getOPTION3_NAME()+"op3 : "+tb_pdoption.getOPTION3_VALUE());
-									}
-								}else {
-									System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()+"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE());
-									dtlCnt += productMgrService.optionInsert(tb_pdoption);
-								}
-							}
-							
-						}else {
-							System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE());
-							dtlCnt += productMgrService.optionInsert(tb_pdoption);
-						}
-					}
-
+				HttpEntity<?> requestSet = new HttpEntity<>(requestJson, httpHeaders);
+				response = restTemplate.postForEntity(url, requestSet, String.class);
+				requestBody = new JSONObject(response.getBody());
+				
+				JSONArray body = (JSONArray)requestBody.get("prdOptList");
+				
+				int dtlCnt =0;
+				JSONObject option1 = body.getJSONObject(0); 
+				JSONObject option2 = null;
+				JSONObject option3 = null;
+				if(body.length() == 3) {
+					option2 = body.getJSONObject(1); 
+					option3 = body.getJSONObject(2); 
+				}else if(body.length() == 2) {
+					option2 = body.getJSONObject(1); 
 				}
 				
+				JSONArray optDtls1 = (JSONArray)option1.get("prdOptDtlList");
+				for(int i =0;i<optDtls1.length();i++) {
+					tb_pdoption.setOPTION1_NAME(option1.getString("prdOptNm"));
+					tb_pdoption.setOPTION1_VALUE(((JSONObject)optDtls1.get(i)).getString("prdOptDtlNm"));
+					if(option2 != null) {
+						
+						JSONArray optDtls2 = (JSONArray)option2.get("prdOptDtlList");
+						for(int j =0; j<optDtls2.length();j++) {
+							tb_pdoption.setOPTION2_NAME(option2.getString("prdOptNm"));
+							tb_pdoption.setOPTION2_VALUE(((JSONObject)optDtls2.get(j)).getString("prdOptDtlNm"));
+							
+							if(option3 != null) {
+								JSONArray optDtls3 = (JSONArray)option3.get("prdOptDtlList");
+								for(int k =0; k<optDtls3.length();k++) {
+									tb_pdoption.setOPTION3_NAME(option3.getString("prdOptNm"));
+									tb_pdoption.setOPTION3_VALUE(((JSONObject)optDtls3.get(j)).getString("prdOptDtlNm"));
+									dtlCnt += productMgrService.optionInsert(tb_pdoption);
+									System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()
+													   +"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE()
+														+"name3 : "+tb_pdoption.getOPTION3_NAME()+"op3 : "+tb_pdoption.getOPTION3_VALUE());
+								}
+							}else {
+								System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()+"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE());
+								dtlCnt += productMgrService.optionInsert(tb_pdoption);
+							}
+						}
+						
+					}else {
+						System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE());
+						dtlCnt += productMgrService.optionInsert(tb_pdoption);
+					}
+				}
 			}
-		 
 		}
-
-		
-		
-		
-		return  new ModelAndView("blankPage", "jsp", "blank/center"); 
+		return;
 	}	
 	
 }

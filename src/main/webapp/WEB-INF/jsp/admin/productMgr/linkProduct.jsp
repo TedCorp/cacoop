@@ -32,7 +32,7 @@
 			</div>
 		</div>
 		<div class="box-body">
-			<form class="form-horizontal" id="frm" >
+			<form class="form-horizontal" id="frm" method="get" action="${contextPath }/adm/productMgr/linkProduct">
 				<input type="hidden" name="sortGubun" id="sortGubun" />
 				<input type="hidden" name="sortOdr" id="sortOdr" />
 				<input type="hidden" name="schTxt_bef" value="${ obj.schTxt_bef }" />
@@ -50,12 +50,12 @@
 						</div>
 						<div class="col-sm-7">
 							<div class="input-group input-group">
-								<input type="search" class="form-control" name="schTxt" id="schTxt" style="ime-mode:active;"
-									placeholder="검색어 입력" value="${param.schTxt }" onclick="javascript:cleanResearch()"
+								<input type="search" class="form-control" name="schTxt" id="schTxt" style="ime-mode:active;" onkeyup="enterEvent()"
+									placeholder="검색어 입력" value="${param.schTxt }" onclick="cleanResearch()"
 								>
 								<span class="input-group-btn">
 									<!-- <button type="button" id="btnSearch" class="btn btn-success pull-right">검색</button> -->
-									<button type="button" onclick="asdf()" class="btn btn-success pull-right">검색</button>
+									<button type="button" style="ime-mode:active;" onclick="interlockPrdSearch()" class="btn btn-success pull-right">검색</button>
 								</span>
 							</div>
 						</div>
@@ -119,7 +119,8 @@
                     	<input name="pdtIdYn" value="N" type="hidden"/>
                     </td>
                     <c:if test='${test.getJSONObject(i).get("repImg") != "null"}'>
-                    	<td class="txt-middle"><img src='http://ct.e-kiss.co.kr:24080/uploads/${test.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
+                    	<input type="hidden" id="thumnail" value="http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get('repImg')}" />
+                    	<td class="txt-middle"><img src='http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
                     </c:if>
                     <c:if test='${test.getJSONObject(i).get("repImg") == "null"}'>
                     	<td class="txt-middle"><img src='${contextPath }/resources/images/mall/goods/noimage.png' style="max-width:60px;"></td>
@@ -173,11 +174,16 @@
 
 <script type="text/javascript">
 
-function asdf() {
-	console.log('${contextPath}');
-	console.log(1);
+function enterEvent() {
+	if (window.event.keyCode == 13) {
+		interlockPrdSearch();
+	}
 }
 
+function interlockPrdSearch() {
+	const frm = document.querySelector("#frm");
+	frm.submit();
+}
 
 $(function() {
 	// 체크박스 전체선택
@@ -226,9 +232,7 @@ function imgControll(img){
 	}
 }
 
-$("#btnSearch").click(function(){
-	$("#frm").submit();
-});
+
 
 $(".pageBtn").click(function(){
 	$("#pageNum").val(this.textContent);
@@ -238,6 +242,9 @@ $(".pageBtn").click(function(){
 $("#btnSave").click(function(){
 	var prdNums = $('input[name="chkPdtId"]:checked');
 	var prdNum = [];
+	
+	let thumnail = document.querySelector("#thumnail");
+	console.log(thumnail);
 	for(var i =0;i<prdNums.length;i++){
 		prdNum.push(prdNums[i].value);
 	}
@@ -252,7 +259,8 @@ $("#btnSave").click(function(){
 	    url: "${contextPath}/adm/productMgr/insertLinkProduct",
 	    traditional: true,
 	    data: {
-	    	prdNums : prdNum.toString()
+	    	prdNums : prdNum.toString(),
+	    	thumnail: thumnail.value
 	    },
 	    success: function (data) {
 	   		alert("선택한 상품의 연동이 완료 되었습니다.");

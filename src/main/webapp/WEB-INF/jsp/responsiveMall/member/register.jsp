@@ -993,6 +993,7 @@
 				<div class="item cacoop_no_area input-hide">
 					<p class="tit">조합원 번호</p>
 					<input type="text" id="CACOOP_NO" name="CACOOP_NO" placeholder="조합원 번호 숫자만 입력">
+					<p class="add red">조합원 번호를 모르실 경우 가입후 관리자에게 문의 부탁드립니다.</p>
 				</div>
 				<div class="item cacoop_no_area input-hide">
 				<p  class="tit">공급사로 등록하시겠습니까?</p>

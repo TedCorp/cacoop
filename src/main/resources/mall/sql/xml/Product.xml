@@ -1780,7 +1780,7 @@
 			 , UP_VALUE
 		  FROM TB_PDOPTION
 		 WHERE PD_CODE = #{value}
-		 ORDER BY OPTION1_VALUE DESC, OPTION2_VALUE DESC  
+ 		 ORDER BY OPTION1_VALUE DESC, OPTION2_VALUE DESC
 	</select>
 	
 	<select id="selectPdOptionStart" parameterType="String" resultType="mall.web.domain.TB_PDOPTION">
@@ -2691,7 +2691,7 @@
 	  WHERE PD_CODE = #{PD_CODE}
 	  AND DEL_YN = 'N'
 	  AND SELL_YN = 'Y'
-	  ORDER BY OPTION1_VALUE
+	  ORDER BY OPTION1_VALUE DESC
 	</select>
 
 	<select id="getOption2" parameterType="HashMap" resultType="mall.web.domain.TB_PDOPTION">
@@ -2708,7 +2708,7 @@
 	  AND OPTION1_VALUE =#{Value1}
 	  AND DEL_YN = 'N'
 	  AND SELL_YN = 'Y'
-	  ORDER BY OPTION2_VALUE 
+	  ORDER BY OPTION2_VALUE DESC
 	</select>
 				
 	<select id="getOption3" parameterType="HashMap" resultType="mall.web.domain.TB_PDOPTION">
@@ -2724,7 +2724,7 @@
 	  AND OPTION3_VALUE IS NOT NULL 
 	  AND DEL_YN = 'N'
 	  AND SELL_YN = 'Y'
-	  ORDER BY OPTION3_VALUE 
+	  ORDER BY OPTION3_VALUE DESC
 	</select>
 	
 	<insert id="insertQna" parameterType="mall.web.domain.TB_PDBORDXM">

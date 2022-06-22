@@ -500,6 +500,7 @@ public class ProductMgrService implements DefaultService {
 		return productMgrMapper.optionInsert(obj);
 		
 	}
+	
 
 	public int optionDelete(Object obj) {
 		return productMgrMapper.optionDelete(obj);
@@ -667,6 +668,10 @@ public class ProductMgrService implements DefaultService {
 
 	public int insertLinkedObject(TB_PDINFOXM productInfo) {
 		return productMgrMapper.insertLinkedObject(productInfo);
+	}
+	
+	public int updateLinkedObject(TB_PDINFOXM productInfo) {
+		return productMgrMapper.updateLinkedObject(productInfo);
 	}
 
 	public int linkDuplicateChk(TB_PDINFOXM tb_pdinfoxm) {

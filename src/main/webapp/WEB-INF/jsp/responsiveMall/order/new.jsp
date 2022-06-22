@@ -28,9 +28,9 @@
    $(function() {
       // 로그인 체크   
       if("${USER.MEMB_ID}" == ""){
-         alert("로그인이 필요합니다.");
+        /*  alert("로그인이 필요합니다.");
          location.href = "${contextPath}/m/user/loginForm";
-         return false;
+         return false; */
       }else{
          fn_dlarGubn();
       }
@@ -624,6 +624,7 @@
                            <li>
                               <a href="${contextPath }/m/product/view/${ list.PD_CODE }" target="_blank">
                                <c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
+                               <c:set var="imgPathSm" value="${contextPath }/upload/${list.ATFL_ID }/${list.RPIMG_SEQ}" />
                                  <div class="img"><img src="${imgPath}" alt="">${list.ATFL_ID}/${list.RPIMG_SEQ}</div> 
                                  <div class="con">
                                     <div class="tit">${list.PD_NAME }</div>

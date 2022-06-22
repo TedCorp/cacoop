@@ -136,12 +136,16 @@ public class OrderRestController extends DefaultController{
 		}
 
 		if(loginUser == null){			
-			ModelAndView mav = new ModelAndView();
-			mav.addObject("alertMessage", "로그인 후 이용해주세요.");
-			mav.addObject("returnUrl", "/m/user/loginForm");
-			mav.setViewName("alertMessage");
-			return mav;
+//			ModelAndView mav = new ModelAndView();
+//			mav.addObject("alertMessage", "로그인 후 이용해주세요.");
+//			mav.addObject("returnUrl", "/m/user/loginForm");
+//			mav.setViewName("alertMessage");
+//			return mav;
+			loginUser = new TB_MBINFOXM();
+			loginUser.setMEMB_ID("Non-member");
 		}else{
+			
+		}
 			// 페이징 단위
 			/*
 			if(request.getParameter("pagerMaxPageItems") != null){
@@ -200,7 +204,7 @@ public class OrderRestController extends DefaultController{
 			model.addAttribute("link", strLink);
 			
 			return new ModelAndView("mall.responsive.layout", "jsp", "order/list");
-		}
+//		}
 	}
 	
 	/* 환불/반품 조회 JSP 추가 - 이유리 */
@@ -819,20 +823,23 @@ public class OrderRestController extends DefaultController{
 	@RequestMapping(value={ "/view/{ORDER_NUM}" }, method=RequestMethod.GET)
 	public ModelAndView view(@ModelAttribute TB_ODINFOXM tb_odinfoxm, HttpServletRequest request, Model model) throws Exception {
 		String viewJsp = "order/view";
-		
+		String loginId = "Non-member";
 		//세션변경
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
-		String loginId=loginUser.getMEMB_ID();
+		if(loginUser != null) {
+			System.out.println("aasdadasdasdasd");
+			loginId=loginUser.getMEMB_ID();
+		}
 		//배송지정보
 		TB_ODDLAIXM tb_oddlaixm = (TB_ODDLAIXM)orderService.getDeliveryInfo(tb_odinfoxm);
 		//주문정보
 		tb_odinfoxm = (TB_ODINFOXM)orderService.getMasterInfo(tb_odinfoxm);
 		//주문상품
 		/* 이유리 추가 */
-		System.out.println("loginUser.getMEMB_ID() : " + loginUser.getMEMB_ID());
+		System.out.println("loginUser.getMEMB_ID() : " + loginId);
 		tb_odinfoxm.setREGP_ID(loginId);
 		tb_odinfoxm.setList(orderService.getDetailsList(tb_odinfoxm));
-		if(!loginUser.getMEMB_ID().equals(tb_odinfoxm.getMEMB_ID())){
+		if(!loginId.equals(tb_odinfoxm.getMEMB_ID())){
 			ModelAndView mav = new ModelAndView();
 			mav.addObject("alertMessage", "주문자와 로그인 정보가 일치하지 않습니다.");
 			mav.addObject("returnUrl", "back");
@@ -1043,7 +1050,11 @@ public class OrderRestController extends DefaultController{
 	@RequestMapping(value="/buy2")
 	public ModelAndView buy2(@ModelAttribute TB_ODINFOXD tb_odinfoxm, Model model, HttpServletRequest request) throws Exception {
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
-		tb_odinfoxm.setMEMB_ID(loginUser.getMEMB_ID());
+		if(loginUser == null) {
+			tb_odinfoxm.setMEMB_ID("Non-members");
+		}else {
+			tb_odinfoxm.setMEMB_ID(loginUser.getMEMB_ID());
+		}
 		
 		//묶음상품코드 - 이유리
 		model.addAttribute("SETPD_CODE", tb_odinfoxm.getSETPD_CODE());
@@ -1160,6 +1171,10 @@ public class OrderRestController extends DefaultController{
 		Map resultMap = orderService.resetOrder(map);
 		
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
+		if(loginUser == null ) {
+			loginUser = new TB_MBINFOXM();
+			loginUser.setMEMB_ID("Non-member");
+		}
 		tb_odinfoxm.setREGP_ID(loginUser.getMEMB_ID());		
 		tb_odinfoxd.setREGP_ID(loginUser.getMEMB_ID());
 		tb_oddlaixm.setREGP_ID(loginUser.getMEMB_ID());

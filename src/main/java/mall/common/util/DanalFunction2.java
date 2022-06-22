@@ -15,8 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 
-import kr.co.danal.jsinbi.HttpClient;
-
 public class DanalFunction2 {
 
 	/*****************************************************
@@ -68,37 +66,37 @@ public class DanalFunction2 {
 		}
 	}
 
-	public Map CallDanalBank(Map REQ_DATA, boolean Debug) {
-
-		String REQ_STR = toEncrypt(data2str(REQ_DATA));
-		REQ_STR = "CPID=" + CPID + "&DATA=" + REQ_STR;
-
-		HttpClient hc = new HttpClient();
-		hc.setConnectionTimeout(DN_CONNECT_TIMEOUT);
-		hc.setTimeout(DN_TIMEOUT);
-
-		int Result = hc.retrieve("POST", DN_BANK_URL, REQ_STR, CHARSET, CHARSET);
-
-		String RES_STR = "";
-		if (Result == HttpClient.EOK && hc.getResponseCode() == 200) {
-			RES_STR = hc.getResponseBody();
-		} else {
-			RES_STR = "RETURNCODE=" + ERC_NETWORK_ERROR + "&RETURNMSG="
-					+ ERM_NETWORK + "( " + Result + "/" + hc.getResponseCode()
-					+ " )";
-		}
-
-		if (Debug) {
-			System.out.println("ReqData[" + data2str(REQ_DATA) + "]");
-			System.out.println("Req[" + REQ_STR + "]");
-			System.out.println("Ret[" + Result + "/" + hc.getResponseCode() + "]");
-			System.out.println("Res[" + RES_STR + "]");
-		}
-
-		Map resMap = str2data(RES_STR);
-		RES_STR = toDecrypt((String) resMap.get("DATA"));
-		return str2data(RES_STR);
-	}
+//	public Map CallDanalBank(Map REQ_DATA, boolean Debug) {
+//
+//		String REQ_STR = toEncrypt(data2str(REQ_DATA));
+//		REQ_STR = "CPID=" + CPID + "&DATA=" + REQ_STR;
+//
+//		HttpClient hc = new HttpClient();
+//		hc.setConnectionTimeout(DN_CONNECT_TIMEOUT);
+//		hc.setTimeout(DN_TIMEOUT);
+//
+//		int Result = hc.retrieve("POST", DN_BANK_URL, REQ_STR, CHARSET, CHARSET);
+//
+//		String RES_STR = "";
+//		if (Result == HttpClient.EOK && hc.getResponseCode() == 200) {
+//			RES_STR = hc.getResponseBody();
+//		} else {
+//			RES_STR = "RETURNCODE=" + ERC_NETWORK_ERROR + "&RETURNMSG="
+//					+ ERM_NETWORK + "( " + Result + "/" + hc.getResponseCode()
+//					+ " )";
+//		}
+//
+//		if (Debug) {
+//			System.out.println("ReqData[" + data2str(REQ_DATA) + "]");
+//			System.out.println("Req[" + REQ_STR + "]");
+//			System.out.println("Ret[" + Result + "/" + hc.getResponseCode() + "]");
+//			System.out.println("Res[" + RES_STR + "]");
+//		}
+//
+//		Map resMap = str2data(RES_STR);
+//		RES_STR = toDecrypt((String) resMap.get("DATA"));
+//		return str2data(RES_STR);
+//	}
 
 	public Map str2data(String str) {
 		Map map = new HashMap();

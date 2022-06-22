@@ -6,15 +6,14 @@
 <!-- ▲ Key -->
 
 <style>
-.pageBtn{float:left; width:20px; cursor:pointer}
+	.pageBtn{float:left; width:20px; cursor:pointer}
+	.box-body .box-body > div:nth-child(2) div{display:inline-block; padding:0 15px;}
+	td{height:100px;}
 </style>
 
 <section class="content-header">
 	<h1>상품연동관리
 		<small>상품 목록</small>
-			<%-- <c:forEach begin="0" end="${test.length() -1}" var="i">
-			     <h6>${test.getJSONObject(i).get("prdNo")}</h6>
-			</c:forEach> --%>
 	</h1>
 </section>
 
@@ -32,7 +31,6 @@
 				</button>
 			</div>
 		</div>
-		<!-- /.box-header -->		
 		<div class="box-body">
 			<form class="form-horizontal" id="frm" >
 				<input type="hidden" name="sortGubun" id="sortGubun" />
@@ -40,7 +38,6 @@
 				<input type="hidden" name="schTxt_bef" value="${ obj.schTxt_bef }" />
 				<input type="hidden" name="pageNum" id="pageNum" value="${param.pageNum }" /> 
 				<input type="hidden" name="pagerMaxPageItems" id="pagerMaxPageItems" value="${obj.pagerMaxPageItems }" />	<!-- 목록수 -->
-				
 				<div class="box-body">
 					<div class="form-group">
 						<label class="col-sm-1 control-label">검색어</label>
@@ -53,9 +50,12 @@
 						</div>
 						<div class="col-sm-7">
 							<div class="input-group input-group">
-								<input type="search" class="form-control" name="schTxt" id="schTxt" style="ime-mode:active;" placeholder="검색어 입력" value="${param.schTxt }" onclick="javascript:cleanResearch()">
+								<input type="search" class="form-control" name="schTxt" id="schTxt" style="ime-mode:active;"
+									placeholder="검색어 입력" value="${param.schTxt }" onclick="javascript:cleanResearch()"
+								>
 								<span class="input-group-btn">
-									<button type="button" id="btnSearch" class="btn btn-success pull-right">검색</button>
+									<!-- <button type="button" id="btnSearch" class="btn btn-success pull-right">검색</button> -->
+									<button type="button" onclick="asdf()" class="btn btn-success pull-right">검색</button>
 								</span>
 							</div>
 						</div>
@@ -63,7 +63,9 @@
 					<div class="form-group">
 						<label class="col-sm-1 control-label txt-right">브랜드</label>
 						<div>
-							<input type="search" class="form-control" name="brand" id="brand" style="ime-mode:active; width:300px;" placeholder="브랜드명 입력" value="${param.brand }" onclick="javascript:cleanResearch()">
+							<input type="search" class="form-control" name="brand" id="brand" style="ime-mode:active; width:300px;"
+								placeholder="브랜드명 입력" value="${param.brand }" onclick="javascript:cleanResearch()"
+							>
 						</div>
 					</div>
 					<div class="form-group">
@@ -77,11 +79,9 @@
 							</select>
 						</div>			
 					</div>
-				</div>	
-				<!-- /.row -->
+				</div>
 			</form>
 		</div>
-		<!-- /.box-body -->
 	</div>
 	<!-- 검색 박스 -->		
 	<div class="box box-default">
@@ -105,9 +105,9 @@
 						<th class="txt-middle" style="width:8%">대표이미지</th>
 						<th class="txt-middle">카테고리/상품명</th>
 						<th class="txt-middle" style="width:12%">변경판가</th>
-						<th class="txt-right">판매가격</th>
+						<th class="txt-middle">판매가격</th>
 						<th class="txt-middle">할인구분</th>
-						<th class="txt-right">할인값</th>
+						<th class="txt-middle">할인값</th>
 						<th class="txt-middle">판매상태</th>
 					</tr>
 				</thead>
@@ -119,12 +119,12 @@
                     	<input name="pdtIdYn" value="N" type="hidden"/>
                     </td>
                     <c:if test='${test.getJSONObject(i).get("repImg") != "null"}'>
-                    	<td><img src='http://ct.e-kiss.co.kr:24080/uploads/${test.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
+                    	<td class="txt-middle"><img src='http://ct.e-kiss.co.kr:24080/uploads/${test.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
                     </c:if>
                     <c:if test='${test.getJSONObject(i).get("repImg") == "null"}'>
-                    	<td>-</td>
+                    	<td class="txt-middle"><img src='${contextPath }/resources/images/mall/goods/noimage.png' style="max-width:60px;"></td>
                     </c:if>
-			    	<td>소통 클라우드  
+			    	<td  class="txt-left">소통 클라우드  
 			    	<c:if test='${test.getJSONObject(i).get("prductCl1Nm") != "null"}'>
 			    		> ${test.getJSONObject(i).get("prductCl1Nm")} 
 			    	</c:if> 
@@ -135,15 +135,15 @@
 			    		 > ${test.getJSONObject(i).get("prductCl3Nm")} 
 			    	</c:if>  
 			    	/ ${test.getJSONObject(i).get("prductNm")}</td>
-			    	<td>-</td>
-			    	<td>${test.getJSONObject(i).get("cnsmrPc")}</td>
-			    	<td>-</td>
-			    	<td>0</td>
+			    	<td class="txt-right">-</td>
+			    	<td class="txt-right">${test.getJSONObject(i).get("cnsmrPc")}</td>
+			    	<td class="txt-middle">-</td>
+			    	<td class="txt-right">0</td>
 			    	<c:if test='${test.getJSONObject(i).get("delYn") == "Y" }'>
-                    	<td>판매 불가</td>
+                    	<td class="txt-middle">판매 불가</td>
                     </c:if>
                     <c:if test='${test.getJSONObject(i).get("delYn") == "N" }'>
-                    	<td>판매 가능</td>
+                    	<td class="txt-middle">판매 가능</td>
                     </c:if>
 			    </tr>
 				</c:forEach>
@@ -156,20 +156,14 @@
 				</tbody>
 			</table>
 		</div>
+
 		<%-- <paging:PageFooter totalCount="${ totalCnt }" rowCount="${ rowCnt }">
 			<First><Previous><AllPageLink><Next><Last>
 		</paging:PageFooter> --%>
-		<div class="paging_new">
-			<ul>
-				<li class="start"><a><i class="ic"></i></a></li>
-				<li><a class='pageBtn'>1</a></li>
-				<li><a class='pageBtn'>2</a></li>
-				<li><a class='pageBtn'>3</a></li>
-				<li><a class='pageBtn'>4</a></li>
-				<li><a class='pageBtn'>5</a></li>
-				<li><a class='pageBtn'>6</a></li>
-				<li class="end"><a><i class="ic"></i></a></li>
-			</ul>
+ 		<div class="paging_new">
+			<paging:PageFooter totalCount="${ totalCnt }" rowCount="${ rowCnt }">
+				<First><Previous><AllPageLink><Next><Last>
+			</paging:PageFooter>
 		</div>
 	</div>
 </section>
@@ -178,10 +172,14 @@
 </form>
 
 <script type="text/javascript">
+
+function asdf() {
+	console.log('${contextPath}');
+	console.log(1);
+}
+
+
 $(function() {
-	console.log(${test});
-	
-	
 	// 체크박스 전체선택
 	$("#allCheck").click(function(){
 		if($("#allCheck").prop("checked")) {
@@ -195,65 +193,59 @@ $(function() {
 	$('.btnSort').click(function(){
 		var strSortGubun = $(this).attr("sortGubun");
 		var strSortOdr = $(this).attr("sortOdr");
-		
 		$("#sortGubun").val(strSortGubun);
 		$("#sortOdr").val(strSortOdr);		
 		$("#frm").submit();		
 	});
-	
-	
-	
-	
 });
 
 function fn_order_by(str){	
 	var frm=document.getElementById("frm");
-	
 	frm.pagerMaxPageItems.value=$("#cnt").val();
-	console.log(frm.pagerMaxPageItems.value);		
 	frm.submit();
 }
 
-var img1= new Image(); 
-function doImgPop(img){ 
-	img1= new Image(); 
-	img1.src=(img); 
-	imgControll(img); 
-} 
+var img1= new Image();
+function doImgPop(img){
+	img1= new Image();
+	img1.src=(img);
+	imgControll(img);
+}
 
 function cleanResearch(){
 	$('#reSearch').val("");
 }
 	  
-function imgControll(img){ 
-	if((img1.width!=0)&&(img1.height!=0)){ 
-		viewImage(img); 
-	} 
-	else{ 
-		controller="imgControll('"+img+"')"; 
-		intervalID=setTimeout(controller,20); 
-	} 
+function imgControll(img){
+	if((img1.width!=0)&&(img1.height!=0)){
+		viewImage(img);
+	}
+	else{
+		controller="imgControll('"+img+"')";
+		intervalID=setTimeout(controller,20);
+	}
 }
 
 $("#btnSearch").click(function(){
-	$("#frm").submit();	
-})
+	$("#frm").submit();
+});
 
 $(".pageBtn").click(function(){
 	$("#pageNum").val(this.textContent);
 	$("#frm").submit();
-	
-})
+});
 
 $("#btnSave").click(function(){
-	
 	var prdNums = $('input[name="chkPdtId"]:checked');
 	var prdNum = [];
 	for(var i =0;i<prdNums.length;i++){
 		prdNum.push(prdNums[i].value);
 	}
 	
-	
+	if (prdNum.length === 0) {
+		alert('연동하실 상품을 선택해주세요.');
+		return;
+	}
 
 	 $.ajax({
 		type: "POST",
@@ -268,8 +260,6 @@ $("#btnSave").click(function(){
 	    }, error: function (jqXHR, textStatus, errorThrown) {
 	       alert("상품 연동중 에러가 발생했습니다. 관리자에게 문의 하세요.(error:"+textStatus+")");
 	    }
-	});	
-	
-})
-
+	});
+});
 </script>

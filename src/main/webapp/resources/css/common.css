@@ -36,3 +36,15 @@ h1, h2, h3, h4, h5, h6 {
 	}
 	
 #QnaPaging a i{ background: url(../images/icon_page_end.png) no-repeat 50% 50% }
+
+
+.paging_new{margin-top:30px}
+.paging_new ul{display:flex;flex-direction:row;justify-content:center;align-items:center}
+.paging_new li{margin:0 10px;width:30px;height:30px;}
+.paging_new li a{display:block;width:30px;line-height:30px;font-size:14px;font-weight:500;color:#333;text-align:center;}
+.paging_new li i{display:block;width:30px;height:30px}
+.paging_new li.on a{background:#111;color:#fff;}
+.paging_new li.start .ic{background:url("/resources/resources2/images/icon_page_start.png") no-repeat 50% 50%}
+.paging_new li.end .ic{background:url("/resources/resources2/images/icon_page_end.png") no-repeat 50% 50%}
+.paging_new li.prev .ic{background:url("/resources/resources2/images/icon_page_prev.png") no-repeat 50% 50%}
+.paging_new li.next .ic{background:url("/resources/ resources2/images/icon_page_next.png") no-repeat 50% 50%}

@@ -302,7 +302,7 @@
 				}
 				//추가상품 input값 전달  (2022.01장보라)
 				if($(".extraPdCode").length != 0){
-					document.getElementById("EXTRA_PD_CODE").value=extrPrd_PdCode;
+// 					document.getElementById("EXTRA_PD_CODE").value=extrPrd_PdCode;
 					document.getElementById("EXTRA_PD_QTY").value=extrPrd_PdQty;
 				}
 			}

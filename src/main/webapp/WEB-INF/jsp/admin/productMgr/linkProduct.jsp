@@ -88,7 +88,7 @@
 		<div class="box-header with-border">
 			<h3 class="box-title">상품 목록 : <font color="green"><b>${totalCnt}</b></font></h3>			
 			<div class="box-tools">
-				<button type="button" class="btn btn-primary btn-sm pull-right left-5" id="btnSave" >상품연동</button>
+				<button type="button" class="btn btn-primary btn-sm pull-right left-5" id="btnSave">상품연동</button>
 			</div>
 		</div>
 		<!-- /.box-header -->
@@ -119,7 +119,7 @@
                     	<input name="pdtIdYn" value="N" type="hidden"/>
                     </td>
                     <c:if test='${test.getJSONObject(i).get("repImg") != "null"}'>
-                    	<input type="hidden" id="thumnail" value="http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get('repImg')}" />
+                    	<%-- <input type="hidden" name="thumnail" value="http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get('repImg')}" /> --%>
                     	<td class="txt-middle"><img src='http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
                     </c:if>
                     <c:if test='${test.getJSONObject(i).get("repImg") == "null"}'>
@@ -240,11 +240,12 @@ $(".pageBtn").click(function(){
 });
 
 $("#btnSave").click(function(){
+	
 	var prdNums = $('input[name="chkPdtId"]:checked');
 	var prdNum = [];
 	
-	let thumnail = document.querySelector("#thumnail");
-	console.log(thumnail);
+	/* let thumnail = document.querySelector("input[name='thumnail']");
+	console.log(thumnail); */
 	for(var i =0;i<prdNums.length;i++){
 		prdNum.push(prdNums[i].value);
 	}
@@ -253,14 +254,13 @@ $("#btnSave").click(function(){
 		alert('연동하실 상품을 선택해주세요.');
 		return;
 	}
-
 	 $.ajax({
 		type: "POST",
 	    url: "${contextPath}/adm/productMgr/insertLinkProduct",
 	    traditional: true,
 	    data: {
-	    	prdNums : prdNum.toString(),
-	    	thumnail: thumnail.value
+	    	prdNums : prdNum.toString()
+	    	/* thumnail: thumnail.value */
 	    },
 	    success: function (data) {
 	   		alert("선택한 상품의 연동이 완료 되었습니다.");

@@ -1876,19 +1876,20 @@ public class ProductMgrController extends DefaultController{
 			productInfo.setINVEN_QTY("999");
 			productInfo.setSALE_CON("SALE_CON_01");
 //			productInfo.setATFL_ID("00000");
-			productInfo.setPD_DINFO(imgLink[1]);
 			productInfo.setREGP_ID(loginUser.getMEMB_NAME());
 			productInfo.setMODP_ID(loginUser.getMEMB_NAME());
 			productInfo.setRETAIL_YN("N");
 			productInfo.setBOX_PDDC_GUBN("PDDC_GUBN_01");
-			productInfo.setIMGURL(request.getParameter("thumnail"));
+			productInfo.setIMGURL(requestBody.get("extrlImgUrl").toString());
 			productInfo.setN_PD_CODE(requestBody.get("prdNo").toString());
+			productInfo.setPD_DINFO(requestBody.get("dtlHtmlCn").toString());
 			if(valichk == 0 ) {
 				int nRtn = productMgrService.insertLinkedObject(productInfo);
 			}
-			if(requestBody.get("prdOptSetNo") != null){
-				System.out.println(11111);
-				System.out.println(productInfo.getN_PD_CODE());
+			
+			String optSetNo =  requestBody.get("prdOptSetNo").toString();
+			
+			if(!"null".equals(optSetNo)) {
 				String PD_CODE = productMgrService.selectByNpdcode(productInfo.getN_PD_CODE());
 
 				TB_PDOPTION tb_pdoption = new TB_PDOPTION();
@@ -1911,7 +1912,7 @@ public class ProductMgrController extends DefaultController{
 				  "\"pageSize\": 100," +
 				  "\"paged\": true" +
 				  "}";
-
+				
 				HttpEntity<?> requestSet = new HttpEntity<>(requestJson, httpHeaders);
 				response = restTemplate.postForEntity(url, requestSet, String.class);
 				requestBody = new JSONObject(response.getBody());
@@ -1919,14 +1920,14 @@ public class ProductMgrController extends DefaultController{
 				JSONArray body = (JSONArray)requestBody.get("prdOptList");
 				
 				int dtlCnt =0;
-				JSONObject option1 = body.getJSONObject(0); 
+				JSONObject option1 = body.getJSONObject(0);
 				JSONObject option2 = null;
 				JSONObject option3 = null;
 				if(body.length() == 3) {
-					option2 = body.getJSONObject(1); 
-					option3 = body.getJSONObject(2); 
+					option2 = body.getJSONObject(1);
+					option3 = body.getJSONObject(2);
 				}else if(body.length() == 2) {
-					option2 = body.getJSONObject(1); 
+					option2 = body.getJSONObject(1);
 				}
 				
 				JSONArray optDtls1 = (JSONArray)option1.get("prdOptDtlList");
@@ -1964,6 +1965,5 @@ public class ProductMgrController extends DefaultController{
 			}
 		}
 		return;
-	}	
-	
+	}
 }

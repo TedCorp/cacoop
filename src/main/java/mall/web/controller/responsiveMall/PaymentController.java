@@ -75,7 +75,7 @@ public class PaymentController extends DefaultController{
         });
     }
 
-    private final String SECRET_KEY = "test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R";
+    private final String SECRET_KEY = "live_sk_OAQ92ymxN34jBkzPKL4rajRKXvdk";
 
     @RequestMapping("/success")
     public ModelAndView confirmPayment(

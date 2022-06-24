@@ -741,7 +741,7 @@
       }
    })
    function pay(){
-      var clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq'
+      var clientKey = 'live_ck_N5OWRapdA8d5nenbMeW3o1zEqZKL'
       var tossPayments = TossPayments(clientKey)
       var orderName = ''
       var userName = '${USER.MEMB_NAME}'.trim()

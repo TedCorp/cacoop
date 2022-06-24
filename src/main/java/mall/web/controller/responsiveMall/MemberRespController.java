@@ -186,9 +186,10 @@ public class MemberRespController extends DefaultController{
 			obj = (TB_SPINFOXM)memberService.getSuprObject(tb_spinfoxm);
 			int addr_count = deliveryAddrMgrService.addrCount();
 			//기존 배송지가 등록되어있는지 확인
-			tb_delivery_addr.setSUPR_ID(obj.getSUPR_ID());
-			
-			int count=deliveryAddrMgrService.getObjectCount(tb_delivery_addr);
+			if(StringUtils.isNotEmpty(tb_spinfoxm.getBIZR_NUM())) {
+				tb_delivery_addr.setSUPR_ID(obj.getSUPR_ID());
+				
+				int count=deliveryAddrMgrService.getObjectCount(tb_delivery_addr);
 				if(count == 0) {
 					for(int i=0; i<addr_count; i++) {
 						tb_delivery_addr.setADDR_GUBN("ADDR_GUBN_"+i);
@@ -201,10 +202,10 @@ public class MemberRespController extends DefaultController{
 						deliveryAddrMgrService.insertObject(tb_delivery_addr);
 					}
 				}
+			}
 		}
 		
 		ModelAndView mav = new ModelAndView();
-		
 		if(StringUtils.isNotEmpty(tb_spinfoxm.getBIZR_NUM()) && tb_spinfoxm.getUSE_YN().equals("Y")) {
 			mav.addObject("alertMessage", "승인 후 이용 바랍니다.");
 			mav.addObject("returnUrl", "/m");

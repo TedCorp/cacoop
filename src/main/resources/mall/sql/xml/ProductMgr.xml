@@ -732,6 +732,7 @@
                 , BOX_PDDC_GUBN
                 , IMGURL
                 , N_PD_CODE
+                , PD_DINFO
 			) VALUES (
 				  TRIM(#{PD_CODE})
 				, #{SUPR_ID}
@@ -749,6 +750,7 @@
 				, #{BOX_PDDC_GUBN}
 				, #{IMGURL}
 				, #{N_PD_CODE}
+				, #{PD_DINFO}
 			)
 	</insert>
 	

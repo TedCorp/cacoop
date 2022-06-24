@@ -927,12 +927,13 @@
 					</ul>
 
 					<div class="tab-conts">
-						<div class="tab-cont on">
+						<div class="tab-cont on" ${fileDtlList }>
+						<c:if test="${!empty fileDtlList }">
 						 <c:forEach var="var" items="${ fileDtlList }" varStatus="status">
 							<c:if test="${var.FILEPATH_FLAG eq mainKey }">													
 								<c:set var="imgDtlPath" value="${contextPath }/upload/${var.STFL_PATH }/${var.STFL_NAME }" />
 							</c:if>
-							<c:if test="${!empty(var.FILEPATH_FLAG) && var.FILEPATH_FLAG ne mainKey }">
+							<c:if test="${!empty(var.FILEPATH_FLAG) && var.FILEPATH_FLAG ne mainKey }">d
 								<c:set var="imgDtlPath" value="${var.STFL_PATH }" />
 							</c:if>
 							<c:if test="${ empty(var.FILEPATH_FLAG) }">
@@ -942,7 +943,10 @@
 								<td><img src="${imgDtlPath }" class="goodsImg" />&nbsp;</td>
 							</tr>
 						</c:forEach>
-								
+						</c:if>
+						<c:if test="${empty fileDtlList }">
+							${ result.PD_DINFO}
+						</c:if>
 							<p class="mgt20"></p>
 							<div class="pd-info02">
 								<h2>상품정보고시</h2>

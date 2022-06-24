@@ -87,7 +87,7 @@ public class OrderRestController extends DefaultController{
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 	
-	private final String SECRET_KEY = "test_sk_zXLkKEypNArWmo50nX3lmeaxYG5R";
+	private final String SECRET_KEY = "live_sk_OAQ92ymxN34jBkzPKL4rajRKXvdk";
 	 
 	@Autowired
 	private Environment environment;
@@ -414,12 +414,16 @@ public class OrderRestController extends DefaultController{
 			tb_odinfoxm.setCNCL_CON("CNCL_CON_03");
 			
 			ALL_DLVY_AMT = Integer.parseInt(tb_odinfoxm.getDLVY_AMT());
+			System.out.println("ALL_DLVY_AMT : " + ALL_DLVY_AMT);
 			ALL_ORDER_AMT = Integer.parseInt(tb_odinfoxm.getORDER_AMT()) - ALL_DLVY_AMT;
+			System.out.println("ALL_ORDER_AMT : " + ALL_ORDER_AMT);
 			
 			//환불금액
 			if(StringUtils.isNotEmpty(tb_odinfoxm.getRFND_AMT())) {
 	        	RFND_AMT = Integer.parseInt(tb_odinfoxm.getRFND_AMT());
 	        }
+			
+			System.out.println("RFND_AMT : " + RFND_AMT);
 			
 			/* 결제금액 & 배송비 재계산 - 이유리 */
 			List<TB_ODINFOXM> list = new ArrayList<TB_ODINFOXM>();
@@ -659,15 +663,10 @@ public class OrderRestController extends DefaultController{
 		int result = 0;
 		String reason = "고객의 요청으로 취소";
 		String cancelAmt = refundAmt+""; //취소금액
-		
+			
 	    
 	    // api 응답이왔을 때 update
 		if(tb_odinfoxm.getSTATUS().equals("CANCEL")) {
-		 HttpHeaders headers = new HttpHeaders();
-	        // headers.setBasicAuth(SECRET_KEY, ""); // spring framework 5.2 이상 버전에서 지원
-	        headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString((SECRET_KEY + ":").getBytes()));
-	        headers.setContentType(MediaType.APPLICATION_JSON);
-
 	        Map<String, String> payloadMap = new HashMap<>();
 	        payloadMap.put("cancelReason", reason);
 	        //부분취소 
@@ -685,11 +684,16 @@ public class OrderRestController extends DefaultController{
 	        	refundReceiveAccount.put("holderName", "");                     // 환불받을 계좌 예금주 
 	        	payloadMap.put("refundReceiveAccount", refundReceiveAccount.toString());
 	        }
+	        
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.set("Authorization", "Basic " + Base64.getEncoder().encodeToString((SECRET_KEY + ":").getBytes()));
+	        headers.setContentType(MediaType.APPLICATION_JSON);
 	        HttpEntity<String> request1 = new HttpEntity<>(objectMapper.writeValueAsString(payloadMap), headers);
-
+	        
 	        System.out.println("PAY_MDKY : "+tb_odinfoxm.getPAY_MDKY());
+	        String mdky = tb_odinfoxm.getPAY_MDKY();
 	        ResponseEntity<JsonNode> responseEntity = restTemplate.postForEntity(
-	                "https://api.tosspayments.com/v1/payments/"+tb_odinfoxm.getPAY_MDKY()+"/cancel", request1, JsonNode.class);
+	                "https://api.tosspayments.com/v1/payments/"+mdky+"/cancel", request1, JsonNode.class);
 	        if (responseEntity.getStatusCode() == HttpStatus.OK) {
 	        	TB_LGUPLUS tb_lguplus = new TB_LGUPLUS();
 	        	

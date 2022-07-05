@@ -411,11 +411,13 @@
                      <dl class="order-desc">
                         <dt>배송 메시지</dt>
                         <dd>
-                           <select>
-                              <option value="">배송 메시지를 선택해 주세요</option>   
-                              <option value="">문 앞에 두고 가주세요</option>   
-                              <option value="">문 앞에 두고 벨 눌러주세요</option>
+                           <select onchange="mDelivery(this.value)">
+                              <option value="배송 메시지를 선택해 주세요">배송 메시지를 선택해 주세요</option>   
+                              <option value="문 앞에 두고 가주세요">문 앞에 두고 가주세요</option>   
+                              <option value="문 앞에 두고 벨 눌러주세요">문 앞에 두고 벨 눌러주세요</option>
+                              <option value="">직접입력</option>
                            </select>
+                           <input type="text" id="directInput" style="display:none;" placeholder="직접입력"/> 
                         </dd>
                      </dl>
                   </div>
@@ -783,6 +785,17 @@
         successUrl: SERVER_SUCCESS_URL,
         failUrl: SERVER_FAIL_URL,
       });
+   }
+   
+   function mDelivery(id) {
+	   console.log(id);
+	   const directInput = document.querySelector("#directInput");
+	   if(id == "") {
+		   directInput.style.display = "block";
+	   } else {
+		   directInput.style.display = "none";
+	   }
+	   directInput.value = id; 
    }
     
 </script>

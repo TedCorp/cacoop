@@ -914,25 +914,25 @@
 						</div>
 					</div>
 				</div>
-				<div class="item">
-					<p  class="tit">비밀번호</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>비밀번호</span></p>
 					<input type="password" name="MEMB_PW" id="MEMB_PW" placeholder="비밀번호 입력">
 					<p class="add red">숫자와 영문자, 특수문자를 포함한 5~20자리 문자를 입력해야 합니다.</p>
 				</div>
-				<div class="item">
-					<p  class="tit">비밀번호확인</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>비밀번호확인</span></p>
 					<input type="password" id="MEMB_PW_RE" placeholder="비밀번호 재 입력">
 				</div>
-				<div class="item">
-					<p  class="tit">이름</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>이름</span></p>
 					<input type="text" name="MEMB_NAME" id="MEMB_NAME" placeholder="이름 입력">
 				</div>
-				<div class="item">
-					<p  class="tit">이메일</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>이메일</span></p>
 					<input type="text" name="MEMB_MAIL" id="MEMB_MAIL" placeholder="이메일 입력 (ex.hongildong@naver.com)">
 				</div>
-				<div class="item">
-					<p  class="tit">휴대폰 번호</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>휴대폰 번호</span></p>
 					<input type="text" id="MEMB_PHONE" class="onlyNum" placeholder="휴대폰 번호 '-'없이 입력" maxlength="11">
 					<input type="hidden" name="MEMB_CPON" id="MEMB_CPON">
 				</div>
@@ -941,16 +941,16 @@
 					<input type="text" id="MEMB_TEL" class="onlyNum" placeholder="전화번호 '-'없이 입력" maxlength="11">
 					<input type="hidden" name="MEMB_TELN" id="MEMB_TELN">
 				</div>
-				<div class="item com_name_area input-hide">
-					<p  class="tit">회사명</p>
+				<div class="item com_name_area input-hide required btn-with">
+					<p  class="tit"><span>회사명</span></p>
 					<input type="text" id="COM_NAME" name="COM_NAME" placeholder="회사명 입력"/>
 				</div>
-				<div class="item rprs_name_area input-hide">
-					<p  class="tit">대표자명</p>
+				<div class="item rprs_name_area input-hide required btn-with">
+					<p  class="tit"><span>대표자명</span></p>
 					<input type="text" id="RPRS_NAME" name="RPRS_NAME" placeholder="대표자명 입력"/>
 				</div>
-				<div class="item">
-					<p  class="tit">우편 번호</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>우편 번호</span></p>
 					<label class="col-sm-2" for="MEMB_PN"></label>
 						<div>
 							<input type="hidden" name="EXTRA_ADDR" id="EXTRA_ADDR" value="">
@@ -967,15 +967,15 @@
 							</div>
 						</div>
 				</div>
-				<div class="item">
-					<p  class="tit">기본 주소</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>기본 주소</span></p>
 					<label class="col-sm-2" for="MEMB_BADR"></label>
 					<div>
 						<input type="text" name="MEMB_BADR" id="MEMB_BADR" value="" placeholder="기본주소" readonly="readonly" maxlength="100">
 					</div>
 				</div>
-				<div class="item">
-					<p  class="tit">상세 주소</p>
+				<div class="item required btn-with">
+					<p  class="tit"><span>상세 주소</span></p>
 					<label class="col-sm-2" for="MEMB_DADR"></label>
 					<div>
 						<input type="text" name="MEMB_DADR" id="MEMB_DADR" placeholder="상세주소" maxlength="100">
@@ -985,8 +985,8 @@
 					<p  class="tit">조합원인 경우 조합원 번호를 입력하세요.</p>
 					<input type="text" name="CACOOP_NO" placeholder="조합원 번호 입력">
 				</div> -->
-				<div class="item com_bunb_area input-hide">
-					<p class="tit">사업자 번호</p>
+				<div class="item com_bunb_area input-hide required btn-with">
+					<p class="tit"><span>사업자 번호</span></p>
 					<input type="text" id="COM_NUM" name="COM_NUM" class="onlyNum" placeholder="사업자 번호 '-'없이 입력" maxlength="10">
 					<input type="hidden" name="COM_BUNB" id="COM_BUNB">
 				</div>
@@ -995,8 +995,8 @@
 					<input type="text" id="CACOOP_NO" name="CACOOP_NO" placeholder="조합원 번호 숫자만 입력">
 					<p class="add red">조합원 번호를 모르실 경우 가입후 관리자에게 문의 부탁드립니다.</p>
 				</div>
-				<div class="item cacoop_no_area input-hide">
-				<p  class="tit">공급사로 등록하시겠습니까?</p>
+				<div class="item cacoop_no_area input-hide required btn-with">
+				<p  class="tit"><span>공급사로 등록하시겠습니까?</span></p>
 				<div style="display:flex;">
 					<div class="checkbox">
 						<input type="checkbox" name="USE_YN" value="Y" id="USE_Y" checked="checked"/>
@@ -1007,12 +1007,12 @@
 						<label for="USE_N">아니오</label>
 					</div>
 				</div>
-				<div class="item dlvy_amt_area input-hide">
-					<p  class="tit">배송비</p>
+				<div class="item dlvy_amt_area input-hide required btn-with">
+					<p  class="tit"><span>배송비</span></p>
 					<input type="text" id="DLVY_AMT" name="DLVY_AMT" class="onlyNum" placeholder="숫자만 입력 (원 단위)">
 				</div>
-				<div class="item dlva_fcon_area input-hide">
-					<p  class="tit">배송비 무료 조건</p>
+				<div class="item dlva_fcon_area input-hide required btn-with">
+					<p  class="tit"><span>배송비 무료 조건</span></p>
 					<input type="text" id="DLVA_FCON" name="DLVA_FCON" class="onlyNum" placeholder="숫자만 입력 (-원 이상 구매 시)">
 				</div>
 				<div class="item ps_com_area input-hide">
@@ -1328,12 +1328,12 @@
 				return false;
 			}
 			
-			if($("#MEMB_TEL").val() == ""){
+/* 			if($("#MEMB_TEL").val() == ""){
 				$('.layer-popup').addClass('on');
 				$('.casa-msg').html("전화번호를 입력해 주세요.");
 				$("#MEMB_TEL").focus();
 				return false;
-			}
+			} */
 			
 			/* 주소 */
 			if($("#MEMB_PN").val() == ""){

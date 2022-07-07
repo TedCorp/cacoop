@@ -125,7 +125,8 @@ input:checked+label {
 
 
 							<c:when test="${status.count % 4 == 0 }">
-								<li><c:set var="imgPath"
+								<li>
+									<c:set var="imgPath"
 										value="${contextPath }/common/commonImgFileDown?ATFL_ID=${ent.ATFL_ID }&ATFL_SEQ=${ent.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
 									<c:if test="${ !empty(ent.ATFL_ID)  }">
 										<c:if test="${ent.FILEPATH_FLAG eq mainKey }">
@@ -136,11 +137,11 @@ input:checked+label {
 											test="${!empty(ent.FILEPATH_FLAG) && ent.FILEPATH_FLAG ne mainKey }">
 											<c:set var="imgPath" value="${ent.STFL_PATH }" />
 										</c:if>
-									</c:if> <c:if test="${ empty(ent.ATFL_ID)  }">
-										<c:set var="imgPath"
-											value="${contextPath }/resources/images/mall/goods/noimage_270.png" />
-									</c:if> <!-- 상품이름 --> <a
-									href="${contextPath }/m/product/view/${ ent.PD_CODE }?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }&${link}"
+									</c:if>
+									<c:if test="${ !empty(ent.IMGURL) }">
+										<c:set var="imgPath" value="${ent.IMGURL }" />
+									</c:if>
+									<a href="${contextPath }/m/product/view/${ ent.PD_CODE }?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }&${link}"
 									target="_self"
 									title="<c:out value=" ${ ent.PD_NAME }" escapeXml="true" />"><img
 										src="${imgPath }"
@@ -173,7 +174,8 @@ input:checked+label {
 							</c:when>
 							<c:otherwise>
 
-								<li><c:set var="imgPath"
+								<li>									
+									<c:set var="imgPath"
 										value="${contextPath }/common/commonImgFileDown?ATFL_ID=${ent.ATFL_ID }&ATFL_SEQ=${ent.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
 									<c:if test="${ !empty(ent.ATFL_ID)  }">
 										<c:if test="${ent.FILEPATH_FLAG eq mainKey }">
@@ -184,10 +186,11 @@ input:checked+label {
 											test="${!empty(ent.FILEPATH_FLAG) && ent.FILEPATH_FLAG ne mainKey }">
 											<c:set var="imgPath" value="${ent.STFL_PATH }" />
 										</c:if>
-									</c:if> <c:if test="${ empty(ent.ATFL_ID)  }">
-										<c:set var="imgPath"
-											value="${contextPath }/resources/images/mall/goods/noimage_270.png" />
-									</c:if> <a
+									</c:if>
+									<c:if test="${ !empty(ent.IMGURL) }">
+										<c:set var="imgPath" value="${ent.IMGURL }" />
+									</c:if>
+									<a
 									href="${contextPath }/m/product/view/${ ent.PD_CODE }?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }&${link}"
 									target="_self"
 									title="<c:out value=" ${ ent.PD_NAME }" escapeXml="true" />"><img

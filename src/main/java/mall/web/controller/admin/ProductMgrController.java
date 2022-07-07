@@ -1866,11 +1866,28 @@ public class ProductMgrController extends DefaultController{
 			HttpEntity<String> response = restTemplate.postForEntity(url, requestMessage, String.class);
 			JSONObject requestBody = new JSONObject(response.getBody());
 			String[] imgLink = requestBody.get("dtlHtmlCn").toString().split("\"");
-
+			
+			String prdCago1 = requestBody.get("prductCl1").toString();
+			String prdCago2 = requestBody.get("prductCl2").toString();
+			String prdCago3 = requestBody.get("prductCl3").toString();
+			
+			
 			TB_PDINFOXM productInfo = new TB_PDINFOXM();
+			if("".equals(prdCago3) || prdCago3 == null) {
+				if("".equals(prdCago2) || prdCago2 == null) {
+					productInfo.setCAGO_ID(prdCago1);
+				} else {
+					productInfo.setCAGO_ID(prdCago2);
+				}
+			} else {
+				productInfo.setCAGO_ID(prdCago3);
+			}
+			
+			String repImg = "http://cloud.1472.ai:8080/uploads/" + requestBody.get("repImg").toString();
+			
 			productInfo.setPD_NAME(requestBody.get("prductNm").toString());
 			productInfo.setSUPR_ID(loginUser.getSUPR_ID());
-			productInfo.setCAGO_ID("021000000000");
+//			productInfo.setCAGO_ID("021000000000");
 			productInfo.setCAGO_ID_LEN(productInfo.getCAGO_ID().length()+1);
 			productInfo.setPD_PRICE(requestBody.get("cnsmrPc").toString());
 			productInfo.setINVEN_QTY("999");
@@ -1880,7 +1897,7 @@ public class ProductMgrController extends DefaultController{
 			productInfo.setMODP_ID(loginUser.getMEMB_NAME());
 			productInfo.setRETAIL_YN("N");
 			productInfo.setBOX_PDDC_GUBN("PDDC_GUBN_01");
-			productInfo.setIMGURL(requestBody.get("extrlImgUrl").toString());
+			productInfo.setIMGURL(repImg);
 			productInfo.setN_PD_CODE(requestBody.get("prdNo").toString());
 			productInfo.setPD_DINFO(requestBody.get("dtlHtmlCn").toString());
 			if(valichk == 0 ) {

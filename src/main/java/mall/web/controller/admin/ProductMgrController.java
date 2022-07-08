@@ -204,7 +204,7 @@ public class ProductMgrController extends DefaultController{
 		
 		
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
-		productInfo.setSUPR_ID(loginUser.getSUPR_ID());		
+		productInfo.setSUPR_ID(loginUser.getSUPR_ID());
 		productInfo.setMEMB_GUBN(loginUser.getMEMB_GUBN());
 		
 		//admin 계정일경우
@@ -1835,8 +1835,35 @@ public class ProductMgrController extends DefaultController{
 	        String totalCnt = requestBody.get("totalElements").toString();
 	        
 	        JSONArray jsonArray = new JSONArray(requestBody.get("content").toString());
-	        
+	        List<?> selectPrd = null;
+	        TB_PDINFOXM productInfo = new TB_PDINFOXM();
+	        JSONArray flagJson = new JSONArray();
+	        TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
+	        for(int i=0; i< jsonArray.length(); i++) {
+	        	int tempPrdNo;
+	        	JSONObject pick = jsonArray.getJSONObject(i);
+	        	tempPrdNo = pick.getInt("prdNo");
+	        	
+		        productInfo.setSUPR_ID(loginUser.getSUPR_ID());
+		        String prdNo = Integer.toString(tempPrdNo);
+		        productInfo.setN_PD_CODE(prdNo);
+		        
+//		        jsonArray2 = productMgrService.getObjectList(productInfo);
+		        selectPrd = (productMgrService.getObjectList(productInfo));
+		        
+		        if(selectPrd.isEmpty()) {
+		        	System.out.println("wow!!!!" + i);
+		        	pick.put("flag", 0);
+		        } else {
+		        	System.out.println("mom!!!!" + i);
+		        	pick.put("flag", 1);
+		        }
+		        
+		        flagJson.put(pick);
+	        }
+
 	        model.addAttribute("test",jsonArray);
+	        model.addAttribute("flag", flagJson);
 	        model.addAttribute("totalCnt", totalCnt);
 	        return new ModelAndView("admin.layout", "jsp", "admin/productMgr/linkProduct");
 	  }

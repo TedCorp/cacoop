@@ -476,6 +476,10 @@
 		<include refid="default.pagerFooter"/>
 	</select>
 	
+	<select id="list" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
+		SELECT * FROM TB_PDINFOXM WHERE N_PD_CODE = #{N_PD_CODE} AND SUPR_ID = #{SUPR_ID}
+	</select>
+	
 	<!-- 상품 상세 -->
 	<select id="find" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
 		SELECT A.PD_CODE

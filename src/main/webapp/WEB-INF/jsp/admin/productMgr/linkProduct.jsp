@@ -112,38 +112,42 @@
 					</tr>
 				</thead>
 				<tbody>
-				<c:forEach begin="0" end="${test.length() -1}" var="i">
+				<c:forEach begin="0" end="${flag.length() -1}" var="i">
 				<tr>
                     <td class="txt-middle">
-                    	<input name="chkPdtId" value='${test.getJSONObject(i).get("prdNo")}' type="checkbox"/>
+                    	<input name="chkPdtId" value='${flag.getJSONObject(i).get("prdNo")}' type="checkbox"/>
                     	<input name="pdtIdYn" value="N" type="hidden"/>
                     </td>
-                    <c:if test='${test.getJSONObject(i).get("repImg") != "null"}'>
+                    <c:if test='${flag.getJSONObject(i).get("repImg") != "null"}'>
                     	<%-- <input type="hidden" name="thumnail" value="http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get('repImg')}" /> --%>
-                    	<td class="txt-middle"><img src='http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
+                    	<td class="txt-middle"><img src='http://cloud.1472.ai:8080/uploads/${flag.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
                     </c:if>
-                    <c:if test='${test.getJSONObject(i).get("repImg") == "null"}'>
+                    <c:if test='${flag.getJSONObject(i).get("repImg") == "null"}'>
                     	<td class="txt-middle"><img src='${contextPath }/resources/images/mall/goods/noimage.png' style="max-width:60px;"></td>
                     </c:if>
-			    	<td  class="txt-left">소통 클라우드  
-			    	<c:if test='${test.getJSONObject(i).get("prductCl1Nm") != "null"}'>
-			    		> ${test.getJSONObject(i).get("prductCl1Nm")} 
+			    	<td  class="txt-left">소통 클라우드
+			    	<c:if test='${flag.getJSONObject(i).get("prductCl1Nm") != "null"}'>
+			    		> ${flag.getJSONObject(i).get("prductCl1Nm")} 
 			    	</c:if> 
-			    	<c:if test='${test.getJSONObject(i).get("prductCl2Nm") != "null"}'>
-			    		 > ${test.getJSONObject(i).get("prductCl2Nm")} 
+			    	<c:if test='${flag.getJSONObject(i).get("prductCl2Nm") != "null"}'>
+			    		 > ${flag.getJSONObject(i).get("prductCl2Nm")} 
 			    	</c:if>
-			    	<c:if test='${test.getJSONObject(i).get("prductCl3Nm") != "null"}'>
-			    		 > ${test.getJSONObject(i).get("prductCl3Nm")} 
+			    	<c:if test='${flag.getJSONObject(i).get("prductCl3Nm") != "null"}'>
+			    		 > ${flag.getJSONObject(i).get("prductCl3Nm")} 
 			    	</c:if>  
-			    	/ ${test.getJSONObject(i).get("prductNm")}</td>
+			    	/ ${flag.getJSONObject(i).get("prductNm")}
+			    	<c:if test='${flag.getJSONObject(i).get("flag") == 1}' >
+			    		<span style="color:red">(연동 완료)</span>
+			    	</c:if>
+			    	</td>
 			    	<td class="txt-right">-</td>
-			    	<td class="txt-right">${test.getJSONObject(i).get("cnsmrPc")}</td>
+			    	<td class="txt-right">${flag.getJSONObject(i).get("cnsmrPc")}</td>
 			    	<td class="txt-middle">-</td>
 			    	<td class="txt-right">0</td>
-			    	<c:if test='${test.getJSONObject(i).get("delYn") == "Y" }'>
+			    	<c:if test='${flag.getJSONObject(i).get("delYn") == "Y" }'>
                     	<td class="txt-middle">판매 불가</td>
                     </c:if>
-                    <c:if test='${test.getJSONObject(i).get("delYn") == "N" }'>
+                    <c:if test='${flag.getJSONObject(i).get("delYn") == "N" }'>
                     	<td class="txt-middle">판매 가능</td>
                     </c:if>
 			    </tr>

@@ -2,14 +2,12 @@ package mall.web.controller.responsiveMall;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
-import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -33,16 +31,18 @@ import mall.web.domain.TB_ODINFOXM;
 import mall.web.domain.TB_PDBORDXM;
 import mall.web.domain.TB_PDCOMMXM;
 import mall.web.domain.TB_PDINFOXM;
-import mall.web.domain.TB_PDOPTION;
 import mall.web.domain.TB_PDSHIPXD;
 import mall.web.domain.TB_PDSHIPXM;
 import mall.web.domain.TB_SHIPTEXD;
 import mall.web.domain.TB_SHIPTEXM;
+import mall.web.domain.TB_SPINFOXM;
 import mall.web.service.admin.impl.EventMgrService;
+import mall.web.service.admin.impl.ProductMgrService;
+import mall.web.service.admin.impl.SupplierMgrService;
 import mall.web.service.common.CommonService;
 import mall.web.service.mall.OrderService;
 import mall.web.service.mall.ProductService;
-import mall.web.service.admin.impl.ProductMgrService;
+
 
 @Controller
 @RequestMapping(value="/m/product")
@@ -62,6 +62,9 @@ public class ProductRespController extends DefaultController{
 	
 	@Resource(name="productMgrService")
 	ProductMgrService productMgrService;
+	
+	@Resource(name="supplierMgrService")
+	SupplierMgrService supplierMgrService;
 	
 	
 	/**
@@ -205,6 +208,10 @@ public class ProductRespController extends DefaultController{
 		}
 		TB_PDINFOXM rtnObj = (TB_PDINFOXM)productService.getObject(productInfo);
 		model.addAttribute("result", rtnObj);
+		
+		TB_SPINFOXM spinfoxm = new TB_SPINFOXM();
+		spinfoxm.setSUPR_ID(rtnObj.getSUPR_ID());
+		model.addAttribute("supply", supplierMgrService.getObject(spinfoxm));
 		
 		//주소정보가져오기- 장보라
 		TB_DELIVERY_ADDR tb_delivery_addr=new TB_DELIVERY_ADDR();

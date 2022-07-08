@@ -832,6 +832,16 @@
 												 -->
 											</td>
 										</tr>
+										<tr>
+											<td>
+												공급처
+											</td>
+											<td>
+												<span class="price-dark" style="font-size: 20px;">
+													${supply.SUPR_NAME}
+												</span> 
+											</td>
+										</tr>
 										<c:choose>
 											<c:when  test="${fn:length(extrList) == 0}">
 											</c:when>

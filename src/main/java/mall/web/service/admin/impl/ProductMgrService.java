@@ -48,7 +48,7 @@ public class ProductMgrService implements DefaultService {
 	}
 	
 	@Override
-	public List<?> getObjectList(Object obj) throws Exception {
+	public List<TB_PDINFOXM> getObjectList(Object obj) throws Exception {
 		return productMgrMapper.list(obj);
 	}
 

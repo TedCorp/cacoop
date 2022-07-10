@@ -70,6 +70,7 @@ public class TB_ODINFOXD extends DefaultDomain{
 	private String DLVY_GUBN;				//VARCHAR2(35)	 		상품별 배송구분
 	private String PD_QTY;					//VARCHAR2(35)	 		상품별 수량
 	private String[] PD_QTYs;				//VARCHAR2(35)	 		상품별 수량
+	private String IMGURL;
 	
 	/* TB_SPINFOXM */
 	private String DLVA_FCON;				//NUMBER				배송비 무료조건
@@ -780,6 +781,12 @@ public class TB_ODINFOXD extends DefaultDomain{
 	}
 	public void setEXTRA_PD_QTY(String eXTRA_PD_QTY) {
 		EXTRA_PD_QTY = eXTRA_PD_QTY;
+	}
+	public String getIMGURL() {
+		return IMGURL;
+	}
+	public void setIMGURL(String iMGURL) {
+		IMGURL = iMGURL;
 	}
 
 	

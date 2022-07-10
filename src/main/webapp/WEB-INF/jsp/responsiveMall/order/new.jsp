@@ -625,9 +625,18 @@
                            </c:if>
                            <li>
                               <a href="${contextPath }/m/product/view/${ list.PD_CODE }" target="_blank">
-                               <c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
+                              <div class="img">
+                              					<c:if test='${empty list.IMGURL}'>
+													<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
+													<img src="${imgPath }" alt="">
+												</c:if>
+												<c:if test='${!empty list.IMGURL }'>
+													<img src="${list.IMGURL }" alt="">
+												</c:if>
+								</div>
+                               <%-- <c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
                                <c:set var="imgPathSm" value="${contextPath }/upload/${list.ATFL_ID }/${list.RPIMG_SEQ}" />
-                                 <div class="img"><img src="${imgPath}" alt="">${list.ATFL_ID}/${list.RPIMG_SEQ}</div> 
+                                 <div class="img"><img src="${imgPath}" alt="">${list.ATFL_ID}/${list.RPIMG_SEQ}</div> --%> 
                                  <div class="con">
                                     <div class="tit">${list.PD_NAME }</div>
                                     <c:if test="${!empty list.OPTION1_NAME} ">

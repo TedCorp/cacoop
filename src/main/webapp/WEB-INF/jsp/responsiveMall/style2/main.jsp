@@ -45,19 +45,26 @@
                         <ul class="row clear-fix " style="display: flex;flex-direction: row; flex-wrap: wrap; align-items: center;">
                             <c:forEach var="ent" items="${ list.PDLIST }" varStatus="status">
                                 <c:if test="${ !empty(ent.ATFL_ID)  }">
+                                
                                     <c:if test="${ent.FILEPATH_FLAG eq mainKey }">
                                         <c:set var="imgPath" value="${contextPath }/upload/${ent.STFL_PATH }/${ent.STFL_NAME }" />
                                     </c:if>
+                                    
                                     <c:if test="${!empty(ent.FILEPATH_FLAG) && ent.FILEPATH_FLAG ne mainKey }">
                                         <c:set var="imgPath" value="${ent.STFL_PATH }" />
                                     </c:if>
-                                    <%-- <c:if test="${ empty(ent.FILEPATH_FLAG) }">
+                                    
+                                    <c:if test="${ empty(ent.FILEPATH_FLAG) }">
                                         <c:set var="imgPath" value="https://www.cjfls.co.kr/upload/${ent.STFL_PATH }/${ent.STFL_NAME }" />
-                                    </c:if> --%>
+                                    </c:if>
                                 </c:if>
-                                <c:if test="${ empty(ent.ATFL_ID)  }">
+                                <c:if test="${ !empty(ent.IMGURL) }">
+									<c:set var="imgPath" value="${ent.IMGURL }" />
+								</c:if>
+                                <c:if test="${ empty(ent.ATFL_ID) && empty(ent.IMGURL) }">
                                     <c:set var="imgPath" value="${contextPath }/resources/images/mall/goods/noimage_270.png" />
                                 </c:if>
+
                                 <li>
                                     <!-- 상품명 -->
                                     <a href="${contextPath }/m/product/view/${ ent.PD_CODE }?entcago=${list.ENTRY_ID}" target="_self" title="${ ent.PD_NAME }">

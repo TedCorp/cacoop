@@ -1833,30 +1833,29 @@ public class ProductMgrController extends DefaultController{
 	        HttpEntity<String> response = restTemplate.postForEntity(url, requestMessage, String.class);
 	        JSONObject requestBody = new JSONObject(response.getBody());
 	        String totalCnt = requestBody.get("totalElements").toString();
-	        
 	        JSONArray jsonArray = new JSONArray(requestBody.get("content").toString());
-	        List<?> selectPrd = null;
+
 	        TB_PDINFOXM productInfo = new TB_PDINFOXM();
 	        JSONArray flagJson = new JSONArray();
 	        TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
+	        productInfo.setSUPR_ID(loginUser.getSUPR_ID());
 	        for(int i=0; i< jsonArray.length(); i++) {
 	        	int tempPrdNo;
 	        	JSONObject pick = jsonArray.getJSONObject(i);
 	        	tempPrdNo = pick.getInt("prdNo");
-	        	
-		        productInfo.setSUPR_ID(loginUser.getSUPR_ID());
+		        
 		        String prdNo = Integer.toString(tempPrdNo);
 		        productInfo.setN_PD_CODE(prdNo);
 		        
-//		        jsonArray2 = productMgrService.getObjectList(productInfo);
-		        selectPrd = (productMgrService.getObjectList(productInfo));
-		        
+		        List<TB_PDINFOXM> selectPrd = null;
+		        selectPrd = productMgrService.getObjectList(productInfo);
+
 		        if(selectPrd.isEmpty()) {
-		        	System.out.println("wow!!!!" + i);
 		        	pick.put("flag", 0);
+		        	pick.put("newCash", "-");
 		        } else {
-		        	System.out.println("mom!!!!" + i);
 		        	pick.put("flag", 1);
+		        	pick.put("newCash", selectPrd.get(0).getPD_PRICE());
 		        }
 		        
 		        flagJson.put(pick);

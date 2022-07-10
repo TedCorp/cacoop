@@ -760,6 +760,7 @@
 				,OPTION2_VALUE
 				,ATFL_ID
 				,RPIMG_SEQ
+				,IMGURL
 		FROM (
 			SELECT	PD_CODE															/*제품코드*/
 					,PD_NAME															/* 제품명 */
@@ -779,6 +780,7 @@
 					,PRICE
 					,ATFL_ID
 					,RPIMG_SEQ
+					,IMGURL
 					,CASE
 						WHEN PRICE IS NOT NULL THEN MEMBERS_PRICE+PRICE
 						ELSE MEMBERS_PRICE
@@ -796,6 +798,7 @@
 						,B.PRICE
 						,A.ATFL_ID
 						,A.RPIMG_SEQ
+						,A.IMGURL
 						<choose>
 							<when test="OPTION2_VALUE != null and OPTION2_VALUE != ''">
 								, B.UP_NAME AS OPTION1_NAME
@@ -2421,6 +2424,7 @@
 					,INPUT_CNT 															/*박스입수량*/
 					,ATFL_ID
 					,RPIMG_SEQ
+					,IMGURL
 			FROM (
 				SELECT PD_CODE															/*제품코드*/
 						,PD_NAME														/* 제품명 */
@@ -2436,6 +2440,7 @@
 						,PRICE
 						,ATFL_ID
 						,RPIMG_SEQ
+						,IMGURL
 						,CASE
 							WHEN PRICE IS NOT NULL THEN MEMBERS_PRICE+PRICE
 							ELSE MEMBERS_PRICE
@@ -2453,6 +2458,7 @@
 							,B.PRICE
 							,A.ATFL_ID
 							,A.RPIMG_SEQ
+							,A.IMGURL
 				FROM TB_PDINFOXM A
 				LEFT OUTER JOIN TB_PDOPTION B
 					ON A.PD_CODE = B.PD_CODE

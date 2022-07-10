@@ -849,6 +849,7 @@
 		FROM (
 			SELECT  A.PD_CODE
                       , A.SUPR_ID
+                      , A.IMGURL
                       , FC_GET_SUPRID_NM(A.SUPR_ID) SUPR_NAME
                       , A.PD_NAME
                       , A.CAGO_ID
@@ -1387,7 +1388,7 @@
 			 , MOD_DTM
 			 , MODP_ID
 			 , RCMD_GUBN
-			 , ENTRY_ID		
+			 , ENTRY_ID
           FROM TB_PDRCMDXM_ENTCAGO
          WHERE ENTRY_ID = #{value}
            AND RCMD_GUBN = 'ENT_RCMD_GUBN_02'
@@ -1432,7 +1433,8 @@
 		              , A.DEL_YN
 		              , A.MEMBER_PRICE
 		              , A.BOX_PDDC_GUBN
-                         , A.BOX_PDDC_VAL
+                      , A.BOX_PDDC_VAL
+                      , A.IMGURL
 		              , B.GRP_CD
 		              , B.SORT_ORDR AS DTL_SORT
 		              , C.SORT_ORDR AS MST_SORT
@@ -2168,6 +2170,7 @@
 						, A.BOX_PDDC_GUBN
 						, A.BOX_PDDC_VAL
 						, A.MEMBER_PRICE
+						, A.IMGURL
 						, B.GRP_CD
 						, C.GRP_NM
 						, B.SORT_ORDR AS DTL_SORT

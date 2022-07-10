@@ -136,11 +136,11 @@
 			    		 > ${flag.getJSONObject(i).get("prductCl3Nm")} 
 			    	</c:if>  
 			    	/ ${flag.getJSONObject(i).get("prductNm")}
-			    	<c:if test='${flag.getJSONObject(i).get("flag") == 1}' >
+			    	<c:if test='${flag.getJSONObject(i).get("flag") eq 1}' >
 			    		<span style="color:red">(연동 완료)</span>
 			    	</c:if>
 			    	</td>
-			    	<td class="txt-right">-</td>
+		    		<td class="txt-right">${flag.getJSONObject(i).get("newCash")}</td>
 			    	<td class="txt-right">${flag.getJSONObject(i).get("cnsmrPc")}</td>
 			    	<td class="txt-middle">-</td>
 			    	<td class="txt-right">0</td>

@@ -21,7 +21,7 @@ import mall.web.domain.TB_PDINFOXM;
 public interface ProductMgrMapper {
 	public int count(Object obj) throws Exception;
 	public int countAdmin(Object obj) throws Exception;
-	public List<?> list(Object obj) throws Exception;
+	public List<TB_PDINFOXM> list(Object obj) throws Exception;
 	public List<?> paginatedList(Object obj) throws Exception;
 	public List<?> paginatedListAdmin(Object obj) throws Exception;
 	public Object find(Object obj) throws Exception;

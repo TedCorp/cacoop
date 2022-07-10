@@ -210,6 +210,12 @@
 		// 구매하기 이벤트 
 		$('#btnBuy').click(function(){
 			
+			<c:if test="${empty USER.MEMB_ID}">
+				alert("로그인이 필요합니다.");
+				location.href = "${contextPath}/m/user/loginForm";
+				return false;
+			</c:if>
+			
 			if($("#sit_tot_price").text() =='0원'){
 				alert('1개 이상의 상품을 선택 해 주세요');
 				return false;

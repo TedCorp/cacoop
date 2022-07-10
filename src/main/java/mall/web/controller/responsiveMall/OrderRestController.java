@@ -1054,11 +1054,11 @@ public class OrderRestController extends DefaultController{
 	@RequestMapping(value="/buy2")
 	public ModelAndView buy2(@ModelAttribute TB_ODINFOXD tb_odinfoxm, Model model, HttpServletRequest request) throws Exception {
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
-		if(loginUser == null) {
-			tb_odinfoxm.setMEMB_ID("Non-members");
-		}else {
-			tb_odinfoxm.setMEMB_ID(loginUser.getMEMB_ID());
-		}
+//		if(loginUser == null) {
+//			tb_odinfoxm.setMEMB_ID("Non-members");
+//		}else {
+		tb_odinfoxm.setMEMB_ID(loginUser.getMEMB_ID());
+//		}
 		
 		//묶음상품코드 - 이유리
 		model.addAttribute("SETPD_CODE", tb_odinfoxm.getSETPD_CODE());

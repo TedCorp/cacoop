@@ -131,5 +131,6 @@ public interface ProductMgrMapper {
 	public int linkDuplicateChk(TB_PDINFOXM tb_pdinfoxm);
 	public String selectByNpdcode(String n_PD_CODE);
 	
-	public TB_PDSHIPXM insertShip(TB_PDSHIPXM asdf);
+	public void insertShip(TB_PDSHIPXM asdf);
+	public String selectByNpdcode(TB_PDINFOXM productInfo);
 }

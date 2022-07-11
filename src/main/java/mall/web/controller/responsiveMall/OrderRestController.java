@@ -831,7 +831,6 @@ public class OrderRestController extends DefaultController{
 		//세션변경
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
 		if(loginUser != null) {
-			System.out.println("aasdadasdasdasd");
 			loginId=loginUser.getMEMB_ID();
 		}
 		//배송지정보
@@ -1113,7 +1112,6 @@ public class OrderRestController extends DefaultController{
 			
 			String[] ExtraCodeList=request.getParameter("EXTRA_PD_CODE").split(",");
 			String[] ExtraQtyList=request.getParameter("EXTRA_PD_QTY").split(",");
-			
 			for(int i =0; i<ExtraCodeList.length;i++) {
 				tb_odinfoxd.setMEMB_ID(loginUser.getMEMB_ID());
 				tb_odinfoxd.setEXTRA_PD_CODE(ExtraCodeList[i]);
@@ -1123,6 +1121,7 @@ public class OrderRestController extends DefaultController{
 				System.out.println("addExtraPd 추가상품의 갯수 : "+addExtraPd.getORDER_QTY());
 				System.out.println("addExtraPd 추가상품의 코드 : "+addExtraPd.getPD_CODE());
 				System.out.println("addExtraPd 추가상품의 이름 : "+addExtraPd.getPD_NAME());
+				System.out.println(addExtraPd.getIMGURL());
 				temp.add(addExtraPd);
 			}
 			tb_odinfoxd.setList(temp);

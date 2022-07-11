@@ -145,6 +145,7 @@
 							, C.PD_CODE
 							, C.ATFL_ID
 							, C.RPIMG_SEQ
+							, C.IMGURL
 		FROM TB_ODINFOXM A ,TB_ODINFOXD B ,TB_PDINFOXM C
 		WHERE A.ORDER_NUM = B.ORDER_NUM
 		AND   B.PD_CODE  = C.PD_CODE
@@ -526,6 +527,7 @@
            ,(MEMBERS_PRICE + PD_PRICE) AS MEMBERS_PRICE
             ,DLVY_AMT
             ,SETPD_CODE
+            ,IMGURL
       FROM (
          SELECT    A.BSKT_REGNO /*장바구니 등록번호*/
                ,A.PD_CODE /*제품코드*/
@@ -589,6 +591,7 @@
                ,TO_NUMBER(FC_GET_PRICE_SALE(A.PD_CODE, A.REGP_ID)) AS MEMBERS_PRICE
                ,A.DLVY_AMT
                ,A.SETPD_CODE
+               ,B.IMGURL
          FROM TB_BKINFOXM A, TB_PDINFOXM B
          WHERE A.PD_CODE = B.PD_CODE
             AND A.BSKT_REGNO IN
@@ -1327,6 +1330,7 @@
 				,C.DLVY_AMT AS SUPR_DLVY_AMT
 				,C.DLVA_FCON
 				,A.SETPD_CODE
+				,B.IMGURL
 		FROM TB_ODINFOXD A
 		INNER JOIN TB_PDINFOXM B
 		   ON A.PD_CODE = B.PD_CODE

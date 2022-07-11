@@ -145,7 +145,7 @@
 		<div class="box-header with-border">
 			<h3 class="box-title">상품 목록 : <font color="green"><b>${obj.count}</b></font></h3>			
 			<div class="box-tools">
-				<button type="button" class="btn btn-danger btn-sm pull-right left-5" id="btnDelete">삭제</button>
+				<button type="button" class="btn btn-danger btn-sm pull-right left-5" id="btnDelete">숨김</button>
 				<button type="button" class="btn btn-success btn-sm pull-right left-5" id="btnExcel"><i class="fa fa-file-excel-o" aria-hidden="true"></i> 엑셀</button>
 				<a href="${contextPath}/adm/productMgr/new?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }${link}" 
 					 class="btn btn-sm btn-primary pull-right left-5">신규등록</a>
@@ -372,10 +372,10 @@ $(function() {
 		
 		if(checkboxValues==''||checkboxValues==null){
 			checkboxValues.push("");	
-			alert("삭제할 항목을 체크해주세요.");
+			alert("숨길 항목을 체크해주세요.");
 			return false;
 		} else {
-			if(!confirm("선택한 상품을 삭제하시겠습니까?")) return;
+			if(!confirm("선택한 상품들을 숨기시겠습니까?")) return;
 		}
 		
 		var formMap = {	 "deleteValues":checkboxValues

@@ -534,11 +534,15 @@
                            <c:if test="${!empty param.OPTION_CODE }">
                               <c:set var="option_code" value="${ param.OPTION_CODE}" />
                            </c:if>
-                           
                            <li>
                               <a href="${contextPath }/m/product/view/${ ent.PD_CODE }" target="_blank">
-                                 <c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${ent.ATFL_ID}&ATFL_SEQ=${ent.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
-                                 <div class="img"><img src="${imgPath}" alt="">${ent.ATFL_ID}/${ent.RPIMG_SEQ}</div> 
+                                    <c:if test='${empty ent.IMGURL}'>
+										<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${ent.ATFL_ID}&ATFL_SEQ=${ent.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
+                                 		<div class="img"><img src="${imgPath}" alt="">${ent.ATFL_ID}/${ent.RPIMG_SEQ}</div> 
+									</c:if>
+									<c:if test='${!empty ent.IMGURL }'>
+										<img src="${ent.IMGURL }" alt="">
+									</c:if>
                                  <div class="con">
                                     <div class="tit">${ent.PD_NAME }</div>
                                     <div class="opt">
@@ -633,7 +637,7 @@
 									<c:if test='${!empty list.IMGURL }'>
 										<img src="${list.IMGURL }" alt="">
 									</c:if>
-								</div>
+							  </div>
                                <%-- <c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
                                <c:set var="imgPathSm" value="${contextPath }/upload/${list.ATFL_ID }/${list.RPIMG_SEQ}" />
                                  <div class="img"><img src="${imgPath}" alt="">${list.ATFL_ID}/${list.RPIMG_SEQ}</div> --%> 

@@ -684,12 +684,12 @@ public class ProductMgrService implements DefaultService {
 		return productMgrMapper.linkDuplicateChk(tb_pdinfoxm);
 	}
 
-	public String selectByNpdcode(String n_PD_CODE) {
-		return productMgrMapper.selectByNpdcode(n_PD_CODE);
+	public String selectByNpdcode(TB_PDINFOXM productInfo) {
+		return productMgrMapper.selectByNpdcode(productInfo);
 	}
 	
-	public TB_PDSHIPXM insertPdShip(TB_PDSHIPXM asdf) {
-		return productMgrMapper.insertShip(asdf);
+	public void insertShip(TB_PDSHIPXM shipxm) {
+		productMgrMapper.insertShip(shipxm);
 	}
 
 }

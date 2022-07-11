@@ -122,6 +122,7 @@ public class TB_ODINFOXM extends DefaultDomain{
 	private String MARGIN;					// 이익율
 	private String REAL_PRICE;				// 제품할인가
 	private String MEMBERS_PRICE;
+	private String IMGURL;
 	
 
 	public String getMEMBERS_PRICE() {
@@ -927,5 +928,11 @@ public class TB_ODINFOXM extends DefaultDomain{
 	}
 	public void setFINANCECODE(String fINANCECODE) {
 		FINANCECODE = fINANCECODE;
+	}
+	public String getIMGURL() {
+		return IMGURL;
+	}
+	public void setIMGURL(String iMGURL) {
+		IMGURL = iMGURL;
 	}
 }

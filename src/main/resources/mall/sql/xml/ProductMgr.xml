@@ -1139,7 +1139,7 @@
 			  MODP_ID = #{REGP_ID}
 			, MOD_DTM = SYSDATE
 			, PD_BARCD = NULL
-			, DEL_YN = 'Y'
+			, SALE_CON = 'SALE_CON_04'
 		WHERE
 			PD_CODE = #{PD_CODE}
 	</update>
@@ -2106,13 +2106,14 @@
 		AND SUPR_ID = #{SUPR_ID}
 	</select>
 	
-	<select id="selectByNpdcode" resultType="String">
+	<select id="selectByNpdcode" parameterType="mall.web.domain.TB_PDINFOXM" resultType="String">
 		SELECT PD_CODE 
 		FROM TB_PDINFOXM 
-		WHERE N_PD_CODE = #{n_PD_CODE}
+		WHERE N_PD_CODE = #{N_PD_CODE}
+		AND SUPR_ID = #{SUPR_ID}
 	</select>
 	
-	<insert id="insertShip" parameterType="mall.web.domain.TB_PDSHIPXD">
+	<insert id="insertShip" parameterType="mall.web.domain.TB_PDSHIPXM">
 		INSERT INTO
 		TB_PDSHIPXM
 		(
@@ -2133,7 +2134,6 @@
 			,#{DLVY_AMT}
 		)
 	</insert>
-	
-	
+
 </mapper>
  

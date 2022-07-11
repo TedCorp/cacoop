@@ -1942,13 +1942,13 @@ public class ProductMgrController extends DefaultController{
 				shipxm.setGUBN_START(spinfoxm.getDLVA_FCON());
 				shipxm.setDLVY_AMT(spinfoxm.getDLVY_AMT());
 				
-				productMgrService.insertPdShip(shipxm);
+				productMgrService.insertShip(shipxm);
 			}
 			
 			String optSetNo =  requestBody.get("prdOptSetNo").toString();
 			
 			if(!"null".equals(optSetNo)) {
-				String PD_CODE = productMgrService.selectByNpdcode(productInfo.getN_PD_CODE());
+				String PD_CODE = productMgrService.selectByNpdcode(productInfo);
 
 				TB_PDOPTION tb_pdoption = new TB_PDOPTION();
 				tb_pdoption.setPD_CODE(PD_CODE);
@@ -1974,50 +1974,55 @@ public class ProductMgrController extends DefaultController{
 				HttpEntity<?> requestSet = new HttpEntity<>(requestJson, httpHeaders);
 				response = restTemplate.postForEntity(url, requestSet, String.class);
 				requestBody = new JSONObject(response.getBody());
-				
-				JSONArray body = (JSONArray)requestBody.get("prdOptList");
-				
-				int dtlCnt =0;
-				JSONObject option1 = body.getJSONObject(0);
-				JSONObject option2 = null;
-				JSONObject option3 = null;
-				if(body.length() == 3) {
-					option2 = body.getJSONObject(1);
-					option3 = body.getJSONObject(2);
-				}else if(body.length() == 2) {
-					option2 = body.getJSONObject(1);
-				}
-				
-				JSONArray optDtls1 = (JSONArray)option1.get("prdOptDtlList");
-				for(int i =0;i<optDtls1.length();i++) {
-					tb_pdoption.setOPTION1_NAME(option1.getString("prdOptNm"));
-					tb_pdoption.setOPTION1_VALUE(((JSONObject)optDtls1.get(i)).getString("prdOptDtlNm"));
-					if(option2 != null) {
-						
-						JSONArray optDtls2 = (JSONArray)option2.get("prdOptDtlList");
-						for(int j =0; j<optDtls2.length();j++) {
-							tb_pdoption.setOPTION2_NAME(option2.getString("prdOptNm"));
-							tb_pdoption.setOPTION2_VALUE(((JSONObject)optDtls2.get(j)).getString("prdOptDtlNm"));
+//				if(!"null".equals(requestBody.get("prdOptList")) || 
+//						requestBody.get("prdOptList") != null || 
+//						!requestBody.get("prdOptList").equals(null)) {
+				if(!requestBody.isNull("prdOptList")) {
+					
+					JSONArray body = (JSONArray)requestBody.get("prdOptList");
+					
+					int dtlCnt =0;
+					JSONObject option1 = body.getJSONObject(0);
+					JSONObject option2 = null;
+					JSONObject option3 = null;
+					if(body.length() == 3) {
+						option2 = body.getJSONObject(1);
+						option3 = body.getJSONObject(2);
+					}else if(body.length() == 2) {
+						option2 = body.getJSONObject(1);
+					}
+					
+					JSONArray optDtls1 = (JSONArray)option1.get("prdOptDtlList");
+					for(int i =0;i<optDtls1.length();i++) {
+						tb_pdoption.setOPTION1_NAME(option1.getString("prdOptNm"));
+						tb_pdoption.setOPTION1_VALUE(((JSONObject)optDtls1.get(i)).getString("prdOptDtlNm"));
+						if(option2 != null) {
 							
-							if(option3 != null) {
-								JSONArray optDtls3 = (JSONArray)option3.get("prdOptDtlList");
-								for(int k =0; k<optDtls3.length();k++) {
-									tb_pdoption.setOPTION3_NAME(option3.getString("prdOptNm"));
-									tb_pdoption.setOPTION3_VALUE(((JSONObject)optDtls3.get(j)).getString("prdOptDtlNm"));
+							JSONArray optDtls2 = (JSONArray)option2.get("prdOptDtlList");
+							for(int j =0; j<optDtls2.length();j++) {
+								tb_pdoption.setOPTION2_NAME(option2.getString("prdOptNm"));
+								tb_pdoption.setOPTION2_VALUE(((JSONObject)optDtls2.get(j)).getString("prdOptDtlNm"));
+								
+								if(option3 != null) {
+									JSONArray optDtls3 = (JSONArray)option3.get("prdOptDtlList");
+									for(int k =0; k<optDtls3.length();k++) {
+										tb_pdoption.setOPTION3_NAME(option3.getString("prdOptNm"));
+										tb_pdoption.setOPTION3_VALUE(((JSONObject)optDtls3.get(j)).getString("prdOptDtlNm"));
+										dtlCnt += productMgrService.optionInsert(tb_pdoption);
+										System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()
+														   +"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE()
+															+"name3 : "+tb_pdoption.getOPTION3_NAME()+"op3 : "+tb_pdoption.getOPTION3_VALUE());
+									}
+								}else {
+									System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()+"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE());
 									dtlCnt += productMgrService.optionInsert(tb_pdoption);
-									System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()
-													   +"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE()
-														+"name3 : "+tb_pdoption.getOPTION3_NAME()+"op3 : "+tb_pdoption.getOPTION3_VALUE());
 								}
-							}else {
-								System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE()+"name2 : "+tb_pdoption.getOPTION2_NAME()+"op2 : "+tb_pdoption.getOPTION2_VALUE());
-								dtlCnt += productMgrService.optionInsert(tb_pdoption);
 							}
+							
+						}else {
+							System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE());
+							dtlCnt += productMgrService.optionInsert(tb_pdoption);
 						}
-						
-					}else {
-						System.out.println("name1 : "+tb_pdoption.getOPTION1_NAME()+"op1 : "+tb_pdoption.getOPTION1_VALUE());
-						dtlCnt += productMgrService.optionInsert(tb_pdoption);
 					}
 				}
 			}

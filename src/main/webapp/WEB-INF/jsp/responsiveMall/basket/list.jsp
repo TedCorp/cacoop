@@ -32,12 +32,6 @@
 		});
 		
 		/* 이미지 에러 */
-		$('.goodsImg').each(function(n){
-			$(this).error(function(){
-				$(this).attr('src', '${contextPath }/resources/images/mall/goods/noimage.png');
-			});
-		});
-		
 		$(document).on("blur", "#PD_QTY", function() {//뭐지
 			price_calculate();
 		});
@@ -494,11 +488,15 @@
 										<c:set var="imgPath" value="https://www.cjfls.co.kr/upload/${list.STFL_PATH }/${list.STFL_NAME }" />
 									</c:if>
 								</c:if>
-								
-								<div class="img"><img class="goodsImg" width="50" height="50" src="${imgPath}" alt="<c:out value="${ list.PD_NAME }" escapeXml="true"/>"/></div>
-								<c:if test="${ empty(list.ATFL_ID) }">
-									<div class="img"><img width="50" height="50" src="${contextPath }/resources/images/mall/goods/noimage.png" alt="<c:out value="${ list.PD_NAME }" escapeXml="true"/>"/></div>
-								</c:if>
+								<div class="img">
+                  					<c:if test='${empty list.IMGURL}'>
+										<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
+										<img src="${imgPath }" alt="">
+									</c:if>
+									<c:if test='${!empty list.IMGURL }'>
+										<img src="${list.IMGURL }" alt="">
+									</c:if>
+							    </div>
 								<div class="con">
 									<strong>
 										<c:if test="${list.EXTRA_YN eq 'Y'}">

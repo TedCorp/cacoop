@@ -45,6 +45,7 @@
 		            , EXTRA_YN
 		            , DLVR_INDI_YN										/* 개별배송 유무 */
 		            , DLVY_SORT											/* 묶음배송 적용방식 */
+		            , IMGURL
 		FROM ( 
 			SELECT 	  A.BSKT_REGNO
 						, A.PD_CODE
@@ -92,6 +93,7 @@
 		             	, A.EXTRA_YN
 		             	, B.DLVR_INDI_YN
 		            	, B.DLVY_SORT
+		            	, B.IMGURL
 			FROM TB_BKINFOXM A
 			INNER JOIN TB_PDINFOXM B
 				ON A.PD_CODE = B.PD_CODE

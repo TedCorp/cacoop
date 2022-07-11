@@ -64,7 +64,7 @@
 												<td class="date">${list.ORDER_DATE}<br>[${list.ORDER_NUM}]<br> <a href="${contextPath}/m/order/detail/${list.ORDER_NUM}">주문상세</a></td>
 												<td class="goods">
 													<div class="flex">
-														<img src="${imgPath}" alt="">&nbsp;&nbsp;&nbsp;
+														<img src="${list.IMGURL}" alt="">&nbsp;&nbsp;&nbsp;
 														<a href="${contextPath}/m/product/view/${list.PD_CODE}" style="color:#333; font-size:14px; text-decoration:none;">
 															<strong>${list.PD_NAME}</strong>
 															<c:if test="${ list.CNT ne 0}">

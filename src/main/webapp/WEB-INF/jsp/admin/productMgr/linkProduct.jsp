@@ -140,7 +140,7 @@
 			    		<span style="color:red">(연동 완료)</span>
 			    	</c:if>
 			    	</td>
-		    		<td class="txt-right">${flag.getJSONObject(i).get("newCash")}</td>
+				    		<td class="txt-right">${flag.getJSONObject(i).get("newCash")}</td>
 			    	<td class="txt-right">${flag.getJSONObject(i).get("cnsmrPc")}</td>
 			    	<td class="txt-middle">-</td>
 			    	<td class="txt-right">0</td>

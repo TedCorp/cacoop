@@ -6,6 +6,8 @@ import java.util.Map;
 import mall.web.domain.Customers;
 import mall.web.domain.TB_COATFLXD;
 import mall.web.domain.TB_PDINFOXM;
+import mall.web.domain.TB_PDSHIPXM;
+import mall.web.domain.TB_SPINFOXM;
 
 /**
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -60,6 +62,7 @@ public interface ProductMgrMapper {
 	// IIBS 연동관련
 	// 공급업체 리스트 조회
 	public List<?> getSuprList(Object obj) throws Exception;
+	public TB_SPINFOXM getSuprList2(TB_PDINFOXM productInfo) throws Exception;
 	public int optionInsert(Object obj);
 	public int optionDelete(Object obj);
 	public List<?> getOptionList(Object obj);
@@ -127,4 +130,6 @@ public interface ProductMgrMapper {
 	public int updateLinkedObject(TB_PDINFOXM productInfo);
 	public int linkDuplicateChk(TB_PDINFOXM tb_pdinfoxm);
 	public String selectByNpdcode(String n_PD_CODE);
+	
+	public TB_PDSHIPXM insertShip(TB_PDSHIPXM asdf);
 }

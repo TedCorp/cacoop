@@ -1175,10 +1175,10 @@ public class OrderRestController extends DefaultController{
 		Map resultMap = orderService.resetOrder(map);
 		
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("USER");
-		if(loginUser == null ) {
-			loginUser = new TB_MBINFOXM();
-			loginUser.setMEMB_ID("Non-member");
-		}
+//		if(loginUser == null ) {
+//			loginUser = new TB_MBINFOXM();
+//			loginUser.setMEMB_ID("Non-member");
+//		}
 		tb_odinfoxm.setREGP_ID(loginUser.getMEMB_ID());		
 		tb_odinfoxd.setREGP_ID(loginUser.getMEMB_ID());
 		tb_oddlaixm.setREGP_ID(loginUser.getMEMB_ID());

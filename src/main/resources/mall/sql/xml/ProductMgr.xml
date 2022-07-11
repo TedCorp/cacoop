@@ -1176,6 +1176,10 @@
 		AND SUPR_ID = #{SUPR_ID}
 	</select>
 	
+	<select id="getSuprList2" parameterType="mall.web.domain.TB_PDINFOXM" resultType="mall.web.domain.TB_SPINFOXM">
+		SELECT * FROM TB_SPINFOXM WHERE SUPR_ID = #{SUPR_ID}
+	</select>
+	
 	<!-- 상품 삭제 (사용안함) -->
 	<update id="delete" parameterType="mall.web.domain.TB_PDINFOXM">
 		UPDATE 
@@ -2107,6 +2111,28 @@
 		FROM TB_PDINFOXM 
 		WHERE N_PD_CODE = #{n_PD_CODE}
 	</select>
+	
+	<insert id="insertShip" parameterType="mall.web.domain.TB_PDSHIPXD">
+		INSERT INTO
+		TB_PDSHIPXM
+		(
+			PD_CODE
+			,SUPR_ID
+			,SHIP_CONFIG
+			,DLVY_GUBN
+			,SHIP_GUBN
+			,GUBN_START
+			,DLVY_AMT
+		) VALUES (
+			#{PD_CODE}
+			,#{SUPR_ID}
+			,#{SHIP_CONFIG}
+			,#{DLVY_GUBN}
+			,#{SHIP_GUBN}
+			,#{GUBN_START}
+			,#{DLVY_AMT}
+		)
+	</insert>
 	
 	
 </mapper>

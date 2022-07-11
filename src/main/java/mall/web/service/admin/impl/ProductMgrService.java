@@ -17,6 +17,8 @@ import mall.web.domain.TB_EXTRPROD;
 import mall.web.domain.TB_PDINFOXM;
 import mall.web.domain.TB_PDOPTION;
 import mall.web.domain.TB_PDRCMDXM;
+import mall.web.domain.TB_PDSHIPXM;
+import mall.web.domain.TB_SPINFOXM;
 import mall.web.mapper.admin.ProductMgrMapper;
 import mall.web.mapper.mall.ProductMapper;
 import mall.web.service.DefaultService;
@@ -496,6 +498,10 @@ public class ProductMgrService implements DefaultService {
 		return productMgrMapper.getSuprList(obj);
 	}
 	
+	public TB_SPINFOXM getSuprList2(TB_PDINFOXM productInfo) throws Exception {
+		return productMgrMapper.getSuprList2(productInfo);
+	}
+	
 	public int optionInsert(Object obj) {
 		return productMgrMapper.optionInsert(obj);
 		
@@ -680,6 +686,10 @@ public class ProductMgrService implements DefaultService {
 
 	public String selectByNpdcode(String n_PD_CODE) {
 		return productMgrMapper.selectByNpdcode(n_PD_CODE);
+	}
+	
+	public TB_PDSHIPXM insertPdShip(TB_PDSHIPXM asdf) {
+		return productMgrMapper.insertShip(asdf);
 	}
 
 }

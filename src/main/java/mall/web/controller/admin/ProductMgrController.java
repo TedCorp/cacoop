@@ -1928,6 +1928,21 @@ public class ProductMgrController extends DefaultController{
 			productInfo.setPD_DINFO(requestBody.get("dtlHtmlCn").toString());
 			if(valichk == 0 ) {
 				int nRtn = productMgrService.insertLinkedObject(productInfo);
+				
+				TB_SPINFOXM spinfoxm = null;
+				
+				spinfoxm = productMgrService.getSuprList2(productInfo);
+
+				TB_PDSHIPXM shipxm = new TB_PDSHIPXM();
+				shipxm.setPD_CODE(productInfo.getPD_CODE());
+				shipxm.setSUPR_ID(productInfo.getSUPR_ID());
+				shipxm.setSHIP_CONFIG("SHIP_CONFIG_01");
+				shipxm.setDLVY_GUBN("DLVY_GUBN_02");
+				shipxm.setSHIP_GUBN("SHIP_GUBN_02");
+				shipxm.setGUBN_START(spinfoxm.getDLVA_FCON());
+				shipxm.setDLVY_AMT(spinfoxm.getDLVY_AMT());
+				
+				productMgrService.insertPdShip(shipxm);
 			}
 			
 			String optSetNo =  requestBody.get("prdOptSetNo").toString();

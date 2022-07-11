@@ -460,8 +460,17 @@
 									<tr>
 										<td class="name">
 											<div class="flex">
-											<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
-												<img src="${imgPath }" alt="">
+<%-- 											<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
+												<img src="${imgPath }" alt=""> --%>
+											    <div class="img">
+				                  					<c:if test='${empty list.IMGURL}'>
+														<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
+														<img src="${imgPath }" alt="">
+													</c:if>
+													<c:if test='${!empty list.IMGURL }'>
+														<img src="${list.IMGURL }" alt="">
+													</c:if>
+												</div>
 												<div>
 													<strong><a href="${contextPath }/m/product/view/${ list.PD_CODE }"target="_blank">${list.PD_NAME }</a></strong>
 													<c:if test="${!empty list.OPTION1_VALUE && empty list.OPTION2_VALUE}">

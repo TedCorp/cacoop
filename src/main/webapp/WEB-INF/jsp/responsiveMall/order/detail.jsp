@@ -410,7 +410,7 @@
 													<td class="name">
 														<div class="flex">
 														<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
-															<img src="${imgPath }" alt="">
+															<img src="${list.IMGURL }" alt="">
 															<div>
 																<input type="hidden" id="OPTION1_VALUE${loop.count}" name="OPTION1_VALUE" value=${ list.OPTION1_VALUE }/>
 																<input type="hidden" id="OPTION2_VALUE${loop.count}" name="OPTION2_VALUE" value=${ list.OPTION2_VALUE }/>
@@ -495,7 +495,7 @@
 												<td class="name">
 													<div class="flex">
 													<c:set var="imgPath" value="${contextPath }/common/commonImgFileDown?ATFL_ID=${list.ATFL_ID}&ATFL_SEQ=${list.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
-														<img src="${imgPath }" alt="">
+														<img src="${list.IMGURL }" alt="">
 														<div>
 															<strong><a href="${contextPath }/m/product/view/${ list.PD_CODE }"target="_blank">${list.PD_NAME }</a></strong>
 															<c:if test="${!empty list.OPTION3_VALUE}">
@@ -879,7 +879,7 @@ function orderStatus(a){
 	    		success: function (data) {
 	    			if(data == total) {
 	    				alert("주문 취소가 완료되었습니다.");
-	    				location.reload();
+	    				location.href="${contextPath }/m/order/wishList";
 	    			} else {
 	    				alert("주문 취소 중 문제가 발생했습니다. 관리자에게 문의하세요. data :"+data+" total : "+total);
 	    				location.reload();

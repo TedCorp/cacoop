@@ -20,9 +20,9 @@
 						              <a href="${contextPath }/m/product/eventList">
 						              	<img src="${contextPath }/upload/${obj.JD_PATH}${rolimg.JD_LIST}" style="width:100%; height: 362px;" >
 						              </a>
-						              </div>									
+						              </div>
 								</c:forEach>
-							</c:if>								
+							</c:if>
 					</div>
 					<!-- Add Pagination -->
 					<div class="swiper-conts-wrap">

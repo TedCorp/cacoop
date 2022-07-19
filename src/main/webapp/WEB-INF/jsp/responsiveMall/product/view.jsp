@@ -624,6 +624,9 @@
 						</div>
 						<div class="product-info">
 							<p class="title">
+								<c:if test="${ 'SALE_CON_02' eq result.SALE_CON }">
+									<span style="color:red;">(품절)</span>
+								</c:if>
 								<c:out value="${ result.PD_NAME }" escapeXml="true" />
 							</p>
 							<div>

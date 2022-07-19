@@ -147,6 +147,9 @@ input:checked+label {
 										src="${imgPath }"
 										alt="<c:out value=" ${ ent.PD_NAME }" escapeXml="true"/>  상품이미지"></a>
 									<p class="tit">
+										<c:if test="${ 'SALE_CON_02' eq ent.SALE_CON }">
+											<span style="color:red;">(품절)</span>
+										</c:if>
 										<a
 											href="${contextPath }/m/product/view/${ ent.PD_CODE }?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }&${link}"
 											title="<c:out value=" ${ ent.PD_NAME }" escapeXml="true" />"
@@ -197,6 +200,9 @@ input:checked+label {
 										src="${imgPath }"
 										alt="<c:out value=" ${ ent.PD_NAME }" escapeXml="true"/>  상품이미지"></a>
 									<p class="tit">
+										<c:if test="${ 'SALE_CON_02' eq ent.SALE_CON }">
+											<span style="color:red;">(품절)</span>
+										</c:if>
 										<a
 											href="${contextPath }/m/product/view/${ ent.PD_CODE }?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }&${link}"
 											title="<c:out value=" ${ ent.PD_NAME }" escapeXml="true" />"
@@ -372,6 +378,9 @@ input:checked+label {
 							alt="<c:out value=" ${ ent.PD_NAME }" escapeXml="true"/>  상품이미지">
 					</a>
 						<p class="tit">
+							<c:if test="${ 'SALE_CON_02' eq ent.SALE_CON }">
+								<span style="color:red;">(품절)</span>
+							</c:if>
 							<a
 								href="${contextPath }/m/product/view/${ ent.PD_CODE }?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }&${link}"
 								title="<c:out value=" ${ ent.PD_NAME }" escapeXml="true" />"

@@ -594,7 +594,7 @@
 			var phone = $('#MEMB_PHONE').val();
 			var tel = $('#MEMB_TEL').val();
 			var bun = $('#COM_NUM').val();
-			
+			var membTel = "";
 			if(phone.length == 11){
 				membMobile = phone.substring(0,3)+"-"+phone.substring(3,7)+"-"+phone.substring(7,12);
 			}
@@ -613,7 +613,9 @@
 			} 
 			
 			$('#MEMB_CPON').val(membMobile);
-			$('#MEMB_TELN').val(membTel);
+			if(membTel != "" || membTel != null) {
+				$('#MEMB_TELN').val(membTel);			
+			}
 			
 			// 회원 주소 체크
 			if(!$('#MEMB_PN').val()){

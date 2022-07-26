@@ -320,19 +320,13 @@ public class PaymentController extends DefaultController{
     }
 
     @RequestMapping("/fail")
-    public String failPayment(@RequestParam String message, @RequestParam String code, Model model) {
-        model.addAttribute("message", message);
-        model.addAttribute("code", code);
-        return "fail";
+    public ModelAndView failPayment(@RequestParam String message, @RequestParam String code) {
+        ModelAndView mav = new ModelAndView();
+        mav.addObject("message", message);
+        mav.addObject("code", code);
+        mav.setViewName("responsiveMall/order/fail");
+        return mav;
     }
-//
-//    @RequestMapping("/virtual-account/callback")
-//    @ResponseStatus(HttpStatus.OK)
-//    public void handleVirtualAccountCallback(@RequestBody CallbackPayload payload) {
-//        if (payload.getStatus().equals("DONE")) {
-//            // handle deposit result
-//        }
-//    }
 
     @RequestMapping(value="/insertPayLog")
     public ModelAndView insertPayLog(HttpServletRequest request,HttpSession session,Model model) throws NoSuchAlgorithmException {

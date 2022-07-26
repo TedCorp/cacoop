@@ -24,7 +24,7 @@
 
 <script src="${contextPath}/resources/js/addr_island.js?v=${DATE}"></script>
 <script type="text/javascript">
-   
+
    $(function() {
       // 로그인 체크   
       if("${USER.MEMB_ID}" == ""){
@@ -509,7 +509,8 @@
                         <span><input type="radio" id="PAY_METD2" name="PAY_METD" value="SC0030"><label for="PAY_METD2">계좌이체</label></span>
                         <span><input type="radio" id="PAY_METD3" name="PAY_METD" value="SC0060"><label for="PAY_METD3">휴대폰결제</label></span>
                         <span><input type="radio" id="PAY_METD4" name="PAY_METD" value="SC0040"><label for="PAY_METD4">가상계좌<small>(무통장입금)</small></label></span>
-                        <span><input type="radio" id="PAY_METD5" name="PAY_METD" value="SC0111"><label for="PAY_METD5"><img src="${contextPath}/resources/resources2/images/icon_payment05.png" alt=""><span class="skip">대덕이로</span></label></span>
+                        <%-- <span><input type="radio" id="PAY_METD5" name="PAY_METD" value="SC0111"><label for="PAY_METD5"><img src="${contextPath}/resources/resources2/images/icon_payment05.png" alt=""><span class="skip">대덕이로</span></label></span> --%>
+                        <span><input type="radio" id="PAY_METD5" name="PAY_METD" value="SC0111"><label for="PAY_METD5">지역화폐</label></span>
                      </div>
                   </div>
                </div> 
@@ -746,15 +747,18 @@
   </div>  
 
 <script>
+	
+	
    $(".DLAR_GUBN").on('click',function(){
       $(".DLAR_GUBN").removeClass('on');
       $(this).addClass('on');
       if($(this).text() == '기본배송지'){
-         $("#DLAR_GUBN1").click();         
+         $("#DLAR_GUBN1").click();
       }else{
-         $("#DLAR_GUBN4").click();         
+         $("#DLAR_GUBN4").click();
       }
    })
+   
    function pay(){
       var clientKey = 'live_ck_N5OWRapdA8d5nenbMeW3o1zEqZKL'
       var tossPayments = TossPayments(clientKey)
@@ -762,6 +766,11 @@
       var userName = '${USER.MEMB_NAME}'.trim()
       var orderId = $("#ORDER_NUM").val();
       var paymentType = $("input[name='PAY_METD']:checked").val();
+      
+      if(paymentType == "SC0060" || paymentType == "SC0111") {
+    	  alert("지원하지 않는 결제수단 입니다.");
+    	  return;
+      } 
       
       switch (paymentType) {
         case 'SC0010':
@@ -785,8 +794,8 @@
          orderName = $('input[name="PD_NAMES"]').val();
       }
       
-      const LOCAL_SUCCESS_URL = 'http://localhost:8888/payment/success';
-      const LOCAL_FAIL_URL = 'http://localhost:8888/payment/fail';
+      const LOCAL_SUCCESS_URL = 'http://localhost:8080/payment/success';
+      const LOCAL_FAIL_URL = 'http://localhost:8080/payment/fail';
       const SERVER_SUCCESS_URL = 'http://www.cacoop.co.kr/payment/success';
       const SERVER_FAIL_URL = 'http://www.cacoop.co.kr/payment/fail';
 
@@ -798,10 +807,10 @@
         successUrl: SERVER_SUCCESS_URL,
         failUrl: SERVER_FAIL_URL,
       });
+      
    }
    
    function mDelivery(id) {
-	   console.log(id);
 	   const directInput = document.querySelector("#directInput");
 	   if(id == "") {
 		   directInput.style.display = "block";
@@ -810,5 +819,5 @@
 	   }
 	   directInput.value = id; 
    }
-    
+
 </script>

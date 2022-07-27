@@ -647,43 +647,7 @@
 											<c:choose>
 											  	<c:when test="${empty result.MEMBER_PRICE}">
 											  	</c:when>
-											  	<c:otherwise>
-													<tr>
-														<td>등급가격</td>	
-														<td style="display: flex; align-items: center;">
-															<span class="price-dark" itemprop="price" style="font-size: 20px;"><fmt:formatNumber value="${ result.MEMBER_PRICE }" pattern="#,###" />원</span> <fmt:parseNumber var="pv" value="${ result.MEMBER_PRICE  }" integerOnly="true" /> ~ 
-															<span class="price-dark" itemprop="price" style="font-size: 20px;"><fmt:formatNumber value="${ result.PD_PRICE }" pattern="#,###" />원</span> <fmt:parseNumber var="pv" value="${ result.PD_PRICE  }" integerOnly="true" /> &nbsp;&nbsp;
-											  				<button class="openBtn" style="min-width: 23px; border-radius: 20px;height: 23px;font-size: 12px">▽</button>
-															<input type="hidden" name="MEMBER_PRICE" id="MEMBER_PRICE" value="${result.MEMBER_PRICE }"/>
-															<c:set var="memberPrice_04" value="${result.MEMBER_PRICE }"/><!-- 조합원가격 -->
-															<c:set var="memberPrice_02" value="${result.PD_PRICE-((result.PD_PRICE-result.MEMBER_PRICE)/2)}"/><!--사업자가격  -->
-															<div class="modal hidden">
-			 													<div class="modalBox">
-																	<table border="1px" >
-																	<tr style="font-weight: bolder;">
-																		<td>등 급</td>
-																		<td>가 격</td>
-																	</tr>
-																   	<tr>
-																		<td>조합원</td>
-																		<td><span class="price-dark" itemprop="price" style="font-size: 20px;"><fmt:formatNumber value="${ memberPrice_04 }"/>원</span><fmt:parseNumber var="pv" value="${ memberPrice_04  }" integerOnly="true" /></td>
-																	</tr>
-																	<tr>
-																		<td>사업자</td>
-																		<td><span class="price-dark" itemprop="price" style="font-size: 20px;"><fmt:formatNumber value="${ memberPrice_02 }"/>원</span><fmt:parseNumber var="pv" value="${ memberPrice_02}" integerOnly="true" /></td>
-																	</tr>
-																	<tr>
-																		<td>일 반</td>
-																		<td><span class="price-dark" itemprop="price" style="font-size: 20px;"><fmt:formatNumber value="${  result.PD_PRICE }"/>원</span><fmt:parseNumber var="pv" value="${  result.PD_PRICE  }" integerOnly="true" /></td>
-																	</tr>
-															  	  </table>
-															  	  <button class="closeBtn" style="min-width:41px;border-radius:20px;margin-top:9px;" >✖</button>
-														  		</div>
-															</div>
-														</td>
-													</tr>
-											 </c:otherwise>
-										</c:choose>
+											</c:choose>
 										<c:if test="${empty option1 }">
 										<tr>
 											<td>수량</td>
@@ -884,15 +848,19 @@
 				                	<c:otherwise> 
 				                		<div class="memberDiv">
 				                			<div class="memberInfo" style="width: 100%;">
-											<c:if test="${!empty loginUser }">
-											<span>${loginUser} 님을 위한 특별가격은</span><br/>
-												<b><span itemprop="price" style="font-size: 20px;">
-													<fmt:formatNumber value="${ result.MEMBERS_PRICE }"/>원
-												</span>
-												<fmt:parseNumber var="pv" value="${ result.MEMBERS_PRICE  }" integerOnly="true" />
-											</b>입니다.
-											</c:if>
-										</div>
+				                				<!-- 일반회원이 아닐경우 -->
+												<c:if test="${USER.MEMB_GUBN!='MEMB_GUBN_01'}">	
+													<c:if test="${!empty loginUser }">
+														<span>${loginUser} 님을 위한 특별가격은</span><br/>
+														<b>
+															<span itemprop="price" style="font-size: 20px;">
+																<fmt:formatNumber value="${ result.MEMBERS_PRICE }"/>원
+															</span>
+															<fmt:parseNumber var="pv" value="${ result.MEMBERS_PRICE  }" integerOnly="true" />
+														</b>입니다.
+													</c:if>
+												</c:if>
+											</div>
 										<div class="memberPriceInfo"> 
 					               			 	<span class="memberPriceSale">
 				                    		    	<b><fmt:formatNumber value="${ result.MEMBERS_PRICE }" pattern="#,###" />원</b>
@@ -910,21 +878,11 @@
 									<c:if test="${!empty option1 }">
 										<div id="sit_tot_price">0원</div>
 									</c:if>
-									<!-- 
-									<c:if test="${empty option1 }">
-										<c:if test="${dlvafcon > members }">
-											<div id="sit_tot_price"><fmt:formatNumber value="${ result.MEMBERS_PRICE + result.DLVY_AMT}" pattern="#,###" />원</div>
-										</c:if>
-										<c:if test="${ dlvafcon <= members}">
-											<div id="sit_tot_price"><fmt:formatNumber value="${ result.MEMBERS_PRICE}" pattern="#,###" />원</div>
-										</c:if>
-									</c:if>
-									 -->
 									 <c:if test="${empty option1 }">
-										<div id="sit_tot_price"><fmt:formatNumber value="${ result.MEMBERS_PRICE + result.DLVY_AMT}" pattern="#,###" />원</div>
+										<div id="sit_tot_price"><fmt:formatNumber value="${ result.MEMBERS_PRICE}" pattern="#,###" />원</div>
+										<%-- <div id=""><fmt:formatNumber value="${ result.MEMBERS_PRICE + result.DLVY_AMT}" pattern="#,###" />원</div> --%>
 									</c:if>
 								</div>
-
 								<div class="form-type">
 									<div class="item mgt30 dual-btns">
 										<button id="btnCart">장바구니</button>
@@ -948,7 +906,7 @@
 					<div class="tab-conts">
 						<div class="tab-cont on" ${fileDtlList }>
 						<c:if test="${!empty fileDtlList }">
-						 <c:forEach var="var" items="${ fileDtlList }" varStatus="status">
+						<c:forEach var="var" items="${ fileDtlList }" varStatus="status">
 							<c:if test="${var.FILEPATH_FLAG eq mainKey }">													
 								<c:set var="imgDtlPath" value="${contextPath }/upload/${var.STFL_PATH }/${var.STFL_NAME }" />
 							</c:if>
@@ -1142,14 +1100,6 @@
 		</div>
 	</div>
 </div>	
-
-
-
-
-
-
-
-
 
 <script>
  //멤버 가격 모달
@@ -1656,9 +1606,9 @@
 		var total_ship = $("#TOTAL_SHIP").val();
 		$("#DLVY_AMT").val(total_ship);
   		
-  		// 총상품금액 + 배송비
+  		// 총상품금액
 		if(totPrice != 0) {
-			$('#sit_tot_price').text((Number(totPrice)+Number(total_ship)).toLocaleString()+'원');
+			$('#sit_tot_price').text((Number(totPrice)+0).toLocaleString()+'원');
 		} else {
 			$('#sit_tot_price').text(Number(totPrice).toLocaleString()+'원');
 		}
@@ -1853,14 +1803,11 @@
 		
 		if(totPrice != 0) {
 			// 총상품금액 + 배송비
-			$('#sit_tot_price').text((Number(totPrice)+Number(total_ship)).toLocaleString()+'원');
+			$('#sit_tot_price').text((Number(totPrice)+0).toLocaleString()+'원');
 		} else {
 			$('#sit_tot_price').text(Number(totPrice).toLocaleString()+'원');
 		}
   	});
-  	
-  	
-  	
   	
   	//추가상품
   	$('#extrPrd').change(function(){

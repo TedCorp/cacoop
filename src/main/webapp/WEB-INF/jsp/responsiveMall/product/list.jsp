@@ -6,21 +6,19 @@
 <%@ include file="/layout/inc/mallKey.jsp"%>
 <!-- ▲ Key -->
 
-<c:set var="arrCagoIdPath"
-	value="${fn:split(rtnCagoInfo.CAGO_ID_PATH, '>') }" />
-<c:set var="arrCagoNmPath"
-	value="${fn:split(rtnCagoInfo.CAGO_NM_PATH, '>') }" />
-
+<c:set var="arrCagoIdPath" value="${fn:split(rtnCagoInfo.CAGO_ID_PATH, '>') }" />
+<c:set var="arrCagoNmPath" value="${fn:split(rtnCagoInfo.CAGO_NM_PATH, '>') }" />
 
 <!-- 대카테고리 -->
 <c:if test="${ !empty rtnCagoList }">
-	<style>
+
+<style>
 input:checked+label {
 	font-weight: bold;
 }
 </style>
-	<div class="container ct-main">
 
+	<div class="container ct-main">
 
 		<!--TOP 카테고리  -->
 		<div class="location" id="first_category">
@@ -94,10 +92,6 @@ input:checked+label {
 								name="sortOdr" id="sortOdr" type="hidden"
 								value="${empty obj.sortOdr ? 'asc' : obj.sortOdr}" />
 							<ul class="clear-fix">
-								<%-- 	<li>
-									<input type="radio" id="recom" name="selectSort" value="PD_PRICE_ASC1" ${param.selectSort eq 'PD_PRICE_ASC1' ? 'checked=checked':''} >
-									<label for="recom">추천상품순</label>
-								</li> --%>
 								<li><input type="radio" id="PD_NAME" class="selectSort"
 									name="selectSort" value="PD_NAME"
 									${param.selectSort eq 'PD_NAME' ? 'checked=checked':''}>
@@ -118,12 +112,9 @@ input:checked+label {
 				<div class="img-list-type pt4">
 					<c:forEach var="ent" items="${ obj.list }" varStatus="status">
 						<c:if test="${status.first}">
-							<ul class="row clear-fix"
-								style="margin-right: 0px; margin-left: 0px;">
+							<ul class="row clear-fix" style="margin-right: 0px; margin-left: 0px;">
 						</c:if>
 						<c:choose>
-
-
 							<c:when test="${status.count % 4 == 0 }">
 								<li>
 									<c:set var="imgPath"
@@ -157,26 +148,43 @@ input:checked+label {
 												escapeXml="true" /></a>
 									</p> <!-- 상품가격 -->
 									<p class="price">
-										<c:choose>
-											<c:when test="${empty ent.MEMBER_PRICE}">
-												<span class="price"><fmt:formatNumber
-														value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
-												<span class="erased"></span>
-											</c:when>
-											<c:otherwise>
-												<span class="price"><fmt:formatNumber
-														value="${ ent.MEMBER_PRICE }" pattern="#,###" />원</span>
-												<span class="erased"><fmt:formatNumber
-														value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
-											</c:otherwise>
-										</c:choose>
+										<!-- 일반회원 -->
+										<c:if test="${USER.MEMB_GUBN=='MEMB_GUBN_01'}">
+											<c:choose>
+												<c:when test="${empty ent.MEMBER_PRICE}">
+													<span class="price"><fmt:formatNumber
+															value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
+													<span class="erased"></span>
+												</c:when>
+												<c:otherwise>
+													<span class="price"><fmt:formatNumber
+															value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
+												</c:otherwise>
+											</c:choose>
+										</c:if>
+										<!-- 일반회원이 아닐경우-->
+										<c:if test="${USER.MEMB_GUBN!='MEMB_GUBN_01'}">
+											<c:choose>
+												<c:when test="${empty ent.MEMBER_PRICE}">
+													<span class="price"><fmt:formatNumber
+															value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
+													<span class="erased"></span>
+												</c:when>
+												<c:otherwise>
+													<span class="price"><fmt:formatNumber
+															value="${ ent.MEMBER_PRICE }" pattern="#,###" />원</span>
+													<span class="erased"><fmt:formatNumber
+															value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
+												</c:otherwise>
+											</c:choose>
+										</c:if>
 									</p></li>
 								</ul>
 								<ul class="row clear-fix"
 									style="margin-right: 0px; margin-left: 0px;">
 							</c:when>
+							
 							<c:otherwise>
-
 								<li>									
 									<c:set var="imgPath"
 										value="${contextPath }/common/commonImgFileDown?ATFL_ID=${ent.ATFL_ID }&ATFL_SEQ=${ent.RPIMG_SEQ}&IMG_GUBUN=mainType1" />
@@ -210,19 +218,36 @@ input:checked+label {
 												escapeXml="true" /></a>
 									</p> <!-- 상품가격 -->
 									<p class="price">
-										<c:choose>
-											<c:when test="${empty ent.MEMBER_PRICE}">
-												<span class="price"><fmt:formatNumber
-														value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
-												<span class="erased"></span>
-											</c:when>
-											<c:otherwise>
-												<span class="price"><fmt:formatNumber
-														value="${ ent.MEMBER_PRICE }" pattern="#,###" />원</span>
-												<span class="erased"><fmt:formatNumber
-														value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
-											</c:otherwise>
-										</c:choose>
+										<!-- 일반회원 -->
+										<c:if test="${USER.MEMB_GUBN=='MEMB_GUBN_01'}">
+											<c:choose>
+												<c:when test="${empty ent.MEMBER_PRICE}">
+													<span class="price"><fmt:formatNumber
+															value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
+													<span class="erased"></span>
+												</c:when>
+												<c:otherwise>
+													<span class="price"><fmt:formatNumber
+															value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
+												</c:otherwise>
+											</c:choose>
+										</c:if>
+										<!-- 일반회원이 아닐경우 -->
+										<c:if test="${USER.MEMB_GUBN!='MEMB_GUBN_01'}">
+											<c:choose>
+												<c:when test="${empty ent.MEMBER_PRICE}">
+													<span class="price"><fmt:formatNumber
+															value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
+													<span class="erased"></span>
+												</c:when>
+												<c:otherwise>
+													<span class="price"><fmt:formatNumber
+															value="${ ent.MEMBER_PRICE }" pattern="#,###" />원</span>
+													<span class="erased"><fmt:formatNumber
+															value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
+												</c:otherwise>
+											</c:choose>
+										</c:if>
 									</p></li>
 							</c:otherwise>
 						</c:choose>
@@ -388,19 +413,36 @@ input:checked+label {
 									escapeXml="true" /></a>
 						</p> <!-- 상품가격 -->
 						<p class="price">
-							<c:choose>
-								<c:when test="${empty ent.MEMBER_PRICE}">
-									<span class="price"><fmt:formatNumber
-											value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
-									<span class="erased"></span>
-								</c:when>
-								<c:otherwise>
-									<span class="price"><fmt:formatNumber
-											value="${ ent.MEMBER_PRICE }" pattern="#,###" />원</span>
-									<span class="erased"><fmt:formatNumber
-											value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
-								</c:otherwise>
-							</c:choose>
+							<!-- 일반회원 -->
+							<c:if test="${USER.MEMB_GUBN=='MEMB_GUBN_01'}">
+								<c:choose>
+									<c:when test="${empty ent.MEMBER_PRICE}">
+										<span class="price"><fmt:formatNumber
+												value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
+										<span class="erased"></span>
+									</c:when>
+									<c:otherwise>
+										<span class="price"><fmt:formatNumber
+												value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
+									</c:otherwise>
+								</c:choose>
+							</c:if>
+							<!-- 일반회원이 아닐경우 -->
+							<c:if test="${USER.MEMB_GUBN!='MEMB_GUBN_01'}">
+								<c:choose>
+									<c:when test="${empty ent.MEMBER_PRICE}">
+										<span class="price"><fmt:formatNumber
+												value="${ ent.PD_PRICE }" pattern="#,###" />원</span>
+										<span class="erased"></span>
+									</c:when>
+									<c:otherwise>
+										<span class="price"><fmt:formatNumber
+												value="${ ent.MEMBER_PRICE }" pattern="#,###" />원</span>
+										<span class="erased"><fmt:formatNumber
+												value="${ent.PD_PRICE }" pattern="#,###" /> 원 </span>
+									</c:otherwise>
+								</c:choose>
+							</c:if>
 						</p></li>
 				</c:forEach>
 			</ul>

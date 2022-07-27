@@ -6,15 +6,13 @@
 <%@ include file="/layout/inc/mallKey.jsp" %>
 <!-- ▲ Key -->
 <div class="container">
-	
-	
 	<div class="page-exhibition">
 		<div class="titbox">
-			<div class="tit">기획전</div>
+			<div class="tit">프로젝트</div>
 		</div>
 		<div class="cntbox">
 			<div class="list">
-				<!-- 기획전리스트가있으면 -->
+				<!-- 프로젝트리스트가있으면 -->
 				<c:if test="${ !empty(tb_event_main.list) }">
 					<ul>
 						<c:forEach items="${tb_event_main.list}" var="list" >
@@ -34,7 +32,7 @@
 										</c:if>
 										<img style="width: 393px; height: 242px;" src="${imgPath }" alt="<c:out value=" ${ list.GRP_NM }" escapeXml="true"/>  상품이미지">
 									</div>
-									<!-- 기획전명/기획전기간 -->
+									<!-- 프로젝트명/프로젝트기간 -->
 									<div class="con">
 										<div class="tit">${list.GRP_NM} </div>
 										<div class="txt">${list.START_DT } ~ ${list.END_DT }</div>
@@ -44,7 +42,7 @@
 						</c:forEach>
 					</ul>
 				</c:if>
-				<!-- 기획전리스트가없으면 -->
+				<!-- 프로젝트리스트가없으면 -->
 				<c:if test="${empty(tb_event_main.list) }">
 					<div class="page-search">
 						<div class="cntbox">
@@ -52,7 +50,7 @@
 								<div class="goods">
 									<div class="goods-empty" id="test">
 										<img src="${contextPath }/resources/resources2/images/icon_search_big.png" alt="">
-										<span><strong>등록된 기획전</strong>이 없습니다.</span>
+										<span><strong>등록된 프로젝트</strong>가 없습니다.</span>
 									</div>
 								</div>
 							</div>

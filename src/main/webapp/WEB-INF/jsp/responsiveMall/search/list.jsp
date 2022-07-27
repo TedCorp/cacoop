@@ -45,8 +45,7 @@
 				</span>
 			</c:forEach>
 		</div>
-
-
+		
 		<div class=page-search>
 			<div class="titbox">
 				<div class="tit">
@@ -54,15 +53,12 @@
 					(<span>${totalCnt} </span>)
 				</div>
 			</div>
-			
 			<div class="cntbox">
 				<div class="search">
 					<div class="cate">
 						<div class="total">
 							<strong>총 ${totalCnt}개</strong> 의 상품이 있습니다.
 						</div>
-						
-						
 						<form id="frmOrd" method="GET" action="${contextPath }/m/search">
 							<div class="sort">
 								<input name="CAGO_ID" id="CAGO_ID" type="hidden" value="${obj.CAGO_ID}" />
@@ -70,12 +66,7 @@
 								<input name="sortOdr" id="sortOdr" type="hidden" value="${empty obj.sortOdr ? 'asc' : obj.sortOdr}" />
 								<input type="hidden" name="schTxt" id="schTxt" value="${param.schTxt }"/>
 								<input type="hidden" name="schGbn" id="schGbn" value="${param.schGbn }"/>
-							
 								<ul class="clear-fix">
-									<%-- <li>
-										<input type="radio" id="recom" name="selectSort" value="PD_PRICE_ASC1" ${param.selectSort eq 'PD_PRICE_ASC1' ? 'checked=checked':''} >
-										<label for="recom">추천상품순</label>
-									</li> --%>
 									<li>
 										<input type="radio" id="PD_NAME" class="selectSort"  name="selectSort" value="PD_NAME" ${param.selectSort eq 'PD_NAME' ? 'checked=checked':''}>
 										<label for="PD_NAME">이름정렬순</label> 
@@ -92,7 +83,6 @@
 							</div>
 						</form>
 					</div>
-
 					<!--changed listings-->
 					<div class="goods">
 						<ul>
@@ -113,14 +103,10 @@
 										<c:if test="${  empty(ent.ATFL_ID) && !empty(ent.IMGURL) }">
 											<c:set var="imgPath" value="${ent.IMGURL }" />
 										</c:if>
-									
-										
 										<a href="${contextPath }/m/product/view/${ ent.PD_CODE }?pageNum=${obj.pageNum }&rowCnt=${obj.rowCnt }&${link}" target="_self" title= "<c:out value=" ${ ent.PD_NAME }" escapeXml="true" />">
 											<img src="${imgPath }" alt="<c:out value=" ${ ent.PD_NAME }" escapeXml="true"/>  상품이미지">
 										</a>
 									</div>
-									
-									
 									<div class="con">
 										<!-- 상품명 -->
 										<div class="name">
@@ -133,24 +119,34 @@
 										</div>
 										<!-- 상품가격 -->
 										<div class="cost">
-											<c:choose>
-                                       			<c:when test="${empty ent.MEMBER_PRICE}">
-                                       				<div class="value"><fmt:formatNumber value="${ ent.PD_PRICE }" pattern="#,###" /><em>원</em></div>
-                                       				<div class="price"></div>
-                                       			</c:when>
-                                       			<c:otherwise>
-                                       				 <div class="value"><fmt:formatNumber value="${ ent.MEMBER_PRICE }" pattern="#,###" /><em>원</em></div>
-                                       				 <div class="price"><fmt:formatNumber value="${ent.PD_PRICE }" pattern="#,###"/><em>원</em></div>
-                                       			</c:otherwise>
-                                     	 	</c:choose>
+											<c:if test="${USER.MEMB_GUBN=='MEMB_GUBN_01'}">
+												<c:choose>
+	                                       			<c:when test="${empty ent.MEMBER_PRICE}">
+	                                       				<div class="value"><fmt:formatNumber value="${ ent.PD_PRICE }" pattern="#,###" /><em>원</em></div>
+	                                       			</c:when>
+	                                       			<c:otherwise>
+	                                       				 <div class="value"><fmt:formatNumber value="${ent.PD_PRICE }" pattern="#,###"/><em>원</em></div>
+	                                       			</c:otherwise>
+	                                     	 	</c:choose>
+											</c:if>
+											<c:if test="${USER.MEMB_GUBN!='MEMB_GUBN_01'}">
+												<c:choose>
+	                                       			<c:when test="${empty ent.MEMBER_PRICE}">
+	                                       				<div class="value"><fmt:formatNumber value="${ ent.PD_PRICE }" pattern="#,###" /><em>원</em></div>
+	                                       				<div class="price"></div>
+	                                       			</c:when>
+	                                       			<c:otherwise>
+	                                       				 <div class="value"><fmt:formatNumber value="${ ent.MEMBER_PRICE }" pattern="#,###" /><em>원</em></div>
+	                                       				 <div class="price"><fmt:formatNumber value="${ent.PD_PRICE }" pattern="#,###"/><em>원</em></div>
+	                                       			</c:otherwise>
+	                                     	 	</c:choose>
+	                                     	</c:if>
 										</div>
-										
 									</div>
 								</li>
 							</c:forEach>
 						</ul>
 					</div>
-					 
 					<!--// End Changed listings-->
 				</div>
 				<paging:PageFooter totalCount="${ totalCnt }" rowCount="${ rowCnt }">
@@ -161,11 +157,8 @@
 		</div>
 	</div>
 	<!-- //Main Container -->
-
 </c:if>
-
 <c:if test="${ empty(obj.list) }">
-
 	<div class="container">
 			<div class="location">
 			<a href="${contextPath }/m">

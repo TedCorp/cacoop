@@ -247,6 +247,7 @@
 	<select id="SuprDlvyAmt" parameterType="mall.web.domain.TB_BKINFOXM" resultType="mall.web.domain.TB_PDINFOXM">
 		SELECT B.SUPR_ID
 		     , A.DLVR_INDI_YN
+		     , A.PD_CODE
 		     , A.DLVY_SORT
 		     , count(B.SUPR_ID) AS CNT
 		     , sum(C.DLVY_AMT) AS SUPR_AMT
@@ -256,7 +257,7 @@
 		  AND A.PD_CODE = C.PD_CODE
 		  AND A.PD_CODE = C.SETPD_CODE
 		  AND C.MEMB_ID = #{REGP_ID}
-	   GROUP BY B.SUPR_ID, A.DLVR_INDI_YN, A.DLVY_SORT
+	   GROUP BY B.SUPR_ID, A.DLVR_INDI_YN, A.DLVY_SORT, A.PD_CODE
 	</select>
 	
 	<!-- 헤당 상품 개수&총합 - 이유리  -->

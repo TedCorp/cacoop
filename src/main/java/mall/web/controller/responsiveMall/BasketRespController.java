@@ -193,7 +193,7 @@ public class BasketRespController extends DefaultController{
 	*/
 	@RequestMapping(value="/qtyUpdate",method=RequestMethod.GET)
 	@ResponseBody
-	public int pickingUpdate(TB_BKINFOXM tb_bkinfoxm, Model model
+	public List pickingUpdate(TB_BKINFOXM tb_bkinfoxm, Model model
 			,@RequestParam(value="CHK_BSKT") String chkBskt, @RequestParam(value="PD_QTY") String pdQty
 			,@RequestParam(value="SETPD_CODE") String setpdCode
 			,HttpServletRequest request) throws Exception{
@@ -344,15 +344,18 @@ public class BasketRespController extends DefaultController{
 		list = (List<TB_PDINFOXM>)basketService.getSuprDlvyAmt(tb_bkinfoxm);
 		
 		/* 배송비 계산 - 이유리 */
+		/*
+		이전 계산코드 
 		int TOTAL_DLVY_AMT = 0;
-		
 		for(TB_PDINFOXM index : list) {
 			TOTAL_DLVY_AMT += Integer.parseInt(index.getDLVY_AMT()); 
+			System.out.println(index.getDLVY_AMT());
 		}
-		
+
 		System.out.println("그래서 배송비는?" + TOTAL_DLVY_AMT);
+		*/
 		
-		return TOTAL_DLVY_AMT;
+		return list;
 	}
 
 	/**

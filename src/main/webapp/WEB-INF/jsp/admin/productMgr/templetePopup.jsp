@@ -30,11 +30,6 @@
 					<td>템플릿명</td>
 					<td>등록 날짜</td>
 				</tr>
-				<!-- 
-				<tr>
-					<td colspan="4">설정 구간이 존재하지 않습니다</td>
-				</tr>
-				 -->
 			 	<c:choose>
 			 		<c:when test="${ !empty(tb_shiptexm.list) }">
 			 			<c:forEach var="list" items="${ tb_shiptexm.list }" varStatus="loop">
@@ -43,7 +38,6 @@
 			 					<td>
 			 						<a href="${contextPath}/adm/productMgr/templete/edit?TEMP_NUM=${ list.TEMP_NUM }">${ list.TEMP_NAME }</a>
 			 					</td>
-			 					<!--<fmt:parseDate value="${ list.REG_DATE }" var="parseDate" pattern="yyyy-MM-dd"/>-->
 			 					<td><fmt:formatDate value="${ list.REG_DATE }" pattern="yyyy-MM-dd"/></td>
 			 				</tr>
 			 			</c:forEach>
@@ -78,14 +72,13 @@ $(function() {
 		
 		$("#TEMP_NUMS").val(arr);
 		var temp_num = $("#TEMP_NUMS").val();
-		
 		//템플릿 삭제
 		$.ajax({
 			type: "POST",
 		    url: "${contextPath}/adm/productMgr/deleteTemplete",
 		    data: { TEMP_NUM : temp_num },
 		    success: function (data) {
-		   		if(data == values.length) {
+		   		if(data == arr.length) {
 		   			alert("템플릿이 삭제되었습니다.");
 		   			location.reload();
 		   		} else {

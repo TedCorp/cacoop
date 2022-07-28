@@ -1689,6 +1689,9 @@ public class ProductMgrController extends DefaultController{
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
 		tb_shiptexm.setSUPR_ID(loginUser.getSUPR_ID());
 		
+		int rmCommaDlvyAmt = Integer.parseInt(tb_shiptexm.getRFND_DLVY_AMT().replaceAll(",", ""));
+		tb_shiptexm.setRFND_DLVY_AMT(String.valueOf(rmCommaDlvyAmt));
+		
 		int result = productMgrService.insertTempMaster(tb_shiptexm);
 		tb_shiptexm = (TB_SHIPTEXM)productMgrService.getTempMaster(tb_shiptexm);
 		
@@ -1726,13 +1729,16 @@ public class ProductMgrController extends DefaultController{
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
 		tb_shiptexm.setSUPR_ID(loginUser.getSUPR_ID());
 		
+		//가격 중간 , 제거
+		int rmCommaDlvyAmt = Integer.parseInt(tb_shiptexm.getRFND_DLVY_AMT().replaceAll(",", ""));
+		tb_shiptexm.setRFND_DLVY_AMT(String.valueOf(rmCommaDlvyAmt));
+		
 		int result = productMgrService.updateTempMaster(tb_shiptexm);
 		tb_shiptexm = (TB_SHIPTEXM)productMgrService.getTempMaster(tb_shiptexm);
 		
 		//배송비 디테일 삭제
 		tb_shiptexd.setTEMP_NUM(tb_shiptexm.getTEMP_NUM());
 		productMgrService.deleteTempDetail(tb_shiptexd);
-		
 		//배송비 디테일 입력
 		if(tb_shiptexm.getSHIP_GUBN().equals("SHIP_GUBN_03") || tb_shiptexm.getSHIP_GUBN().equals("SHIP_GUBN_04")) {
 			if(tb_shiptexd.getDLVY_AMTS().length != 0) {

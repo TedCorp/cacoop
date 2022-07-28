@@ -71,24 +71,24 @@
 							<td>
 								<div id="priceOnly" class="flex line-hgt none" style="padding:4px 0 4px 0;">
 									구매 금액 &nbsp;
-									<input type="text" name="GUBN_START" class="form-control input_wdt input7 number" value="<fmt:formatNumber value="${tb_shiptexm.GUBN_START}" pattern="#,###"/>"/>원 미만이면 &nbsp; 
+									<input type="text" maxlength="6" name="GUBN_START" class="form-control input_wdt input7 number" value="<fmt:formatNumber value="${tb_shiptexm.GUBN_START}" pattern="#,###"/>"/>원 미만이면 &nbsp; 
 									배송비 &nbsp;
-									<input type="text" name="DLVY_AMT" class="form-control input_wdt input8 number" value="<fmt:formatNumber value="${tb_shiptexm.DLVY_AMT}" pattern="#,###"/>"/>원
+									<input type="text" maxlength="6" name="DLVY_AMT" class="form-control input_wdt input8 number" value="<fmt:formatNumber value="${tb_shiptexm.DLVY_AMT}" pattern="#,###"/>"/>원
 								</div>
 								<div id="priceUnit" class="flex line-hgt none" style="padding:4px 0 4px 0;">
 									구매 금액 &nbsp;
-									<input type="text" class="form-control input_wdt3 input1 number"/>원 이상 &nbsp; 
-									<input type="text" class="form-control input_wdt3 input2 number"/>원 미만이면 &nbsp;
+									<input type="text" maxlength="6" class="form-control input_wdt3 input1 number"/>원 이상 &nbsp; 
+									<input type="text" maxlength="6" class="form-control input_wdt3 input2 number"/>원 미만이면 &nbsp;
 									배송비 &nbsp;
-									<input type="text" class="form-control input_wdt3 input3 number"/>원&nbsp;
+									<input type="text" maxlength="6" class="form-control input_wdt3 input3 number"/>원&nbsp;
 									<button type="button" class="btn btn-info btn-flat btn-hgt" onclick="addDetail('a');">추가</button>
 								</div>
 								<div id="countUnit" class="flex line-hgt none" style="padding:4px 0 4px 0;">
 									구매 수량 &nbsp;
-									<input type="text" class="form-control input_wdt3 input4"/>개 이상 &nbsp; 
-									<input type="text" class="form-control input_wdt3 input5"/>개 미만이면 &nbsp;
+									<input type="text" maxlength="9" class="form-control input_wdt3 input4"/>개 이상 &nbsp; 
+									<input type="text" maxlength="9" class="form-control input_wdt3 input5"/>개 미만이면 &nbsp;
 									배송비 &nbsp;
-									<input type="text" class="form-control input_wdt3 input6 number"/>원&nbsp;
+									<input type="text" maxlength="6" class="form-control input_wdt3 input6 number"/>원&nbsp;
 									<button type="button" class="btn btn-info btn-flat btn-hgt" onclick="addDetail('b');">추가</button>
 								</div>
 								<table class="shipping_dtl_table none">
@@ -109,18 +109,18 @@
 									 	<c:choose>
 									 		<c:when test="${ !empty(tb_shiptexd.list) }">
 									 			<c:forEach var="list" items="${ tb_shiptexd.list }" varStatus="loop">
-									 			<c:set var="rownum" value="${ rownum + 1 }"/>
-									 				<tr>
-									 					<td>${ rownum }</td>
-									 					<td><fmt:formatNumber value="${list.GUBN_START}"/>원 이상 <fmt:formatNumber value="${list.GUBN_END}"/>원 미만</td>
-									 					<td><fmt:formatNumber value="${list.DLVY_AMT}"/>원</td>
-									 					<td>
-									 					<input type="button" id="btn${ list.TEMP_SEQ }" class="del_ship_btn" onclick="delShipBtn('${ rownum }');" value="삭제"/>
-									 					<input type="hidden" name="GUBN_STARTS" value="${ list.GUBN_START }"/>
-														<input type="hidden" name="GUBN_ENDS" value="${ list.GUBN_END }"/>
-														<input type="hidden" name="DLVY_AMTS" value="${ list.DLVY_AMT }"/>
-														</td>
-									 				</tr>
+										 			<c:set var="rownum" value="${ rownum + 1 }"/>
+										 				<tr>
+										 					<td>${ rownum }</td>
+										 					<td><fmt:formatNumber value="${list.GUBN_START}"/>원 이상 <fmt:formatNumber value="${list.GUBN_END}"/>원 미만</td>
+										 					<td><fmt:formatNumber value="${list.DLVY_AMT}"/>원</td>
+										 					<td>
+										 					<input type="button" id="btn${ list.TEMP_SEQ }" class="del_ship_btn" onclick="delShipBtn('${ rownum }');" value="삭제"/>
+										 					<input type="hidden" name="GUBN_STARTS" value="${ list.GUBN_START }"/>
+															<input type="hidden" name="GUBN_ENDS" value="${ list.GUBN_END }"/>
+															<input type="hidden" name="DLVY_AMTS" value="${ list.DLVY_AMT }"/>
+															</td>
+										 				</tr>
 									 			</c:forEach>
 									 		</c:when>
 									 		<c:otherwise>
@@ -136,7 +136,7 @@
 						<tr>
 							<td><label for="inputEmail3" class="control-label required ">반품 배송비</label></td>
 							<td>
-								<input type="text" name="RFND_DLVY_AMT" class="form-control td_wdt number" placeholder="숫자만 입력(원 단위)" value="<fmt:formatNumber value="${tb_shiptexm.RFND_DLVY_AMT}" pattern="#,###"/>"/>
+								<input type="text" maxlength="11" name="RFND_DLVY_AMT" id="RFND_DLVY_AMT" class="form-control td_wdt number" placeholder="숫자만 입력(원 단위)" value="<fmt:formatNumber value="${tb_shiptexm.RFND_DLVY_AMT}" pattern="#,###"/>"/>
 							</td>
 						</tr>
 					</table>
@@ -154,13 +154,6 @@
 			</c:choose>
 			<a href="${contextPath}/adm/productMgr/getTempletePop" class="btn btn-info btn-hgt" style="margin-bottom:10px; background:#3c763d;">뒤로</a>
 		</div>
-		<!--
-		<div class="box">
-			<div class="box-body">
-				
-			</div>
-		</div>
-		-->
 	</form>
 </section>
 <script type="text/javascript">
@@ -359,10 +352,9 @@ function addDetail(type) {
 		html += 	'</td>';
 
 		//, 제거하고 hidden에 값 넣기  
-		 input1 = input1.replace(",", "");
-		 input2 = input2.replace(",", "");
-		 input3 = input3.replace(",", "");
-		
+		input1 = input1.replace(",", "");
+		input2 = input2.replace(",", "");
+		input3 = input3.replace(",", "");
 		
 		html += '<input type="hidden" name="GUBN_STARTS" value="' + input1 + '"/>';
 		html += '<input type="hidden" name="GUBN_ENDS" value="' + input2 + '"/>';
@@ -378,7 +370,6 @@ function addDetail(type) {
 		html += 	'<td>';
 		html += 	input6 + '원';
 		html += 	'</td>';
-		
 
 		//, 제거하고 hidden에 값 넣기 
 		var input6 = input6.replace(",", "");
@@ -464,13 +455,11 @@ function saveTempBtn(text) {
     
 	//opener.document.getElementById("NEW_TEMP_NUM").value = document.getElementById("NEW_TEMP_NUM").value;
 	opener.document.getElementById("NEW_TEMP_NAME").value = document.getElementById("NEW_TEMP_NAME").value;
-	
 	$.ajax({
 		type: "POST",
 		url: "${contextPath}/adm/productMgr/" + url,
 		data: $("#templeteFrm").serialize(),
 		success: function (data) {
-			console.log(data);
 			if(data == total) {
 				opener.setTempName(new_temp_name);
 				alert("배송 상세 정보가 저장되었습니다.");

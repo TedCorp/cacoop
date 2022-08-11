@@ -87,7 +87,16 @@ public class LoginController extends DefaultController{
 		
 		ModelAndView mav = new ModelAndView();
 		TB_MBINFOXM loginMember = (TB_MBINFOXM)memberMgrService.getObject(memberInfo);
-
+		
+		//TB_MBINFOXM 테이블에서 로그인 id를 통해 받은id가 없을경우 바로 return 시키는 방식
+		if (loginMember == null || loginMember.getMEMB_ID() == "" ) {
+			mav.addObject("alertMessage", "아이디와 비밀번호를 확인하시기 바랍니다.");
+			mav.addObject("returnUrl", "/adm/loginForm");
+			mav.setViewName("alertMessage");		
+			return mav;
+		}
+		
+		//암호화처리된 비밀번호 푸는코드
 		digestUtils = new DigestUtils();
 		String strEncrpytPasswd = digestUtils.kisaSha256(memberInfo.getMEMB_PW());
 		String trimEncrpytPasswd = strEncrpytPasswd.trim();

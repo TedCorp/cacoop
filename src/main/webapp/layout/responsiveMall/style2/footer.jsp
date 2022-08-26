@@ -9,9 +9,9 @@
         <div class="footer-wrap" >
             <div class="footer-conts">
                 <div class="content">
-                    <ul class="redirect-conts">
-                        <li><a href="#">이용약관</a></li>
-                        <li><a href="#" style="color: #26c165;">개인정보취급방침</a></li>
+                    <ul class="redirect-conts" style="font-size: 15px;">
+                        <li><span onclick="termscheck('terms');">이용약관</span></li>
+                        <li><span onclick="termscheck('personalInfo');" style="color: #26c165;">개인정보취급방침</span></li>
                     </ul>
                     <div class="info-list">
                         <p>
@@ -43,9 +43,54 @@
                 </div>
             </div>
         </div>
+	<div class='layer-popup confrim-type' style='position: absolute;'>
+		<div class='popup' style="max-width: 1400px; left: 300px; top: 1800px;">
+			<button type='button' class='btn-pop-close popClose'data-focus='pop' data-focus-prev='popBtn01'>X</button>
+			<div class='pop-conts' style='padding:20px 20px 20px 20px;'>
+				<div class='casa-msg' style="text-align: initial; word-break: keep-all; overflow: scroll;"></div>
+			</div>
+			<div class='pop-bottom-btn type02'>
+		 		<button type='button' data-focus='popBtn02' data-focus-next='pop' class='btn-pop-next' onclick="popClose()">확인</button>
+			</div>
+		</div>
+	</div>
+	
 <script>
+	
+	function popClose() {
+		$('.layer-popup').removeClass('on');
+	}
+
 	function license(){
 		window.open('http://www.ftc.go.kr/info/bizinfo/communicationViewPopup.jsp?wrkr_no=2948101258','wowbook','width=750,height=700');
 		return false;
 	}
+	function termscheck(clicktype){
+		if(clicktype === 'terms'){
+			$.ajax({
+				type: "POST",
+				url: "${contextPath}/html/terms.html",
+				data: $("#idChkFrm").serialize(),
+				success: function (data) {
+					$('.layer-popup').addClass('on');
+					$('.casa-msg').html(data);
+				}, error: function (jqXHR, textStatus, errorThrown) {
+					alert("처리중 에러가 발생했습니다. 관리자에게 문의 하세요.(error:"+textStatus+")");
+				}
+			});
+		} else if(clicktype === 'personalInfo'){
+			$.ajax({
+				type: "POST",
+				url: "${contextPath}/html/personalInfo.html",
+				data: $("#idChkFrm").serialize(),
+				success: function (data) {
+					$('.layer-popup').addClass('on');
+					$('.casa-msg').html(data);
+				}, error: function (jqXHR, textStatus, errorThrown) {
+					alert("처리중 에러가 발생했습니다. 관리자에게 문의 하세요.(error:"+textStatus+")");
+				}
+			});
+		}
+	}
+	
 </script>

@@ -302,19 +302,19 @@
 						<input type="checkbox" name="terms" id="terms2"/>
 						<label for="terms2">[필수] 이용약관 동의</label>
 	
-						<span class="view terms_cdt1">내용보기</span>
+						<span class="view terms_cdt1" onclick="termscheck('terms');">내용보기</span>
 					</div>
 					<div class="checkbox">
 						<input type="checkbox" name="terms" id="terms3"/>
 						<label for="terms3">[필수] 개인정보처리방침 동의</label>
 	
-						<span class="view terms_cdt2">내용보기</span>
+						<span class="view terms_cdt2" onclick="termscheck('personalInfo');">내용보기</span>
 					</div>
 					<div class="checkbox">
 						<input type="checkbox" name="terms" id="terms4"/>
 						<label for="terms4">[선택] 마케팅정보 활용 및 광고성 정보 수신동의</label>
 	
-						<span class="view terms_cdt3">내용보기</span>
+						
 					</div>
 				</div>
 				<div class="item">
@@ -342,20 +342,23 @@
 			</div>
 		</div>
   </div>
+  
+  <div class='layer-popup confrim-type terms' style='position: absolute;'>
+		<div class='popup' style="max-width: 1400px; left: 300px; top: 1500px;">
+			<button type='button' class='btn-pop-close popClose'data-focus='pop' data-focus-prev='popBtn01'>X</button>
+			<div class='pop-conts' style='padding:20px 20px 20px 20px;'>
+				<div class='casa-msg2'></div>
+			</div>
+		 	<div class='pop-bottom-btn type02'>
+		 		<button type='button' data-focus='popBtn02' data-focus-next='pop' class='btn-pop-next'>확인</button>
+			</div>
+		</div>
+  </div>
   <script>
   $(function() {
 		//fn_memb_gbn();	//사업자구분체크
 		
-		/* 이용약관 모달 */
-		$(".terms_condition1").click(function(){
-			$('#myModal').modal('show');
-		});
-		
-		/* 개인정보처리방침 모달 */
-		$(".terms_condition2").click(function(){
-			$('#myModal').modal('show');
-		});
-		
+
 		/* 아이디 한글입력 안되게 처리 */
 		$(".nHangul").keydown(function(){
 			$(this).keyup(function(){
@@ -855,6 +858,34 @@
 				passCheck.className = "add green";
 				return;
 			}
+		}
+	}
+	
+	function termscheck(clicktype){
+		if(clicktype === 'terms'){
+			$.ajax({
+				type: "POST",
+				url: "${contextPath}/html/terms.html",
+				data: $("#idChkFrm").serialize(),
+				success: function (data) {
+					$('.terms').addClass('on');
+					$('.casa-msg2').html(data);
+				}, error: function (jqXHR, textStatus, errorThrown) {
+					alert("처리중 에러가 발생했습니다. 관리자에게 문의 하세요.(error:"+textStatus+")");
+				}
+			});
+		} else if(clicktype === 'personalInfo'){
+			$.ajax({
+				type: "POST",
+				url: "${contextPath}/html/personalInfo.html",
+				data: $("#idChkFrm").serialize(),
+				success: function (data) {
+					$('.terms').addClass('on');
+					$('.casa-msg2').html(data);
+				}, error: function (jqXHR, textStatus, errorThrown) {
+					alert("처리중 에러가 발생했습니다. 관리자에게 문의 하세요.(error:"+textStatus+")");
+				}
+			});
 		}
 	}
   </script>

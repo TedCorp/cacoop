@@ -21,7 +21,7 @@ src/main/webapp/upload
 META-INF/
 WEB-INF/
 danal/
-html/
+#html/
 layout/
 resources/
 robots.txt

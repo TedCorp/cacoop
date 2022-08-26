@@ -33,7 +33,7 @@
 			<!-- box-body -->
 			<div class="box-body">
 			
-			<!-- 대표사진이 있으면  -->	
+			<!-- 대표사진이 있으면  -->
 			  <c:if test="${ !empty(tb_event_main.GRP_CD) and !empty(fileList) }">
 					<div class="form-group">                                        
 				        <label class="col-md-2 control-label required">대표이미지 목록</label>
@@ -51,8 +51,8 @@
 								<button type="button" class="btn btn-xs btn-danger file_${var.ATFL_ID}_${var.ATFL_SEQ}" onclick="javascript:fn_fileDelete(this, '${var.ATFL_ID}', '${var.ATFL_SEQ}')">삭제</button>
 				        		<br>
 			                </c:forEach>
-			                <div class="col-md-2">
-		                		<p class="form-control-static required">* 대표이미지 지정</p>
+			                <div class="col-md-5">
+		                		<p class="form-control-static required">*대표이미지를 체크해야 정상 노출이 됩니다.</p>
 		                	</div>
 						</div>
 					</div>

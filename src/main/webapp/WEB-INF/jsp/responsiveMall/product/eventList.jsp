@@ -35,7 +35,8 @@
 									<!-- 프로젝트명/프로젝트기간 -->
 									<div class="con">
 										<div class="tit">${list.GRP_NM} </div>
-										<div class="txt">${list.START_DT } ~ ${list.END_DT }</div>
+										<%-- 이전 프로젝트 기간
+										<div class="txt">${list.START_DT } ~ ${list.END_DT }</div> --%>
 									</div>
 								</a> 
 							</li>

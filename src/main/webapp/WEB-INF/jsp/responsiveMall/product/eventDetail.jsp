@@ -14,9 +14,11 @@
 
 <div class="container">
 	<div class="page-exhibition">
+	
+		<%-- 이전 프로젝트 이름 
 		<div class="titbox">
 			<div class="tit">${tem.GRP_NM }</div>
-		</div>
+		</div> --%>
 		<c:if test="${ !empty(tem) }">
 			<div class="cntbox">
 				<div class="detail">

@@ -70,7 +70,7 @@
                                     <a href="${contextPath }/m/product/view/${ ent.PD_CODE }?entcago=${list.ENTRY_ID}" target="_self" title="${ ent.PD_NAME }">
                                         <img src="${imgPath}" class="img-1 img-responsive goodsImg270 test" style="width:232px; height:232px;" alt="${ ent.PD_NAME } image1">
                                     </a>
-                                    <p class="tit"><a href="${contextPath }/m/product/view/${ ent.PD_CODE }" title="${ ent.PD_NAME }" target="_self">${ ent.PD_NAME }</a> </p>
+                                    <p class="tit"><a href="${contextPath }/m/product/view/${ ent.PD_CODE }" title="${ ent.PD_NAME }" target="_self">${ ent.PD_NAME }</a></p>
                                     <!-- 상품가격 -->
                                     <p class="price">
                                     	<c:choose>
@@ -84,6 +84,8 @@
                                        		</c:otherwise>
                                        </c:choose>
                                     </p>
+                                    <hr style="border-top:1.7px solid #cbcbcb;">
+                                    <p class="tit" style="color: #000;">${ ent.SUPR_NAME }</p>
                                 </li>
                             </c:forEach>
                         </ul>

@@ -84,7 +84,7 @@
                                        		</c:otherwise>
                                        </c:choose>
                                     </p>
-                                    <hr style="border-top:1.7px solid #cbcbcb;">
+                                    <hr style="border-top:1.7px solid #cbcbcb;margin-top: 10px; margin-bottom: 7px;">
                                     <p class="tit" style="color: #000;">${ ent.SUPR_NAME }</p>
                                 </li>
                             </c:forEach>

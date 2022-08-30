@@ -20,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -372,12 +373,11 @@ public class JundanMgrController extends DefaultController {
 	 */
 	@RequestMapping(value={"/rolling"}, method=RequestMethod.GET)
 	public ModelAndView getRolling(HttpServletRequest request, @ModelAttribute TB_JDINFOXM jdinfo, Model model) throws Exception {
-
 		try {
 			//파일 경로		
 			String vewInf = "jundan/main/";
 			String path= (request.getSession().getServletContext().getRealPath("/")).replace("\\", "/") + "upload/" + vewInf;
-
+			
 			//파일 읽어오기
 			File dirFile=new File(path);
 			File[] fileList=dirFile.listFiles();
@@ -441,17 +441,25 @@ public class JundanMgrController extends DefaultController {
 	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	 */
 	@RequestMapping(value={"/rolling"}, method=RequestMethod.POST)
-	public ModelAndView rolling(@ModelAttribute TB_JDINFOXM jdpdinfo, HttpServletRequest request, Model model, MultipartHttpServletRequest multipartRequest) throws Exception{
+	public ModelAndView rolling(@ModelAttribute TB_JDINFOXM jdpdinfo, HttpServletRequest request, Model model, MultipartHttpServletRequest multipartRequest,
+								@RequestParam("uploadtype") String uploadtype) throws Exception{
+		
 		String errorMsg = "";
 		String moveResult = "";								//이동결과
 		String result = "";										//업로드결과
-		String strRtURl = "adm/jundanMgr/rolling";		//returnUrl		
-		String jdpath = "main/";								//구분
-		
+		String strRtURl = "adm/jundanMgr/rolling";		//returnUrl
+		String jdpath = null;
+		if(uploadtype.equals("web")) {	//웹 노출시
+			jdpath = "main/";								//구분
+		} else {	//모바일 노출시
+			jdpath = "mobile/";
+		}
+			
+			
 		try{
 			// 해당 경로에 이미지 파일이 존재하는 지 체크
 			int fileCnt = JunDanUtil.jundanFileCnt(request, "jundan/"+jdpath);
-			
+				
 			// 존재한다면 
 			if(fileCnt > 0){						
 		    	// 현재일자(년월일) 폴더명 생성		
@@ -494,7 +502,7 @@ public class JundanMgrController extends DefaultController {
 				if(multiFile.getOriginalFilename() != null || StringUtils.isNotEmpty(multiFile.getOriginalFilename())){
 					result = JunDanUtil.jundanFileUpload(request, multiFile, "jundan/"+jdpath, "rolImgFile" + jdpdinfo.getJD_GUBN() + "_");
 				}
-	        }
+		    }
 		}catch(IOException e){
 			result = null;
 			errorMsg = e.getMessage();
@@ -536,8 +544,16 @@ public class JundanMgrController extends DefaultController {
 	@RequestMapping(value={"/rolImg"}, method=RequestMethod.GET)
 	public @ResponseBody TB_JDINFOXM rolImg(HttpServletRequest request, @ModelAttribute TB_JDINFOXM jdinfo, Model model) throws Exception {
 		
+		//노출지면 radio 체크값
+		String uploadtype = request.getParameter("uploadtype");
+		
 		//파일 경로
-		String vewInf = "jundan/main/";
+		String vewInf = null;
+		if(uploadtype.equals("web")) {	//웹 노출시
+			vewInf = "jundan/main/";
+		} else if(uploadtype.equals("mobile")) {	//모바일 노출시
+			vewInf = "jundan/mobile/";
+		}
 		String path= (request.getSession().getServletContext().getRealPath("/")).replace("\\", "/") + "upload/" + vewInf;
 		
 		//파일 읽어오기
@@ -599,9 +615,18 @@ public class JundanMgrController extends DefaultController {
 		String result = "";										//이동결과
 		String strRtURl = "adm/jundanMgr/rolling";		//returnUrl
 		
+		//노출지면 radio 체크값
+		String uploadtype = request.getParameter("uploadtype");
+		
 		// 전단구분
 		String jdgubn = request.getParameter("JD_GUBN");
-		String jdpath = "main/";
+		String jdpath = null;
+		if(uploadtype.equals("web")) {	//웹 파일삭제
+			jdpath = "main/";
+		} else if (uploadtype.equals("mobile")) {	//모바일 파일삭제
+			jdpath = "mobile/";
+		}
+		
 		//System.out.println(jdinfo.getJD_LIST());
 
 		try{			

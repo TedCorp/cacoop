@@ -20,6 +20,19 @@
 			<div class="box-body">
 				<!-- 롤링이미지 구분 -->
 				<div class="form-group">
+					<label class="col-sm-2 control-label">노출 타입</label>
+					<div>
+						<p class="form-control-static" style="padding-top : 5px;">
+							<strong>웹 페이지</strong> <input type="radio" name="uploadtype" value="web" checked="checked" onchange="javascript:fn_chk_yn();" />
+							&ensp;
+							<strong>모바일</strong> <input type="radio" name="uploadtype" value="mobile" onchange="javascript:fn_chk_yn();" />
+							&emsp;
+							<span style="color:red">* 체크 한 페이지에 해당 이미지가 적용됩니다.</span>
+						</p>
+					</div>
+				</div>
+				
+				<div class="form-group">
 					<label class="col-sm-2 control-label">롤링 구분</label>
 					<div class="col-sm-10">
 						<c:set var="JD_GUBN" value="1" />
@@ -68,8 +81,11 @@
 				<!-- 안내사항 -->
 				<div class="form-group">
 					<label for="PD_DINFO" class="col-md-2 control-label">이용안내</label>
-					<div class="col-md-8">
-						<p class="form-control-static" style="color:red">* Size: 1462px X 362px</p>
+					<div class="col-md-4">
+						<p class="form-control-static" style="color:red">
+							* Web Img Size: 1462px X 362px <br>
+							* Mobile Img Size: 390px X 362px
+						</p>
 					</div>
 				</div>
 			</div>
@@ -141,6 +157,9 @@
 	
 	/* 구분별 현재 롤링이미지 */
 	function fn_chk_yn(){
+		var uploadtype = $("input[name='uploadtype']:checked").val();
+		
+		//alert(uploadtype);
 		// 현재 등록된 이미지 불러오기
 		$.ajax({
 	         type:"GET",
@@ -154,7 +173,12 @@
 	        	if(data.jd_LIST == null || data.jd_LIST == ""){
 	        		$("#file-rolImg").attr("src", "${contextPath }/resources/images/mall/goods/noimage.png");	        			
 	        	}else{
-	        		$("#file-rolImg").attr("src", "${contextPath }/upload/jundan/main/"+data.jd_LIST);
+	        		if (uploadtype === "web"){
+	        			$("#file-rolImg").attr("src", "${contextPath }/upload/jundan/main/"+data.jd_LIST);
+	        		} else if (uploadtype === "mobile"){
+	        			$("#file-rolImg").attr("src", "${contextPath }/upload/jundan/mobile/"+data.jd_LIST);
+	        		}
+	        		
 	        		$('#JD_LIST').val(data.jd_LIST);
 	        	}
 	         },
@@ -183,7 +207,7 @@
 	
 	/* 미리보기 레이아웃 */	
 	var img1= new Image();
-	function viewImage(img){ 	
+	function viewImage(img){
 		W=img1.width+499; 
 		H=img1.height+331; 
 		O="width="+W+",height="+H+",scrollbars=yes"; 

@@ -1280,7 +1280,7 @@ Member
 .main-container .banner-zone .swiper-slide img {
 	width: 100%;
     float: left;
-    min-width: 1000px;
+    min-width: 0px;
 }
 .ct-main .banner-zone .swiper-slide img{
 	width: 100%;
@@ -3329,7 +3329,7 @@ select {
 }
 @media (max-width: 500px ) {
 	.main-container .banner-zone .swiper-slide img{
-		margin-left: -125px;
+		margin-left: 0px;
 	}
 
 	.intro .img-list-type li p {

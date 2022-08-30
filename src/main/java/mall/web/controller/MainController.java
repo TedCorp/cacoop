@@ -143,14 +143,29 @@ public class MainController {
 	*/
 	@RequestMapping(value = { "/m" }, method = RequestMethod.GET) // @RequestMapping(method=RequestMethod.GET)
 	public ModelAndView responsiveMall(@ModelAttribute TB_JDINFOXM jundanInfo, @ModelAttribute TB_EVENT_MAIN tb_event_main, @ModelAttribute TB_PDINFOXM productInfo, 
-			HttpServletRequest request, Model model) throws Exception {
+			HttpServletRequest request, Model model,HttpServletRequest req) throws Exception {
 		// 상품목록
 		//productInfo.setSUPR_ID("C00001");
 		//productInfo.setSALE_CON("SALE_CON_01");
-
+		
+		
+		
+		
+		
 		// ############ 롤링이미지 읽어오기 (시작)_20190613 #############
 		// 파일 경로
-		String vewInf = "jundan/main/";
+		
+		String userAgent = req.getHeader("User-Agent").toUpperCase();
+		String IS_MOBILE = "MOBI";	//모바일
+		String IS_PC = "PC";	//pc
+		String vewInf;
+		
+		//모바일시
+		if(userAgent.indexOf(IS_MOBILE) > -1) {
+			vewInf = "jundan/mobile/";
+		} else { //웹
+			vewInf = "jundan/main/";
+		}
 		String path = (request.getSession().getServletContext().getRealPath("/")).replace("\\", "/") + "upload/" + vewInf;
 
 		// 파일 읽어오기

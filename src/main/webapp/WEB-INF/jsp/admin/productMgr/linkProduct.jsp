@@ -120,7 +120,7 @@
                     </td>
                     <c:if test='${flag.getJSONObject(i).get("repImg") != "null"}'>
                     	<%-- <input type="hidden" name="thumnail" value="http://cloud.1472.ai:8080/uploads/${test.getJSONObject(i).get('repImg')}" /> --%>
-                    	<td class="txt-middle"><img src='http://cloud.1472.ai:8080/uploads/${flag.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
+                    	<td class="txt-middle"><img src='https://cloud.1472.ai:18443/uploads/${flag.getJSONObject(i).get("repImg")}' style="max-width:60px;"></td>
                     </c:if>
                     <c:if test='${flag.getJSONObject(i).get("repImg") == "null"}'>
                     	<td class="txt-middle"><img src='${contextPath }/resources/images/mall/goods/noimage.png' style="max-width:60px;"></td>

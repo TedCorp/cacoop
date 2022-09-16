@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.ModelAndView;
 
 import mall.web.mapper.mall.FindMemberInfoMapper;
 import mall.web.service.DefaultService;;
@@ -78,6 +79,11 @@ public class FindMemberInfoService implements DefaultService {
 	
 	public List<?> findPW(Object obj) throws Exception {
 		return findMemberInfoMapper.findPW(obj);
+	}
+	
+	public int updatePw(Object obj) throws Exception {
+		
+		return findMemberInfoMapper.updatePw(obj);
 	}
 
 }

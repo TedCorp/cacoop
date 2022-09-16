@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -350,4 +351,24 @@ public class MemberRespController extends DefaultController{
 		}
 		return mav;
 	}
+	
+	/* 비밀번호 찾기후 비밀번호 변경*/
+	@RequestMapping(value="/m/findmemberinfo/updatepw", method=RequestMethod.POST)
+	public String updatepw(@ModelAttribute TB_MBINFOXM tb_mbinfoxm, @RequestParam("MEMB_PW") String MEMB_PW) throws Exception {
+		
+		//해싱처리
+		digestUtils = new DigestUtils();
+		String strEncrpytPasswd = digestUtils.kisaSha256(tb_mbinfoxm.getMEMB_PW());
+		String trimEncrpytPasswd = strEncrpytPasswd.trim();
+		tb_mbinfoxm.setMEMB_PW(trimEncrpytPasswd);
+		
+		
+		int cnt = findMemberInfoService.updatePw(tb_mbinfoxm);
+		
+		System.out.println(cnt);
+		
+		
+		return "redirect:/m";
+	}
+	
 }

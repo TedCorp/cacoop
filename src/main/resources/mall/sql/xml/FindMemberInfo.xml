@@ -67,4 +67,15 @@
 		</if>
 	</select>
 	
+	<!-- 비밀번호 찾기 이후 업데이트 -->
+	<update id="updatePw" parameterType="mall.web.domain.TB_FINDMEMBERINFO" >
+		UPDATE 
+			TB_MBINFOXM
+		SET
+			MEMB_PW = #{MEMB_PW}
+		WHERE
+			MEMB_ID = #{MEMB_ID}
+	</update>
+	
+	
 </mapper>

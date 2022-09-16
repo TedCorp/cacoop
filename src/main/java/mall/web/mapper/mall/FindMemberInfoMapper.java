@@ -25,4 +25,5 @@ public interface FindMemberInfoMapper {
 	public Object findEmail(Object obj) throws Exception;
 	public List<?> findID(Object obj) throws Exception;
 	public List<?> findPW(Object obj) throws Exception;	
+	public int updatePw(Object obj) throws Exception;
 }

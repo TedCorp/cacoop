@@ -368,7 +368,7 @@ public class MemberRespController extends DefaultController{
 		ModelAndView mav = new ModelAndView();
 		
 		mav.addObject("alertMessage", "비밀번호 변경이 완료되었습니다. 로그인해주시길 바라겠습니다.");
-		mav.addObject("returnUrl", "/m");
+		mav.addObject("returnUrl", "/m/user/loginForm");
 		mav.setViewName("alertMessage");
 		
 		return mav;

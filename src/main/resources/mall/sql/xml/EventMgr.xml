@@ -88,6 +88,7 @@
 				, A.RPIMG_SEQ 
 				, A.ATFL_ID 
 				, A.ATFL_ID_D 
+				, A.D_USE_YN
 				, B.STFL_PATH
 				, B.STFL_NAME
 				, B.FILEPATH_FLAG

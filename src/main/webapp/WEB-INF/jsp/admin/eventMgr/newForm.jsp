@@ -6,14 +6,14 @@
 <%@ include file="/layout/inc/mallKey.jsp" %>
 <!-- ▲ Key -->
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.4/codemirror.css">
+<link rel="stylesheet" href="https://uicdn.toast.com/editor/2.0.0/toastui-editor.min.css">
 
-
-
+<!-- <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" /> -->
 
 <section class="content-header">
 	<h1>기획전상품관리<small>기획전상품목록</small></h1>
 </section>
-
 
 <section class="content">
 	<!-- Horizontal Form -->
@@ -22,7 +22,8 @@
 		<input type="hidden" id="ATFL_ID" name="ATFL_ID" value="${tb_event_main.ATFL_ID }"><!-- 메인사진 -->	
 		<input type="hidden" id="RPIMG_SEQ" name="RPIMG_SEQ" value="${ tb_event_main.RPIMG_SEQ }"><!-- 메인사진SEQ -->
 		<input type="hidden" id="ATFL_ID_D" name="ATFL_ID_D" value="${tb_event_main.ATFL_ID_D }"><!-- 상세사진 -->	
-		<input name="D_USE_YN" id="D_USE_YN" type="hidden" value="Y" /><!-- 상세사진 사용여부  -->
+		<!-- <input name="D_USE_YN" id="D_USE_YN" type="hidden" value="Y" /> --><!-- 상세사진 사용여부  -->
+		<input name="D_USE_YN" id="D_USE_YN" type="hidden" /><!-- 상세사진 사용여부  -->
 		<!-- 내용 시작 -->
 		<div class="box box-info">
 		
@@ -64,34 +65,38 @@
 			        </div>
 			    </div>
 			    
-				<c:if test="${ !empty(tb_event_main.GRP_CD) and !empty(fileDtlList) }">
-					<div class="form-group">                                        
-				        <label class="col-md-2 control-label required">상세 첨부파일 목록</label>
-				        <div class="col-md-9"> 
-				        	<c:forEach var="var" items="${ fileDtlList }" varStatus="status">
-						        <c:if test="${var.FILEPATH_FLAG eq mainKey }">													
-									<c:set var="imgDtlPath" value="${contextPath }/upload/${var.STFL_PATH }/${var.STFL_NAME }" />
-								</c:if>
-								<c:if test="${!empty(var.FILEPATH_FLAG) and var.FILEPATH_FLAG ne mainKey }">
-									<c:set var="imgDtlPath" value="${var.STFL_PATH }" />
-								</c:if>
-								<input type="hidden" id="detail" value="${var.ORFL_NAME}"/>
-								<label class="file_${var.ATFL_ID}_${var.ATFL_SEQ}"  for="seq${var.ATFL_SEQ}">${var.ORFL_NAME } (경로 : ${imgDtlPath})</label>
-								<button type="button" class="btn btn-xs btn-primary file_${var.ATFL_ID}_${var.ATFL_SEQ}" onclick="javascript:doImgPop('${imgDtlPath}')" >이미지 보기</button>
-								<button type="button" class="btn btn-xs btn-danger file_${var.ATFL_ID}_${var.ATFL_SEQ}" onclick="javascript:fn_fileDelete(this, '${var.ATFL_ID}', '${var.ATFL_SEQ}')">삭제</button>
-				        		<br>
-			                </c:forEach>
+			    <div style="display: none">
+					<c:if test="${ !empty(tb_event_main.GRP_CD) and !empty(fileDtlList) }">
+						<div class="form-group">                                        
+					        <label class="col-md-2 control-label required">상세 첨부파일 목록</label>
+					        <div class="col-md-9"> 
+					        	<c:forEach var="var" items="${ fileDtlList }" varStatus="status">
+							        <c:if test="${var.FILEPATH_FLAG eq mainKey }">													
+										<c:set var="imgDtlPath" value="${contextPath }/upload/${var.STFL_PATH }/${var.STFL_NAME }" />
+									</c:if>
+									<c:if test="${!empty(var.FILEPATH_FLAG) and var.FILEPATH_FLAG ne mainKey }">
+										<c:set var="imgDtlPath" value="${var.STFL_PATH }" />
+									</c:if>
+									<input type="hidden" id="detail" value="${var.ORFL_NAME}"/>
+									<label class="file_${var.ATFL_ID}_${var.ATFL_SEQ}"  for="seq${var.ATFL_SEQ}">${var.ORFL_NAME } (경로 : ${imgDtlPath})</label>
+									<button type="button" class="btn btn-xs btn-primary file_${var.ATFL_ID}_${var.ATFL_SEQ}" onclick="javascript:doImgPop('${imgDtlPath}')" >이미지 보기</button>
+									<button type="button" class="btn btn-xs btn-danger file_${var.ATFL_ID}_${var.ATFL_SEQ}" onclick="javascript:fn_fileDelete(this, '${var.ATFL_ID}', '${var.ATFL_SEQ}')">삭제</button>
+					        		<br>
+				                </c:forEach>
+							</div>
 						</div>
-					</div>
-			    </c:if>
-			    
-			    <div class="form-group">                                        
-			        <label class="col-md-2 control-label required">상세이미지 첨부</label>
-			        <div class="col-md-3">
-		                <input onclick="javascript:Imagechk();" name="fileDtl" type="file" id="file-simple" class="fileDtl" onchange="fileUpload()" >
-		                <input type="hidden" class="fileDtl2" id="fileDtl2"/><!-- 상세이미지  -->
-			        </div>
-			    </div>
+				    </c:if>
+				    
+				    <div class="form-group">                                        
+				        <label class="col-md-2 control-label required">상세이미지 첨부</label>
+				        <div class="col-md-3">
+			                <input onclick="javascript:Imagechk();" name="fileDtl" type="file" id="file-simple" class="fileDtl" onchange="fileUpload()" >
+			                <input type="hidden" class="fileDtl2" id="fileDtl2"/><!-- 상세이미지  -->
+				        </div>
+				    </div>
+				</div>
+				    
+				    
 				<div class="form-group">
 					<label for="GRP_CD" class="col-sm-2 control-label required">기획전코드</label>
 					<div class="col-sm-10">
@@ -251,6 +256,11 @@
 	
 	</spform:form>
 	
+	<!-- toast 에디터 -->
+	<div id="editor" style="box-sizing: border-box; height: 500px;"></div>
+	<!-- <input type="button" value="test" onclick="testtest123()">
+	<button onclick="ToView();">↓↓↓ 불러서 넣기 ↓↓↓</button>
+	<div id="viewer"></div> -->
 	
 	<div class="box-footer" >
 		<a href="${contextPath}/adm/eventMgr" class="btn btn-default pull-right"><i class="fa fa-list"></i> 목록</a>
@@ -284,7 +294,75 @@
 </form>
 
 
+<!-- <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script> -->
+<script src="https://uicdn.toast.com/editor/2.0.0/toastui-editor-all.min.js"></script>
 <script type="text/javascript">
+// toast 에디터
+const content = [].join('\n');
+
+const editor = new toastui.Editor({
+    el: document.querySelector('#editor'),
+    language: "ko-KR",
+    previewStyle: 'vertical',
+    initialEditType: "markdown",
+    height: '500px',
+    initialValue: '본문입력영역  \n이미지 이름과 경로에 한글을 제거해주세요'
+});
+
+editor.addHook("addImageBlobHook", function(blob, callback){
+   // blob 텍스트 
+   console.log(blob);
+   callback(toastImgUpload(blob));
+});
+
+function toastImgUpload(blob){
+	let imgPath;
+	
+	let formData = new FormData();
+    formData.append("file", blob);
+	$.ajax({
+        url:"imgUpload.json",
+        type:"POST",
+        enctype: 'multipart/form-data',
+        dataType: 'json',
+        processData: false,   //경로 두번찍힘
+        contentType: false,
+        async: false,	//리턴시 값 넘기기
+        data: formData,
+        success : function(data) {
+       		//데이터 가져오기
+       		imgPath = data.imgPath;
+       		//alert(data.test);
+        },
+        error : function(jqXHR, textStatus, errorThrown) {
+       	 alert("처리중 에러가 발생했습니다. 관리자에게 문의 하세요.(error:"+textStatus+")");
+        }
+  });
+	//console.log(test123);
+  return imgPath;
+}
+
+/* const viewer = toastui.Editor.factory({
+    el: document.querySelector('#viewer'),
+    viewer: true,
+    height: '500px',
+    initialValue: content
+});
+
+function ToView(){
+	alert(editor.getMarkdown());
+	alert(editor.getHtml());
+    viewer.setMarkdown(editor.getMarkdown());
+}; */
+
+/* const editor = new toastui.Editor({
+	el: document.querySelector('#editortest123'),
+	previewStyle: 'vertical',
+	previewHighlight: false,
+	height: '500px',
+	initialValue: ''
+}); */
+
 $(document).ready(function(){
 
   	//기획전상품초기화
@@ -339,6 +417,11 @@ $(document).ready(function(){
 			return false;
 			}
 		}
+		
+		
+		document.getElementById("D_USE_YN").value = editor.getHtml();
+		
+		//alert(document.getElementById("D_USE_YN").value);
 		
 		$("#eventFrm").submit();
 	});

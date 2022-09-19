@@ -670,9 +670,12 @@ public class ProductRespController extends DefaultController{
 		
 		
 	    if(StringUtils.isNotEmpty(tb_event_main.getGRP_CD())){
+	    	System.out.println(1);
 	    	TB_EVENT_MAIN tem = (TB_EVENT_MAIN)eventMgrService.getObject(tb_event_main);
+	    	System.out.println(2);
 	 
 	    	productInfo.setList(eventMgrService.selectProduct(tb_event_main));
+	    	System.out.println(3);
 
 	     	//상품정렬
 			if( tb_event_main.getSortOdr()!=null && tb_event_main.getSortOdr()!="") {
@@ -686,12 +689,18 @@ public class ProductRespController extends DefaultController{
 				model.addAttribute("fileDtlList", commonService.selectFileList(commonDtlFile));
 			}
 			
+			System.out.println(4);
+			model.addAttribute("testtest5512", tem.getD_USE_YN());
 			model.addAttribute("tem", tem);
 			model.addAttribute("obj",productInfo);
+			
+			System.out.println("tem 그거 : " + tem.getD_USE_YN());
+			System.out.println("tem 그거 : " + tem.getGRP_NM());
+			
 		}else {
 			System.out.println("저장된 제품이 없습니다");
 		}
-	     
+	    
 	    
 	    
 	    

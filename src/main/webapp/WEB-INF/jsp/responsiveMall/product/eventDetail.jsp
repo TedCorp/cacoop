@@ -14,7 +14,6 @@
 
 <div class="container">
 	<div class="page-exhibition">
-	
 		<%-- 이전 프로젝트 이름 
 		<div class="titbox">
 			<div class="tit">${tem.GRP_NM }</div>
@@ -37,7 +36,11 @@
 								<c:set var="imgPath" value="${contextPath }/resources/images/mall/goods/noimage_270.png" />
 							</c:if>
 						</c:forEach>
-							<img src="${imgPath}" alt="<c:out value=" ${ tem.GRP_NM }" escapeXml="true"/>기획전이미지">
+						<div id="temDUSEYN">
+						</div>
+						${testtest5512}
+						<%-- ${tem.D_USE_YN} --%>
+						<%-- <img src="${imgPath}" alt="<c:out value=" ${ tem.GRP_NM }" escapeXml="true"/>기획전이미지"> --%>
 						</div>
 					</div>
 					
@@ -128,7 +131,6 @@
 </div>
 
 <script>
-
 
 /* 파라미터값전달 */
 $(document).on("change", ".selectSort", function() {

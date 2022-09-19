@@ -1,11 +1,16 @@
 package mall.web.controller.admin;
 
+import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.monitor.FileEntry;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +20,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
@@ -40,7 +47,8 @@ import mall.web.service.common.CommonService;
 public class EventMgrController extends DefaultController {
 
 	private static final Logger logger = LoggerFactory.getLogger(EventMgrController.class);
-
+	
+	
 	@Resource(name = "eventMgrService")
 	EventMgrService eventMgrService;
 
@@ -138,6 +146,8 @@ public class EventMgrController extends DefaultController {
 	public ModelAndView insertAndUpdate(@ModelAttribute TB_EVENT_MAIN tb_event_main, @ModelAttribute TB_PDINFOXM tb_pdinfoxm, @ModelAttribute TB_COATFLXD comFile,  MultipartHttpServletRequest multipartRequest,
 			HttpServletRequest request, Model model, String val) throws Exception {
 		// 등록자 정보 변경필요
+		System.out.println("testtest:"+val);
+		
 		String URL="";
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
 		comFile.setREGP_ID(loginUser.getMEMB_ID());
@@ -377,7 +387,47 @@ public class EventMgrController extends DefaultController {
 		int updateCnt = eventMgrService.getGrpPdCnt(tb_event_main);
 		return updateCnt > 0 ? SUCCESS : FAILURE;
 	}
+	
+	@RequestMapping(value = "/imgUpload", method = RequestMethod.POST)
+	public Map<String, String> imgUpload(@RequestParam("file") MultipartFile file, HttpServletRequest session) {
+		
+		// 원래 파일 이름 추출
+        String origName = file.getOriginalFilename();
 
+        // 파일 이름으로 쓸 uuid 생성
+        //String uuid = UUID.randomUUID().toString();
+
+        // 확장자 추출(ex : .png)
+        //String extension = origName.substring(origName.lastIndexOf("."));
+
+        // uuid와 확장자 결합
+        //String savedName = uuid + extension;
+
+        // 파일을 불러올 때 사용할 파일 경로
+        //String savedPath = "C:\\"+"upload\\"+"test\\" + origName;
+        
+        //실질적으로 파일 넣는 경로
+        String savedPath = session.getServletContext().getRealPath("/")+"resources\\adminlte\\dist\\ToastImgTemp\\" + origName;
+        //파일 가져올때 넣어주는 경로
+        String savedPath2 = "/resources/adminlte/dist/ToastImgTemp/" + origName;
+        
+        //프로젝트 까지 경로
+        //String abcc = session.getServletContext().getRealPath("/");
+        //C:\Users\park\Desktop\project\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\cacoop\ 이렇게 출력
+        
+        
+        // 실제로 로컬에 uuid를 파일명으로 저장
+        try {
+        	file.transferTo(new File(savedPath));
+		} catch (Exception e) {
+			
+		}
+		
+		Map<String, String> myMap = new HashMap<String, String>();
+		myMap.put("imgPath", savedPath2);
+		
+		return myMap;
+	}
 }
 
 

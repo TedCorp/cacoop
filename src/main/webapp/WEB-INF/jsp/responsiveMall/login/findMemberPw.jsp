@@ -44,16 +44,16 @@
 	<div class="narrow-container login join">
 		<div class="head">
 			<div class="logo-wrap">
-				<img src="${contextPath}/resources/resources2/images/logo.png" width="100%"/>
+				<img src="${contextPath}/resources/resources2/images/logo.jpg" width="100%"/>
 			</div>
 			<div class="title">비밀번호찾기</div>
 		</div>
 		<div class="form-type type02">
-			<div class="item mgt30">
+			<!-- <div class="item mgt30">
 				<button class="type02">휴대폰 번호로 찾기</button>
 
 				<p class="add mgt20">가입 시 입력한 회원명과 휴대폰번호를 통해 아이디를 찾을 수 있습니다.</p>
-			</div>
+			</div> -->
 
 			
 

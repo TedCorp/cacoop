@@ -55,6 +55,11 @@ public class CommonRespController {
 	@RequestMapping(value="/user/login", method=RequestMethod.POST)
 	public ModelAndView getUserLogin(@ModelAttribute TB_MBINFOXM memberInfo, Model model, HttpServletRequest request, HttpSession session) throws Exception {
 		
+		//비밀번호 찾기시 이후 경로 변경	*용덕 220919 
+		if(memberInfo.getRtnUrl().equals("/m/findmemberinfo/updatepw")) {
+			memberInfo.setRtnUrl("/m");
+		}
+		
 		ModelAndView mav = new ModelAndView();
 		TB_MBINFOXM loginMember = (TB_MBINFOXM)memberMgrService.getObject(memberInfo);
 

@@ -249,6 +249,14 @@
 			var chk_eng = upw.search(/[a-z]/ig);
 			var chk_spe = upw.search(/[`~!@@#$%^&*|₩₩₩'₩";:₩/?]/gi);
 			
+			if(upw != reupw){
+				$('.layer-popup').addClass('on');
+				$('.casa-msg').html("비밀번호가 일치하지 않습니다. 비밀번호를 확인해주세요.");
+				mempw.val('');
+				memreupw.val('');
+				return false;
+			}
+			
 			if(!/^(?=.*[a-zA-Z0-9])((?=.*\d)|(?=.*\W)).{5,20}$/.test(upw)) {
 				$('.layer-popup').addClass('on');
 				$('.casa-msg').html("비밀번호는 숫자와 영문자, 특수문자를 포함한 5~20자리 문자를 입력해야 합니다.");
@@ -276,10 +284,6 @@
 				return false;
 			}
 		}
-		
-		//alert();
-		//return false;
-		
 		$("#fregisterform").submit();
 	});
 	

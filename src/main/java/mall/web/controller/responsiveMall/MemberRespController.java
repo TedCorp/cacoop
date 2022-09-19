@@ -354,7 +354,7 @@ public class MemberRespController extends DefaultController{
 	
 	/* 비밀번호 찾기후 비밀번호 변경*/
 	@RequestMapping(value="/m/findmemberinfo/updatepw", method=RequestMethod.POST)
-	public String updatepw(@ModelAttribute TB_MBINFOXM tb_mbinfoxm, @RequestParam("MEMB_PW") String MEMB_PW) throws Exception {
+	public ModelAndView updatepw(@ModelAttribute TB_MBINFOXM tb_mbinfoxm, @RequestParam("MEMB_PW") String MEMB_PW) throws Exception {
 		
 		//해싱처리
 		digestUtils = new DigestUtils();
@@ -365,10 +365,13 @@ public class MemberRespController extends DefaultController{
 		
 		int cnt = findMemberInfoService.updatePw(tb_mbinfoxm);
 		
-		System.out.println(cnt);
+		ModelAndView mav = new ModelAndView();
 		
+		mav.addObject("alertMessage", "비밀번호 변경이 완료되었습니다. 로그인해주시길 바라겠습니다.");
+		mav.addObject("returnUrl", "/m");
+		mav.setViewName("alertMessage");
 		
-		return "redirect:/m";
+		return mav;
 	}
 	
 }

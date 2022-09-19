@@ -407,7 +407,9 @@ public class EventMgrController extends DefaultController {
         //String savedPath = "C:\\"+"upload\\"+"test\\" + origName;
         
         //실질적으로 파일 넣는 경로
-        String savedPath = session.getServletContext().getRealPath("/")+"resources\\adminlte\\dist\\ToastImgTemp\\" + origName;
+        //String savedPath = session.getServletContext().getRealPath("/")+"resources\\adminlte\\dist\\ToastImgTemp\\" + origName;
+        //서버용
+        String savedPath = session.getServletContext().getRealPath("/")+"resources/adminlte/dist/ToastImgTemp/" + origName;
         //파일 가져올때 넣어주는 경로
         String savedPath2 = "/resources/adminlte/dist/ToastImgTemp/" + origName;
         

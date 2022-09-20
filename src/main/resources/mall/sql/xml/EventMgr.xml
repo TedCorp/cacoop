@@ -67,7 +67,10 @@
 		  FROM TB_EVENT_MAIN A
 		  LEFT JOIN TB_COATFLXD B 
 			ON A.ATFL_ID =B.ATFL_ID
-			AND A.RPIMG_SEQ = B.ATFL_SEQ WHERE A.USE_YN = 'Y' AND A.REGP_ID = #{REGP_ID}
+			AND A.RPIMG_SEQ = B.ATFL_SEQ WHERE A.USE_YN = 'Y'
+			<if test= "REGP_ID != 'admin'">
+				 AND A.REGP_ID = #{REGP_ID}
+			</if>
 	    ORDER BY A.START_DT DESC
 	</select>
 	

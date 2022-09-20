@@ -77,7 +77,7 @@ public class EventMgrController extends DefaultController {
 		//ID정보 가져오기
 		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
 		
-		//ID정보 REGP_ID에 넣기 xml 파일에서 조건문으로 사용 목적
+		//ID정보 REGP_ID에 넣기 xml 파일에서 조건문으로 사용 목적 만약 admin일경우 모든 리스트 출력
 		tb_event_main.setREGP_ID(loginUser.getMEMB_ID());
 		
 		tb_event_main.setList(eventMgrService.getObjectList(tb_event_main));

@@ -5,12 +5,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.io.monitor.FileEntry;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +72,13 @@ public class EventMgrController extends DefaultController {
 	 * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	*/
 	@RequestMapping(method = RequestMethod.GET)
-	public ModelAndView getList(@ModelAttribute TB_EVENT_MAIN tb_event_main, Model model) throws Exception {
+	public ModelAndView getList(@ModelAttribute TB_EVENT_MAIN tb_event_main, Model model, SessionStatus status, HttpServletRequest request) throws Exception {
+		
+		//ID정보 가져오기
+		TB_MBINFOXM loginUser = (TB_MBINFOXM)request.getSession().getAttribute("ADMUSER");
+		
+		//ID정보 REGP_ID에 넣기 xml 파일에서 조건문으로 사용 목적
+		tb_event_main.setREGP_ID(loginUser.getMEMB_ID());
 		
 		tb_event_main.setList(eventMgrService.getObjectList(tb_event_main));
 		model.addAttribute("obj", tb_event_main);

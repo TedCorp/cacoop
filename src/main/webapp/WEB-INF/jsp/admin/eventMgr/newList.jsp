@@ -27,6 +27,7 @@
 						<th class="txt-middle">기획전코드</th>
 						<th class="txt-middle">기획전명</th>
 						<th class="txt-middle">사용여부</th>
+						<th class="txt-middle">수정자</th>
 						<th class="txt-middle">등록자</th>
 						<th class="txt-middle">등록일자</th>
 						<th class="txt-middle">시작일</th>
@@ -48,6 +49,7 @@
 							<c:if test="${list.USE_YN eq 'Y'}"><small class="label label-info">${list.USE_YN }</small></c:if>
 							<c:if test="${list.USE_YN eq 'N'}"><small class="label label-danger">${list.USE_YN }</small></c:if>
 						</td>
+						<td class="txt-middle">${list.REGP_ID }</td>
 						<td class="txt-middle">${list.MODP_ID }</td>
 						<td class="txt-middle">${list.MOD_DTM }</td>
 						<td class="txt-middle">${list.START_DT }</td>

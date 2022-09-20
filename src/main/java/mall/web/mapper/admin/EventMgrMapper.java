@@ -15,6 +15,7 @@ public interface EventMgrMapper {
 	public List<?> paginatedList(Object obj) throws Exception;
 	public Object find(Object obj) throws Exception;
 	public List<?> list(Object obj) throws Exception;
+	public List<?> list_main(Object obj) throws Exception;
 	public int insert(Object obj) throws Exception;
 	public int update(Object obj) throws Exception;
 	public int delete(Object obj) throws Exception;

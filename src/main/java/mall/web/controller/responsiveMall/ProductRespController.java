@@ -634,7 +634,7 @@ public class ProductRespController extends DefaultController{
 	@RequestMapping(value="/eventList", method=RequestMethod.GET)
 	public ModelAndView eventList(@ModelAttribute TB_EVENT_MAIN tb_event_main, Model model, HttpServletRequest request)throws Exception  {
 		
-		tb_event_main.setList(eventMgrService.getObjectList(tb_event_main));
+		tb_event_main.setList(eventMgrService.getObjectListMain(tb_event_main));
 		model.addAttribute("tb_event_main", tb_event_main);
 		
 		

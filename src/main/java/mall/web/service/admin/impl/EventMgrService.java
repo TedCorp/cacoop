@@ -38,6 +38,11 @@ public class EventMgrService implements DefaultService{
 	public List<?> getObjectList(Object obj) throws Exception {
 		return eventMgrMapper.list(obj);
 	}
+	
+	//추가된 메인페이지 노출용
+	public List<?> getObjectListMain(Object obj) throws Exception {
+		return eventMgrMapper.list_main(obj);
+	}
 
 	//디폴트 사용안함 (상품정렬은getOrderByList)이걸로사용
 	@Override

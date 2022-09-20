@@ -67,13 +67,37 @@
 		  FROM TB_EVENT_MAIN A
 		  LEFT JOIN TB_COATFLXD B 
 			ON A.ATFL_ID =B.ATFL_ID
-			AND A.RPIMG_SEQ = B.ATFL_SEQ WHERE A.USE_YN = 'Y'
+			AND A.RPIMG_SEQ = B.ATFL_SEQ<!--  WHERE A.USE_YN = 'Y' -->
 			<if test= "REGP_ID != 'admin'">
-				 AND A.REGP_ID = #{REGP_ID}
+				 WHERE A.REGP_ID = #{REGP_ID}
 			</if>
 	    ORDER BY A.START_DT DESC
 	</select>
 	
+	<!-- 기획전리스트 메인노출용 -->
+	<select id="list_main" parameterType="mall.web.domain.TB_EVENT_MAIN" resultType="mall.web.domain.TB_EVENT_MAIN">
+	    SELECT    A.GRP_CD
+				, A.GRP_NM
+				, A.USE_YN
+				, A.REG_DTM
+				, A.REGP_ID
+				, A.MOD_DTM
+				, A.MODP_ID
+				, A.ATFL_ID 
+				, A.START_DT
+				, A.END_DT
+				, A.RPIMG_SEQ 
+				, A.ATFL_ID_D
+				, A.D_USE_YN	
+			 	, B.STFL_PATH
+                , B.STFL_NAME
+                , B.FILEPATH_FLAG  
+		  FROM TB_EVENT_MAIN A
+		  LEFT JOIN TB_COATFLXD B 
+			ON A.ATFL_ID =B.ATFL_ID
+			AND A.RPIMG_SEQ = B.ATFL_SEQ WHERE A.USE_YN = 'Y'
+	    ORDER BY A.START_DT DESC
+	</select>
 	
 
 	

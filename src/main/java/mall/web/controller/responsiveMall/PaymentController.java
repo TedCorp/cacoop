@@ -170,13 +170,13 @@ public class PaymentController extends DefaultController{
 			if(method.toString().equals("휴대폰")) {
 				System.out.println("휴대폰 결제");
 				JSONObject mobilePhone = new JSONObject(jsonNode.get("mobilePhone").toString());
-				Object carrier = mobilePhone.get("carrier");
+				// Object carrier = mobilePhone.get("carrier");
             	Object customerMobilePhone = mobilePhone.get("customerMobilePhone");
             	Object settlementStatus = mobilePhone.get("settlementStatus");
             	tb_lguplus.setLGD_PAYTYPE("SC0060");
             	tb_lguplus.setLGD_RESPMSG("결제성공");
-            	tb_lguplus.setLGD_FINANCECODE(carrier.toString());
-            	tb_lguplus.setLGD_FINANCENAME(carrier.toString());
+            	tb_lguplus.setLGD_FINANCECODE(customerMobilePhone.toString());
+            	tb_lguplus.setLGD_FINANCENAME(customerMobilePhone.toString());
             	
             	tb_odinfoxm.setPAY_METD("SC0060");
             	tb_odinfoxm.setFINANCECODE(customerMobilePhone.toString());

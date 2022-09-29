@@ -767,10 +767,10 @@
       var orderId = $("#ORDER_NUM").val();
       var paymentType = $("input[name='PAY_METD']:checked").val();
       
-      if(paymentType == "SC0060") {
-    	  alert("핸드폰 결제 서비스 준비중입니다.");
-    	  return;
-      } 
+      // if(paymentType == "SC0060") {
+    	//   alert("핸드폰 결제 서비스 준비중입니다.");
+    	//   return;
+      // } 
       if(paymentType == "SC0111") {
     	  alert("지역화폐 결제 서비스 준비중입니다.");
     	  return;

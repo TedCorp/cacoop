@@ -163,8 +163,8 @@ public class ProductRespController extends DefaultController{
 		      model.addAttribute("rtnCagoList", productService.getCagoList(productInfo));
 		      
 		      // 이벤트 목록가져오기 2021-11-05 장보라
-				tb_event_main.setList(eventMgrService.getObjectList(tb_event_main));
-				model.addAttribute("tb_event_main", tb_event_main);
+		      //tb_event_main.setList(eventMgrService.getObjectList(tb_event_main));
+		      //model.addAttribute("tb_event_main", tb_event_main);
 				
 		      
 		      

@@ -319,9 +319,8 @@
 				, E.MOD_DTM
 				, E.FILEPATH_FLAG
 			FROM TB_PDINFOXM A 
-			LEFT JOIN TB_COATFLXD E 
-			ON A.ATFL_ID =E.ATFL_ID 
-			 WHERE A.PD_CODE IN
+			LEFT OUTER JOIN TB_COATFLXD E ON A.ATFL_ID =E.ATFL_ID AND  A.RPIMG_SEQ = E.ATFL_SEQ
+			WHERE A.PD_CODE IN
 			  (
 				 SELECT B.PD_CODE 
 				 FROM TB_EVENT_MAIN_D B 
@@ -329,7 +328,6 @@
 					 ON B.GRP_CD =C.GRP_CD 
 				 WHERE C.GRP_CD=#{GRP_CD}
 			 )
-			AND  A.RPIMG_SEQ = E.ATFL_SEQ
 	</select>
 	
 	<!-- 선택기획전상품수 -->
@@ -434,17 +432,14 @@
 					    ELSE A.MEMBER_PRICE 
 					    END AS PD_PRICE_RESULT
 		FROM TB_PDINFOXM A 
-		LEFT JOIN TB_COATFLXD E 
-		ON A.ATFL_ID =E.ATFL_ID 
+		LEFT OUTER JOIN TB_COATFLXD E ON A.ATFL_ID =E.ATFL_ID AND A.RPIMG_SEQ = E.ATFL_SEQ
  		WHERE A.PD_CODE IN
  		 (
 	 	SELECT B.PD_CODE 
 		 FROM TB_EVENT_MAIN_D B 
-		 JOIN TB_EVENT_MAIN C 
-			 ON B.GRP_CD =C.GRP_CD 
+		 JOIN TB_EVENT_MAIN C ON B.GRP_CD =C.GRP_CD 
 		 WHERE C.GRP_CD=#{GRP_CD}
  		)
-		AND  A.RPIMG_SEQ = E.ATFL_SEQ
 		<if test="sortGubun != null or sortGubun != ''">
 			<if test='sortGubun == "PD_PRICE"'>
 				<if test='sortOdr == "desc"'>
